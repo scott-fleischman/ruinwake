@@ -6,6 +6,9 @@ const BLOCK_COLORS = {
   [BlockType.GRASS]: 0x4a8f3f,
   [BlockType.DIRT]: 0x7b5b3a,
   [BlockType.STONE]: 0x888888,
+  [BlockType.WOOD]: 0x6b4226,
+  [BlockType.LEAVES]: 0x2d6e1e,
+  [BlockType.SAND]: 0xd4b96a,
 };
 
 const FACES = [
