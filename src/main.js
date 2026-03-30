@@ -5,6 +5,9 @@ import { generateTerrain, SURFACE_Y } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
+import { Inventory } from './core/inventory.js';
+import { mineBlock, placeBlock, raycast } from './core/actions.js';
+import { isBlockSolid } from './core/block.js';
 
 const MOUSE_SENSITIVITY = 0.002;
 const JUMP_VELOCITY = 8.0;
@@ -15,6 +18,7 @@ const world = new World();
 generateTerrain(world, { seed: 42 });
 
 const player = new Player({ x: 0.5, y: SURFACE_Y + 2, z: 0.5 });
+const inventory = new Inventory(36);
 
 // --- Renderer (adapter) ---
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -41,6 +45,17 @@ const input = new InputHandler(renderer.domElement);
 
 // --- HUD ---
 const hud = document.getElementById('hud');
+
+const BLOCK_NAMES = { 1: 'Dirt', 2: 'Stone', 3: 'Grass' };
+
+function getLookDirection(player) {
+  const cosPitch = Math.cos(player.pitch);
+  return {
+    x: -Math.sin(-player.yaw) * cosPitch,
+    y: Math.sin(player.pitch),
+    z: -Math.cos(-player.yaw) * cosPitch,
+  };
+}
 
 // --- Game loop ---
 let lastTime = performance.now();
@@ -73,6 +88,34 @@ function gameLoop(now) {
   applyGravity(player, dt);
   resolveCollision(player, world, dt);
 
+  // Block actions
+  if (input.locked) {
+    const forward = getLookDirection(player);
+    const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
+
+    if (input.consumeLeftClick()) {
+      const hit = raycast(world, eyePos, forward, 6);
+      if (hit) {
+        mineBlock(world, inventory, hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+        worldRenderer.markDirty(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+      }
+    }
+
+    if (input.consumeRightClick()) {
+      const hit = raycast(world, eyePos, forward, 6);
+      if (hit) {
+        const px = hit.blockPos.x + hit.normal.x;
+        const py = hit.blockPos.y + hit.normal.y;
+        const pz = hit.blockPos.z + hit.normal.z;
+        const items = inventory.getItems();
+        if (items.length > 0) {
+          placeBlock(world, inventory, px, py, pz, items[0].type);
+          worldRenderer.markDirty(px, py, pz);
+        }
+      }
+    }
+  }
+
   // Sync camera to player
   camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
   camera.rotation.order = 'YXZ';
@@ -85,7 +128,8 @@ function gameLoop(now) {
   renderer.render(scene, camera);
 
   // HUD
-  hud.textContent = `pos: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${player.position.z.toFixed(1)} | ground: ${player.onGround}`;
+  const invText = inventory.getItems().map(i => `${BLOCK_NAMES[i.type] || i.type}:${i.count}`).join(' ');
+  hud.textContent = `pos: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${player.position.z.toFixed(1)} | ${invText || 'empty'}`;
 }
 
 // Handle resize

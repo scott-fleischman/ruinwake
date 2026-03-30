@@ -4,13 +4,25 @@ export class InputHandler {
     this.mouseDx = 0;
     this.mouseDy = 0;
     this.locked = false;
+    this.leftClick = false;
+    this.rightClick = false;
 
     document.addEventListener('keydown', (e) => { this.keys[e.code] = true; });
     document.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
 
     canvas.addEventListener('click', () => {
-      canvas.requestPointerLock();
+      if (!this.locked) {
+        canvas.requestPointerLock();
+      }
     });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!this.locked) return;
+      if (e.button === 0) this.leftClick = true;
+      if (e.button === 2) this.rightClick = true;
+    });
+
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
@@ -43,5 +55,17 @@ export class InputHandler {
     this.mouseDx = 0;
     this.mouseDy = 0;
     return { dx, dy };
+  }
+
+  consumeLeftClick() {
+    const v = this.leftClick;
+    this.leftClick = false;
+    return v;
+  }
+
+  consumeRightClick() {
+    const v = this.rightClick;
+    this.rightClick = false;
+    return v;
   }
 }

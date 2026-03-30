@@ -7,6 +7,24 @@ export class WorldRenderer {
     this.scene = scene;
     this.world = world;
     this.meshes = new Map();
+    this.dirty = new Set();
+  }
+
+  markDirty(wx, wy, wz) {
+    const cx = Math.floor(wx / CHUNK_SIZE);
+    const cy = Math.floor(wy / CHUNK_SIZE);
+    const cz = Math.floor(wz / CHUNK_SIZE);
+    this.dirty.add(`${cx},${cy},${cz}`);
+    // also mark neighbors for cross-chunk face updates
+    const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+    const ly = ((wy % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+    const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+    if (lx === 0) this.dirty.add(`${cx - 1},${cy},${cz}`);
+    if (lx === CHUNK_SIZE - 1) this.dirty.add(`${cx + 1},${cy},${cz}`);
+    if (ly === 0) this.dirty.add(`${cx},${cy - 1},${cz}`);
+    if (ly === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy + 1},${cz}`);
+    if (lz === 0) this.dirty.add(`${cx},${cy},${cz - 1}`);
+    if (lz === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy},${cz + 1}`);
   }
 
   update(playerX, playerZ, renderDistance = 4) {
@@ -24,6 +42,12 @@ export class WorldRenderer {
           const [kcx, kcy, kcz] = key.split(',').map(Number);
           if (kcx === cx && kcz === cz) {
             needed.add(key);
+            if (this.dirty.has(key) && this.meshes.has(key)) {
+              const oldMesh = this.meshes.get(key);
+              this.scene.remove(oldMesh);
+              oldMesh.geometry.dispose();
+              this.meshes.delete(key);
+            }
             if (!this.meshes.has(key)) {
               const mesh = buildChunkMesh(chunk, kcx, kcy, kcz, this.world);
               if (mesh) {
@@ -35,6 +59,8 @@ export class WorldRenderer {
         }
       }
     }
+
+    this.dirty.clear();
 
     for (const [key, mesh] of this.meshes) {
       if (!needed.has(key)) {
