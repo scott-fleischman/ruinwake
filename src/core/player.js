@@ -7,6 +7,7 @@ export class Player {
     this.yaw = 0;
     this.pitch = 0;
     this.moveSpeed = moveSpeed;
+    this.onGround = false;
   }
 
   applyMovementInput(input, dt) {
