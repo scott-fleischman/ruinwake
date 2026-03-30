@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Middle-earth Voxel RPG</title>
   <style>
-    * { margin: 0; padding: 0; }
-    body { overflow: hidden; background: #000; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #0a0a0a; color: #ddd; font-family: monospace; }
     canvas { display: block; }
     #hud {
       position: absolute;
       top: 10px;
       left: 10px;
       color: #ddd;
-      font-family: monospace;
       font-size: 14px;
       pointer-events: none;
       text-shadow: 1px 1px 2px #000;
@@ -27,6 +26,7 @@
       font-size: 24px;
       pointer-events: none;
       text-shadow: 1px 1px 2px #000;
+      display: none;
     }
     #instructions {
       position: absolute;
@@ -34,20 +34,69 @@
       left: 50%;
       transform: translate(-50%, -50%);
       color: #ccc;
-      font-family: monospace;
       font-size: 18px;
       text-align: center;
       cursor: pointer;
       background: rgba(0,0,0,0.7);
       padding: 30px;
       border-radius: 8px;
+      display: none;
     }
+    #new-game {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,20,0.92);
+      padding: 30px 40px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      width: 460px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    #new-game h1 { text-align: center; color: #c9a84c; margin-bottom: 20px; font-size: 22px; }
+    #new-game label { display: block; margin: 12px 0 4px; color: #aaa; font-size: 13px; }
+    #new-game select, #new-game input {
+      width: 100%; padding: 8px; background: #1a1a2a; color: #ddd;
+      border: 1px solid #555; border-radius: 4px; font-family: monospace; font-size: 14px;
+    }
+    #new-game .info { color: #888; font-size: 12px; margin-top: 4px; min-height: 32px; }
+    #start-btn {
+      display: block; width: 100%; margin-top: 20px; padding: 12px;
+      background: #4a6e2f; color: #fff; border: none; border-radius: 6px;
+      font-family: monospace; font-size: 16px; cursor: pointer;
+    }
+    #start-btn:hover { background: #5a8a3a; }
   </style>
 </head>
 <body>
+  <div id="new-game">
+    <h1>Middle-earth Voxel RPG</h1>
+    <label for="seed-input">World Seed</label>
+    <input id="seed-input" type="number" value="42">
+    <label for="race-select">Race</label>
+    <select id="race-select">
+      <option value="man">Man</option>
+      <option value="elf">Elf</option>
+      <option value="dwarf">Dwarf</option>
+      <option value="hobbit">Hobbit</option>
+    </select>
+    <div id="race-info" class="info"></div>
+    <label for="class-select">Class</label>
+    <select id="class-select"></select>
+    <div id="class-info" class="info"></div>
+    <label for="difficulty-select">Difficulty</label>
+    <select id="difficulty-select">
+      <option value="story">Story</option>
+      <option value="standard" selected>Standard</option>
+      <option value="harsh">Harsh</option>
+    </select>
+    <button id="start-btn">Begin Journey</button>
+  </div>
   <div id="hud"></div>
   <div id="crosshair">+</div>
-  <div id="instructions">Click to play<br><br>WASD — Move<br>Mouse — Look<br>Space — Jump<br>ESC — Release mouse</div>
+  <div id="instructions">Click to play<br><br>WASD — Move | Mouse — Look<br>Space — Jump | Shift — Sprint<br>Left Click — Mine | Right Click — Place<br>ESC — Release mouse</div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
