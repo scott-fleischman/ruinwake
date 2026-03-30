@@ -1,0 +1,68 @@
+import { BlockType, isBlockSolid } from './block.js';
+
+export function mineBlock(world, inventory, x, y, z) {
+  const block = world.getBlock(x, y, z);
+  if (!isBlockSolid(block)) return false;
+  world.setBlock(x, y, z, BlockType.AIR);
+  inventory.add(block, 1);
+  return true;
+}
+
+export function placeBlock(world, inventory, x, y, z, blockType) {
+  if (isBlockSolid(world.getBlock(x, y, z))) return false;
+  if (!inventory.remove(blockType, 1)) return false;
+  world.setBlock(x, y, z, blockType);
+  return true;
+}
+
+export function raycast(world, origin, direction, maxDist) {
+  let x = Math.floor(origin.x);
+  let y = Math.floor(origin.y);
+  let z = Math.floor(origin.z);
+
+  const stepX = direction.x >= 0 ? 1 : -1;
+  const stepY = direction.y >= 0 ? 1 : -1;
+  const stepZ = direction.z >= 0 ? 1 : -1;
+
+  const tDeltaX = direction.x !== 0 ? Math.abs(1 / direction.x) : Infinity;
+  const tDeltaY = direction.y !== 0 ? Math.abs(1 / direction.y) : Infinity;
+  const tDeltaZ = direction.z !== 0 ? Math.abs(1 / direction.z) : Infinity;
+
+  let tMaxX = direction.x !== 0
+    ? ((direction.x > 0 ? x + 1 - origin.x : origin.x - x) * tDeltaX)
+    : Infinity;
+  let tMaxY = direction.y !== 0
+    ? ((direction.y > 0 ? y + 1 - origin.y : origin.y - y) * tDeltaY)
+    : Infinity;
+  let tMaxZ = direction.z !== 0
+    ? ((direction.z > 0 ? z + 1 - origin.z : origin.z - z) * tDeltaZ)
+    : Infinity;
+
+  let t = 0;
+  let normal = { x: 0, y: 0, z: 0 };
+
+  while (t < maxDist) {
+    if (isBlockSolid(world.getBlock(x, y, z))) {
+      return { blockPos: { x, y, z }, normal, t };
+    }
+
+    if (tMaxX < tMaxY && tMaxX < tMaxZ) {
+      t = tMaxX;
+      x += stepX;
+      tMaxX += tDeltaX;
+      normal = { x: -stepX, y: 0, z: 0 };
+    } else if (tMaxY < tMaxZ) {
+      t = tMaxY;
+      y += stepY;
+      tMaxY += tDeltaY;
+      normal = { x: 0, y: -stepY, z: 0 };
+    } else {
+      t = tMaxZ;
+      z += stepZ;
+      tMaxZ += tDeltaZ;
+      normal = { x: 0, y: 0, z: -stepZ };
+    }
+  }
+
+  return null;
+}
