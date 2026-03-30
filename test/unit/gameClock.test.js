@@ -23,7 +23,7 @@ describe('GameClock', () => {
 
   it('reports DAY phase during daytime', () => {
     const clock = new GameClock();
-    clock.tick(1);
+    clock.tick(DAY_LENGTH * 0.25);
     expect(clock.getPhase()).toBe(Phase.DAY);
   });
 
