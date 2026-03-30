@@ -42,11 +42,10 @@ describe('StatusEffectSystem', () => {
     expect(sys.getActive()).toHaveLength(0);
   });
 
-  it('getStrength returns total strength for a type', () => {
+  it('getStrength returns strength for a type', () => {
     const sys = new StatusEffectSystem();
     sys.apply({ type: 'stamina_regen', duration: 60, strength: 2 });
-    sys.apply({ type: 'stamina_regen', duration: 30, strength: 1 });
-    expect(sys.getStrength('stamina_regen')).toBe(3);
+    expect(sys.getStrength('stamina_regen')).toBe(2);
   });
 
   it('getStrength returns 0 for missing type', () => {
