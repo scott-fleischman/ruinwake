@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { World } from './core/world.js';
-import { generateTerrain, SURFACE_Y } from './core/terrain.js';
+import { generateTerrain, SURFACE_Y, getHeightAt } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
@@ -69,6 +69,10 @@ function startGame(config) {
   generateTerrain(world, { seed: config.seed });
 
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
+  // Set player spawn height based on terrain heightmap
+  const spawnHeight = getHeightAt(0, 0, config.seed);
+  player.position.y = spawnHeight + 2;
+
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
   const enemies = [];
