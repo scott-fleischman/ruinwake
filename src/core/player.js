@@ -1,11 +1,12 @@
-const MOVE_SPEED = 5.0;
+export const DEFAULT_MOVE_SPEED = 5.0;
 
 export class Player {
-  constructor({ x, y, z }) {
+  constructor({ x, y, z }, { moveSpeed = DEFAULT_MOVE_SPEED } = {}) {
     this.position = { x, y, z };
     this.velocity = { x: 0, y: 0, z: 0 };
     this.yaw = 0;
     this.pitch = 0;
+    this.moveSpeed = moveSpeed;
   }
 
   applyMovementInput(input, dt) {
@@ -29,7 +30,7 @@ export class Player {
     const worldX = dx * cosYaw - dz * sinYaw;
     const worldZ = dx * sinYaw + dz * cosYaw;
 
-    this.position.x += worldX * MOVE_SPEED * dt;
-    this.position.z += worldZ * MOVE_SPEED * dt;
+    this.position.x += worldX * this.moveSpeed * dt;
+    this.position.z += worldZ * this.moveSpeed * dt;
   }
 }
