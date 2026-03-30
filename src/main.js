@@ -10,6 +10,9 @@ import { GameClock, Phase } from './core/gameClock.js';
 import { createGameConfig, applyConfig } from './core/gameConfig.js';
 import { races } from './core/race.js';
 import { classes } from './core/playerClass.js';
+import { CombatSystem } from './core/combat.js';
+import { EnemySpawner } from './core/spawner.js';
+import { EnemyRenderer } from './render/enemyRenderer.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -67,6 +70,12 @@ function startGame(config) {
 
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
   const gameClock = new GameClock();
+  const combatSystem = new CombatSystem();
+  const enemies = [];
+  let spawnSeed = config.seed;
+  const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
+  const spawner = new EnemySpawner(spawnRng);
+  let spawnTimer = 0;
 
   // --- Renderer ---
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -87,6 +96,7 @@ function startGame(config) {
   scene.add(dirLight);
 
   const worldRenderer = new WorldRenderer(scene, world);
+  const enemyRenderer = new EnemyRenderer(scene);
 
   // --- Input ---
   const input = new InputHandler(renderer.domElement);
@@ -161,21 +171,6 @@ function startGame(config) {
     resolveCollision(player, world, dt);
 
     if (input.locked) {
-      const forward = getLookDirection(player);
-      const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
-
-      if (input.consumeLeftClick()) {
-        const hit = raycast(world, eyePos, forward, 6);
-        if (hit) {
-          const { x: bx, y: by, z: bz } = hit.blockPos;
-          const blockType = world.getBlock(bx, by, bz);
-          const drops = blockDrops(blockType);
-          world.setBlock(bx, by, bz, 0);
-          for (const drop of drops) inventory.add(drop.type, drop.count);
-          worldRenderer.markDirty(bx, by, bz);
-        }
-      }
-
       if (input.consumeRightClick()) {
         const hit = raycast(world, eyePos, forward, 6);
         if (hit) {
@@ -194,6 +189,55 @@ function startGame(config) {
       }
     }
 
+    // Enemy spawning
+    spawnTimer += gameDt;
+    if (spawnTimer >= 10) {
+      spawnTimer = 0;
+      const aliveCount = enemies.filter(e => !e.isDead()).length;
+      const newEnemies = spawner.trySpawn({
+        phase: gameClock.getPhase(),
+        playerPos: player.position,
+        existingCount: aliveCount,
+        surfaceY: SURFACE_Y,
+      });
+      enemies.push(...newEnemies);
+    }
+
+    // Enemy AI
+    for (const enemy of enemies) {
+      if (!enemy.isDead()) {
+        enemy.updateAI(player.position, dt);
+      }
+    }
+
+    // Enemy attacks
+    combatSystem.processEnemyAttacks(enemies, player.position, survivalStats);
+
+    // Player melee attack (left click when no block hit)
+    if (input.locked && input.consumeLeftClick()) {
+      const forward = getLookDirection(player);
+      const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
+      const blockHit = raycast(world, eyePos, forward, 6);
+      if (blockHit) {
+        const { x: bx, y: by, z: bz } = blockHit.blockPos;
+        const blockType = world.getBlock(bx, by, bz);
+        const drops = blockDrops(blockType);
+        world.setBlock(bx, by, bz, 0);
+        for (const drop of drops) inventory.add(drop.type, drop.count);
+        worldRenderer.markDirty(bx, by, bz);
+      } else {
+        combatSystem.playerAttack(player.position, forward, enemies, 10);
+      }
+    }
+
+    // Remove long-dead enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      if (enemies[i].isDead()) enemies.splice(i, 1);
+    }
+
+    // Render enemies
+    enemyRenderer.sync(enemies);
+
     updateDayNightLighting(gameClock.getPhase());
 
     camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
@@ -211,10 +255,11 @@ function startGame(config) {
     const foc = Math.ceil(survivalStats.focus);
     const invItems = inventory.getItems().slice(0, 6).map(i => `${i.type}:${i.count}`).join(' ');
 
+    const enemyCount = enemies.length;
     hud.innerHTML = `
       <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc}</div>
-      <div>${invItems || 'inventory empty'}</div>
+      <div>${invItems || 'inventory empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
     `;
   }
 
