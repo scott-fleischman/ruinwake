@@ -492,14 +492,17 @@ function startGame(config) {
     const lvl = experienceSystem.level;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
     const fearLvl = Math.round(fearSystem.level);
-    // Build hotbar display
-    let hotbarDisplay = '';
+    // Update visual hotbar bar
+    const hotbarBar = document.getElementById('hotbar-bar');
+    let hotbarHTML = '';
     for (let i = 0; i < 8; i++) {
       const item = hotbar.getSlot(i);
-      const sel = i === hotbar.selectedSlot;
-      const label = item ? `${item.type}` : '·';
-      hotbarDisplay += sel ? `[${label}]` : ` ${label} `;
+      const sel = i === hotbar.selectedSlot ? ' selected' : '';
+      const itemName = item ? item.type.replace(/_/g, ' ') : '';
+      const itemCount = item ? item.count : '';
+      hotbarHTML += `<div class="slot${sel}"><span class="num">${i + 1}</span><span class="item-name">${itemName}</span><span class="item-count">${itemCount}</span></div>`;
     }
+    hotbarBar.innerHTML = hotbarHTML;
 
     // NPC proximity hint
     const nearbyNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
@@ -509,7 +512,6 @@ function startGame(config) {
     hud.innerHTML = `
       <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
-      <div style="margin-top:4px">${hotbarDisplay}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${npcHint}${dialogueLine}
     `;

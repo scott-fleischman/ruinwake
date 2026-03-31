@@ -116,6 +116,52 @@
     #quest-log .objective { color: #999; margin-left: 8px; }
     #quest-log .objective.complete { color: #6a6; text-decoration: line-through; }
     #quest-log .hint { color: #888; font-size: 11px; margin-top: 8px; }
+    #hotbar-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 50;
+    }
+    #hotbar-bar .slot {
+      width: 50px;
+      height: 50px;
+      background: rgba(10,10,20,0.7);
+      border: 2px solid #555;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #aaa;
+      position: relative;
+    }
+    #hotbar-bar .slot.selected {
+      border-color: #c9a84c;
+      background: rgba(40,40,20,0.8);
+    }
+    #hotbar-bar .slot .num {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 9px;
+      color: #666;
+    }
+    #hotbar-bar .slot .item-name {
+      font-size: 9px;
+      color: #ddd;
+      text-align: center;
+      overflow: hidden;
+      max-width: 46px;
+    }
+    #hotbar-bar .slot .item-count {
+      font-size: 8px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -144,6 +190,7 @@
   </div>
   <div id="hud"></div>
   <div id="crosshair">+</div>
+  <div id="hotbar-bar"></div>
   <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
   <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>
   <div id="instructions">
