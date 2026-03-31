@@ -160,6 +160,11 @@ function startGame(config) {
       player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch));
     }
 
+    // Camera toggle on V
+    if (input.consumeKeyPress('KeyV')) {
+      player.toggleCamera();
+    }
+
     // Crouch toggle
     player.setCrouch(!!input.keys['KeyC']);
 
@@ -244,10 +249,22 @@ function startGame(config) {
 
     updateDayNightLighting(gameClock.getPhase());
 
-    camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
     camera.rotation.order = 'YXZ';
     camera.rotation.y = -player.yaw;
     camera.rotation.x = player.pitch;
+
+    if (player.cameraMode === 'third_person_behind') {
+      const camDist = 5;
+      const eyeHeight = 2.0;
+      const lookDir = getLookDirection(player);
+      camera.position.set(
+        player.position.x - lookDir.x * camDist,
+        player.position.y + eyeHeight - lookDir.y * camDist,
+        player.position.z - lookDir.z * camDist
+      );
+    } else {
+      camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
+    }
 
     worldRenderer.update(player.position.x, player.position.z, 4);
     renderer.render(scene, camera);

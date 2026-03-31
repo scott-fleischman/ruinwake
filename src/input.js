@@ -1,13 +1,17 @@
 export class InputHandler {
   constructor(canvas) {
     this.keys = {};
+    this._justPressed = {};
     this.mouseDx = 0;
     this.mouseDy = 0;
     this.locked = false;
     this.leftClick = false;
     this.rightClick = false;
 
-    document.addEventListener('keydown', (e) => { this.keys[e.code] = true; });
+    document.addEventListener('keydown', (e) => {
+      if (!this.keys[e.code]) this._justPressed[e.code] = true;
+      this.keys[e.code] = true;
+    });
     document.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
 
     canvas.addEventListener('click', () => {
@@ -66,6 +70,12 @@ export class InputHandler {
   consumeRightClick() {
     const v = this.rightClick;
     this.rightClick = false;
+    return v;
+  }
+
+  consumeKeyPress(code) {
+    const v = !!this._justPressed[code];
+    this._justPressed[code] = false;
     return v;
   }
 }

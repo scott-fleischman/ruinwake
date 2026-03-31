@@ -73,6 +73,11 @@ const DROP_TABLE = {
   [BlockType.TORCH]: [{ type: ItemType.TORCH, count: 1 }],
   [BlockType.THATCH]: [{ type: ItemType.FIBER, count: 2 }],
   [BlockType.SNOW]: [{ type: ItemType.DIRT, count: 1 }],
+  [BlockType.DARK_STONE]: [{ type: ItemType.DARK_STONE, count: 1 }],
+  [BlockType.OAK_PLANKS]: [{ type: ItemType.OAK_PLANKS, count: 1 }],
+  [BlockType.BIRCH_WOOD]: [{ type: ItemType.BIRCH_WOOD, count: 1 }],
+  [BlockType.SLATE]: [{ type: ItemType.SLATE, count: 1 }],
+  [BlockType.MARBLE]: [{ type: ItemType.MARBLE, count: 1 }],
 };
 
 export function blockDrops(blockType) {

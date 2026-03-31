@@ -41,6 +41,15 @@ const BLOCK_COLORS = {
   [BlockType.ICE]: [0.70, 0.85, 0.95],
   [BlockType.MOSSY_STONE]: [0.38, 0.48, 0.35],
   [BlockType.CORRUPTED_STONE]: [0.30, 0.20, 0.35],
+  [BlockType.DARK_STONE]: [0.20, 0.18, 0.22],
+  [BlockType.OAK_PLANKS]: [0.55, 0.38, 0.18],
+  [BlockType.BIRCH_WOOD]: [0.80, 0.75, 0.65],
+  [BlockType.REED]: [0.45, 0.60, 0.30],
+  [BlockType.MUD]: [0.35, 0.28, 0.18],
+  [BlockType.SLATE]: [0.38, 0.38, 0.42],
+  [BlockType.MARBLE]: [0.90, 0.88, 0.85],
+  [BlockType.OBSIDIAN]: [0.10, 0.08, 0.15],
+  [BlockType.CRYSTAL]: [0.70, 0.80, 0.95],
 };
 
 const DEFAULT_COLOR = [1, 0, 1];
