@@ -33,6 +33,7 @@ import { QuestSystem } from './core/quest.js';
 import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
 import { formatInventoryDisplay } from './core/inventoryUI.js';
+import { buildHUDState } from './core/hudState.js';
 import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
 import { NPCSystem } from './core/npc.js';
@@ -575,20 +576,24 @@ function startGame(config) {
     renderer.render(scene, camera);
 
     const phase = gameClock.getPhase();
-    const hp = Math.ceil(survivalStats.health);
-    const sta = Math.ceil(survivalStats.stamina);
-    const hun = Math.ceil(survivalStats.hunger);
-    const foc = Math.ceil(survivalStats.focus);
-    const temp = survivalStats.temperature < -0.5 ? 'Cold' : survivalStats.temperature > 0.5 ? 'Hot' : 'Mild';
+    const hud = buildHUDState({
+      survivalStats,
+      questSystem,
+      compass,
+      playerYaw: player.yaw,
+      fearSystem,
+      experienceSystem,
+    });
     const invItems = inventory.getItems().slice(0, 8).map(i => `${i.type}:${i.count}`).join(' ');
 
     const enemyCount = enemies.length;
     const crouchLabel = player.crouching ? ' [Crouching]' : '';
     const guardLabel = combatSystem._guarding ? ' [Guard]' : '';
     const weather = weatherSystem.current;
-    const lvl = experienceSystem.level;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
-    const fearLvl = Math.round(fearSystem.level);
+    const questLabel = hud.activeQuestName ? ` | Quest: ${hud.activeQuestName}` : '';
+    const compassLabel = hud.compassCardinal ? ` ${hud.compassCardinal}` : '';
+    const fearLvl = hud.fearLevel;
     // Update visual hotbar bar
     const hotbarBar = document.getElementById('hotbar-bar');
     let hotbarHTML = '';
@@ -617,8 +622,8 @@ function startGame(config) {
     }
 
     hud.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
-      <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
+      <div>${race.name} ${cls.name} Lv${hud.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
+      <div>HP: ${hud.health}/${hud.maxHealth} | STA: ${hud.stamina} | HUN: ${hud.hunger} | FOC: ${hud.focus} | ${hud.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${npcHint}${siteHint}${dialogueLine}
     `;
