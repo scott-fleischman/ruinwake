@@ -62,7 +62,7 @@ function startGame(config) {
   const MOUSE_SENSITIVITY = 0.002;
   const JUMP_VELOCITY = 8.0;
   const MAX_PITCH = Math.PI / 2 - 0.01;
-  const GAME_TIME_SCALE = 20;
+  const GAME_TIME_SCALE = 4;
 
   // --- Core state ---
   const world = new World();
@@ -264,6 +264,7 @@ function startGame(config) {
       <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc}</div>
       <div>${invItems || 'inventory empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
+      <div style="margin-top:8px;color:#888;font-size:11px">WASD:Move Space:Jump Shift:Sprint LClick:Mine RClick:Place ESC:Menu</div>
     `;
   }
 
