@@ -37,13 +37,94 @@ const ENEMY_SCALES = {
   [EnemyType.WRAITH]: { w: 0.6, h: 2.0, d: 0.6 },
 };
 
+// Beast-type enemies get body + 4 legs instead of humanoid parts
+export const BEAST_TYPES = new Set([
+  EnemyType.WOLF,
+  EnemyType.SPIDER,
+  EnemyType.GIANT_SPIDER,
+  EnemyType.CORRUPTED_BEAR,
+]);
+
+/**
+ * Build a multi-part model description for an enemy type.
+ * Returns { parts: [{ name, w, h, d, offsetY }] }
+ */
+export function buildEnemyModel(enemyType) {
+  const scale = ENEMY_SCALES[enemyType] || { w: 0.6, h: 1, d: 0.6 };
+
+  if (BEAST_TYPES.has(enemyType)) {
+    // Beast: body + 4 legs
+    const legH = scale.h * 0.4;
+    const legW = scale.w * 0.15;
+    const bodyH = scale.h * 0.6;
+    return {
+      parts: [
+        { name: 'body', w: scale.w, h: bodyH, d: scale.d, offsetY: legH + bodyH / 2 },
+        { name: 'leg', w: legW, h: legH, d: legW, offsetY: legH / 2 },
+        { name: 'leg', w: legW, h: legH, d: legW, offsetY: legH / 2 },
+        { name: 'leg', w: legW, h: legH, d: legW, offsetY: legH / 2 },
+        { name: 'leg', w: legW, h: legH, d: legW, offsetY: legH / 2 },
+      ],
+    };
+  }
+
+  // Humanoid: body + head + 2 arms
+  const bodyH = scale.h * 0.6;
+  const headSize = scale.w * 0.5;
+  const armW = scale.w * 0.2;
+  const armH = bodyH * 0.7;
+  return {
+    parts: [
+      { name: 'body', w: scale.w, h: bodyH, d: scale.d, offsetY: bodyH / 2 },
+      { name: 'head', w: headSize, h: headSize, d: headSize, offsetY: bodyH + headSize / 2 },
+      { name: 'arm', w: armW, h: armH, d: armW, offsetY: bodyH * 0.6 },
+      { name: 'arm', w: armW, h: armH, d: armW, offsetY: bodyH * 0.6 },
+    ],
+  };
+}
+
+function createEnemyGroup(enemyType) {
+  const model = buildEnemyModel(enemyType);
+  const color = ENEMY_COLORS[enemyType] || 0xff0000;
+  const group = new THREE.Group();
+
+  for (const part of model.parts) {
+    const geo = new THREE.BoxGeometry(part.w, part.h, part.d);
+    const mat = new THREE.MeshLambertMaterial({ color });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = part.offsetY;
+
+    // Position arms to the sides
+    if (part.name === 'arm') {
+      const scale = ENEMY_SCALES[enemyType] || { w: 0.6, h: 1, d: 0.6 };
+      const sign = group.children.filter(c => c.userData.partName === 'arm').length === 0 ? -1 : 1;
+      mesh.position.x = sign * (scale.w / 2 + part.w / 2);
+    }
+
+    // Position legs in quadrant pattern
+    if (part.name === 'leg') {
+      const scale = ENEMY_SCALES[enemyType] || { w: 0.6, h: 1, d: 0.6 };
+      const legIdx = group.children.filter(c => c.userData.partName === 'leg').length;
+      const signX = legIdx % 2 === 0 ? -1 : 1;
+      const signZ = legIdx < 2 ? -1 : 1;
+      mesh.position.x = signX * (scale.w / 2 - part.w / 2);
+      mesh.position.z = signZ * (scale.d / 2 - part.w / 2);
+    }
+
+    mesh.userData.partName = part.name;
+    group.add(mesh);
+  }
+
+  return group;
+}
+
 export class EnemyRenderer {
   constructor(scene) {
     this.scene = scene;
     this.meshMap = new Map();
   }
 
-  sync(enemies) {
+  sync(enemies, camera) {
     const alive = new Set();
 
     for (const enemy of enemies) {
@@ -57,23 +138,26 @@ export class EnemyRenderer {
         continue;
       }
 
-      let mesh = this.meshMap.get(enemy);
-      if (!mesh) {
-        const scale = ENEMY_SCALES[enemy.type] || { w: 0.6, h: 1, d: 0.6 };
-        const geo = new THREE.BoxGeometry(scale.w, scale.h, scale.d);
-        const mat = new THREE.MeshLambertMaterial({ color: ENEMY_COLORS[enemy.type] || 0xff0000 });
-        mesh = new THREE.Mesh(geo, mat);
-        this.scene.add(mesh);
-        this.meshMap.set(enemy, mesh);
+      let group = this.meshMap.get(enemy);
+      if (!group) {
+        group = createEnemyGroup(enemy.type);
+        this.scene.add(group);
+        this.meshMap.set(enemy, group);
       }
 
-      const scale = ENEMY_SCALES[enemy.type] || { w: 0.6, h: 1, d: 0.6 };
-      mesh.position.set(enemy.position.x, enemy.position.y + scale.h / 2, enemy.position.z);
+      group.position.set(enemy.position.x, enemy.position.y, enemy.position.z);
+
+      // Face toward camera (rotate Y only)
+      if (camera) {
+        const dx = camera.position.x - enemy.position.x;
+        const dz = camera.position.z - enemy.position.z;
+        group.rotation.y = Math.atan2(dx, dz);
+      }
     }
 
-    for (const [enemy, mesh] of this.meshMap) {
+    for (const [enemy, group] of this.meshMap) {
       if (!alive.has(enemy)) {
-        this.scene.remove(mesh);
+        this.scene.remove(group);
         this.meshMap.delete(enemy);
       }
     }

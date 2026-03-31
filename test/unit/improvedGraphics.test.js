@@ -3,6 +3,8 @@ import { buildChunkGeometry, BLOCK_COLORS } from '../../src/core/geometry.js';
 import { Chunk } from '../../src/core/chunk.js';
 import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
+import { buildEnemyModel, BEAST_TYPES } from '../../src/render/enemyRenderer.js';
+import { buildNPCModel } from '../../src/render/npcRenderer.js';
 
 describe('TALL_GRASS billboard sprite (crossed planes)', () => {
   it('produces fewer vertices than a full cube', () => {
@@ -220,9 +222,6 @@ describe('per-vertex color variation', () => {
 
 describe('entity multi-part models', () => {
   it('humanoid enemy model has body, head, and arms', () => {
-    // This test validates the exported helper that builds multi-part geometry info
-    const { buildEnemyModel, BEAST_TYPES } = require('../../src/render/enemyRenderer.js');
-    // If buildEnemyModel is not exported, this will fail (RED)
     expect(buildEnemyModel).toBeDefined();
 
     const model = buildEnemyModel('goblin');
@@ -232,7 +231,6 @@ describe('entity multi-part models', () => {
   });
 
   it('beast enemy model has body and legs', () => {
-    const { buildEnemyModel, BEAST_TYPES } = require('../../src/render/enemyRenderer.js');
     expect(BEAST_TYPES).toBeDefined();
 
     const model = buildEnemyModel('wolf');
@@ -241,7 +239,6 @@ describe('entity multi-part models', () => {
   });
 
   it('NPC model has body and head', () => {
-    const { buildNPCModel } = require('../../src/render/npcRenderer.js');
     expect(buildNPCModel).toBeDefined();
 
     const model = buildNPCModel();

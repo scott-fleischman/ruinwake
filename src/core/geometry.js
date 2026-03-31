@@ -56,8 +56,49 @@ export const BLOCK_COLORS = {
 
 const DEFAULT_COLOR = [1, 0, 1];
 
+// Deterministic hash-based noise for per-vertex color variation
+function vertexNoise(wx, wy, wz, channel) {
+  // Simple hash from world position + channel for deterministic noise
+  let h = (wx * 374761 + wy * 668265 + wz * 1274613 + channel * 982451) | 0;
+  h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
+  h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
+  h = (h >> 16) ^ h;
+  // Map to range [-0.05, +0.05]
+  return ((h & 0xffff) / 0xffff - 0.5) * 0.1;
+}
+
+// Two diagonal planes forming an X-shape for billboard rendering
+const CROSSED_PLANES = [
+  // Plane 1: diagonal from (0,0,0)-(1,1,1) corner
+  { verts: [[0, 0, 0], [0, 1, 0], [1, 1, 1], [1, 0, 1]] },
+  // Plane 2: diagonal from (1,0,0)-(0,1,1) corner
+  { verts: [[1, 0, 0], [1, 1, 0], [0, 1, 1], [0, 0, 1]] },
+];
+
+// Colors for specific faces of multi-colored blocks
+const GRASS_SIDE_COLOR = BLOCK_COLORS[BlockType.DIRT];   // brown for sides/bottom
+const WOOD_TOP_COLOR = [0.60, 0.48, 0.32];               // lighter cut-wood color
+
 export function shouldRenderBlock(blockType) {
   return blockType !== BlockType.AIR;
+}
+
+function getFaceColor(block, faceDir) {
+  if (block === BlockType.GRASS) {
+    // Top face is green, all other faces are dirt brown
+    if (faceDir[1] === 1) {
+      return BLOCK_COLORS[BlockType.GRASS];
+    }
+    return GRASS_SIDE_COLOR;
+  }
+  if (block === BlockType.WOOD) {
+    // Top face is lighter cut-wood, sides are bark
+    if (faceDir[1] === 1) {
+      return WOOD_TOP_COLOR;
+    }
+    return BLOCK_COLORS[BlockType.WOOD];
+  }
+  return BLOCK_COLORS[block] || DEFAULT_COLOR;
 }
 
 export function buildChunkGeometry(chunk, cx, cy, cz, world) {
@@ -75,7 +116,29 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
         const wy = cy * CHUNK_SIZE + y;
         const wz = cz * CHUNK_SIZE + z;
 
-        const color = BLOCK_COLORS[block] || DEFAULT_COLOR;
+        // TALL_GRASS uses crossed billboard planes instead of a cube
+        if (block === BlockType.TALL_GRASS) {
+          const color = BLOCK_COLORS[block] || DEFAULT_COLOR;
+          for (const plane of CROSSED_PLANES) {
+            const vertStart = positions.length / 3;
+            for (const v of plane.verts) {
+              const vx = wx + v[0];
+              const vy = wy + v[1];
+              const vz = wz + v[2];
+              positions.push(vx, vy, vz);
+              colors.push(
+                color[0] + vertexNoise(vx, vy, vz, 0),
+                color[1] + vertexNoise(vx, vy, vz, 1),
+                color[2] + vertexNoise(vx, vy, vz, 2)
+              );
+            }
+            indices.push(
+              vertStart, vertStart + 1, vertStart + 2,
+              vertStart, vertStart + 2, vertStart + 3
+            );
+          }
+          continue;
+        }
 
         for (const face of FACES) {
           const nx = wx + face.dir[0];
@@ -85,10 +148,18 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           if (isBlockSolid(world.getBlock(nx, ny, nz))) continue;
 
           const vertStart = positions.length / 3;
+          const color = getFaceColor(block, face.dir);
 
           for (const v of face.verts) {
-            positions.push(wx + v[0], wy + v[1], wz + v[2]);
-            colors.push(color[0], color[1], color[2]);
+            const vx = wx + v[0];
+            const vy = wy + v[1];
+            const vz = wz + v[2];
+            positions.push(vx, vy, vz);
+            colors.push(
+              color[0] + vertexNoise(vx, vy, vz, 0),
+              color[1] + vertexNoise(vx, vy, vz, 1),
+              color[2] + vertexNoise(vx, vy, vz, 2)
+            );
           }
 
           indices.push(
