@@ -7,38 +7,43 @@
 ## Done: Vertical Slice 5 — Crafting stations and restoration (E key, 5 sites)
 ## Done: Vertical Slice 6 — Main quest (8 chapters, NPC dialogue, quest log)
 ## Done: Vertical Slice 7 — Landmark regions (10 landmarks, biome terrain)
+## Done: Vertical Slice 8 — Full systems integration
 
-## Current: Vertical Slice 8 — Full systems integration
+### Systems wired into game loop
+- Factions/reputation with kill/restore bonuses
+- Side quests (27) with auto-activation
+- Armor damage reduction (diminishing returns)
+- Weapon damage from equipment
+- Relic abilities (X key: ward light, heal, calm fear)
+- Discoverables auto-pickup with XP
+- Lore journal entries
+- Fast travel at restored sites
+- Shelter quality evaluation
+- Tool requirements for mining (pickaxe for stone, axe for wood)
+- Enemy block collision
+- Quest world triggers for chapters 2-8
+- NPC quest acceptance (T key)
+- Food freshness tracking
+- Building style racial bonuses
+- Settings menu (P key) with sensitivity/FOV
+- Status effects in HUD
+- Equipment screen in inventory
 
-Goal: Wire all headless systems into the playable game loop so every
-spec feature is accessible to the player.
+## Current: Vertical Slice 9 — World expansion and polish
 
-### Completed this pass
-- Fog inversion bug fixed (proportional near/far)
-- World boundary clamping (no falling off edge)
-- Crafting menu (E key) with recipe list
-- Food eating (F key) from inventory
-- Quest log (Q key) with objectives
-- NPC interaction (T key) with dialogue
-- Site restoration (R key) with material requirements
-- Hotbar selection (1-8 / scrollwheel)
-- Visual hotbar bar at bottom
-- Inventory screen (I key)
-- Save/Load (F5/F9)
-- HUD state extracted to headless builder
-- Active quest name and compass in HUD
-- Skill tree screen (Tab key, 6 trees)
-- World map (M key, 10 landmarks)
-- 15 enemy variants (from 7)
-- 27 side quests (from 12)
-- Biome-aware terrain (mountains tall, forests have trees)
-- 84-item database
+### Completed
+- World expanded to 600x600 (TERRAIN_EXTENT=300)
+- Quest triggers at real landmark positions
+- Ruin structures at restorable sites and NPC locations
+- Item icons (emoji) in inventory and hotbar
+- NPC quest acceptance dialogue
+- 972 tests across 109 files, 6 test layers
 
-### Remaining for completion
-- Status effects visible in HUD
-- Fix recipe outputs (several produce wrong items)
-- Tutorial/onboarding hints
-- Settings menu (camera sensitivity, FOV)
-- Accessibility options
-- More integration tests and solvability tests
-- Performance optimization pass
+### Remaining for 100%
+- Crafting station proximity detection for station recipes
+- Stealth crouching reduces enemy aggro
+- Throwable items (H key)
+- Tool durability wear
+- Front-facing third-person camera (optional per spec 29)
+- Audio (not applicable in web stack)
+- Remappable keys (accessibility)
