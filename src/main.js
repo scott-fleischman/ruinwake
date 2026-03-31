@@ -269,6 +269,10 @@ function startGame(config) {
     craftingPanel.style.display = craftingUI.isOpen ? 'block' : 'none';
     if (!craftingUI.isOpen) return;
     const allRecipesList = craftingUI.getAllRecipes();
+    // Clamp selectedIndex to valid range
+    if (craftingUI.selectedIndex >= allRecipesList.length) {
+      craftingUI.selectedIndex = Math.max(0, allRecipesList.length - 1);
+    }
     const available = craftingUI.getAvailableRecipes(inventory);
     const availNames = new Set(available.map(r => r.name));
     craftingList.innerHTML = allRecipesList.map((r, i) => {
@@ -276,8 +280,11 @@ function startGame(config) {
       const avail = availNames.has(r.name) ? ' available' : ' unavailable';
       const inputs = r.inputs.map(inp => `${inp.count} ${inp.type}`).join(', ');
       const outputs = r.outputs.map(out => `${out.count} ${out.type}`).join(', ');
-      return `<div class="recipe${sel}${avail}">${r.name}: ${inputs} → ${outputs}</div>`;
+      return `<div class="recipe${sel}${avail}" data-idx="${i}">${r.name}: ${inputs} → ${outputs}</div>`;
     }).join('');
+    // Scroll selected item into view
+    const selectedEl = craftingList.querySelector('.recipe.selected');
+    if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
   }
 
   function updateQuestPanel() {
@@ -371,10 +378,14 @@ function startGame(config) {
     // Fear natural decay
     fearSystem.tick(gameDt);
 
-    // Map screen (M key)
+    // Map screen (M key) — update every frame while open so player dot moves
     if (input.consumeKeyPress('KeyM')) {
       mapScreen.toggle();
+    }
+    if (mapScreen.isOpen) {
       updateMapPanel(player.position);
+    } else {
+      mapPanel.style.display = 'none';
     }
 
     // Skill tree (Tab key)
@@ -412,11 +423,13 @@ function startGame(config) {
       }
     }
 
-    // Quest log (Q key)
+    // Quest log (Q key) — update every frame while open so objectives update live
     if (input.consumeKeyPress('KeyQ')) {
       const questPanel = document.getElementById('quest-log');
       questPanel.style.display = questPanel.style.display === 'none' ? 'block' : 'none';
-      if (questPanel.style.display === 'block') updateQuestPanel();
+    }
+    if (document.getElementById('quest-log').style.display === 'block') {
+      updateQuestPanel();
     }
 
     // Crafting navigation and crafting
