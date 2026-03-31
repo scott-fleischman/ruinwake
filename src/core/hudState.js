@@ -6,6 +6,7 @@ export function buildHUDState(opts = {}) {
     playerYaw = 0,
     fearSystem,
     experienceSystem,
+    statusEffects,
   } = opts;
 
   const state = {};
@@ -41,6 +42,16 @@ export function buildHUDState(opts = {}) {
     state.level = experienceSystem.level;
   } else {
     state.level = 1;
+  }
+
+  if (statusEffects) {
+    state.statusEffects = statusEffects.getActive().map(e => ({
+      type: e.type,
+      remaining: e.remaining,
+      strength: e.strength,
+    }));
+  } else {
+    state.statusEffects = [];
   }
 
   return state;
