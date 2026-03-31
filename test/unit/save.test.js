@@ -4,6 +4,9 @@ import { World } from '../../src/core/world.js';
 import { Player } from '../../src/core/player.js';
 import { Inventory } from '../../src/core/inventory.js';
 import { BlockType } from '../../src/core/block.js';
+import { Quest, QuestSystem } from '../../src/core/quest.js';
+import { Faction, FactionSystem } from '../../src/core/faction.js';
+import { SurvivalStats } from '../../src/core/survival.js';
 
 describe('save/load', () => {
   it('round-trips player position', () => {
@@ -58,5 +61,52 @@ describe('save/load', () => {
     const data = serializeGameState(world, player, inventory);
     expect(typeof data).toBe('string');
     expect(() => JSON.parse(data)).not.toThrow();
+  });
+
+  it('round-trips survival stats', () => {
+    const world = new World();
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    const inventory = new Inventory(36);
+    const stats = new SurvivalStats();
+    stats.health = 75;
+    stats.hunger = 40;
+    stats.focus = 30;
+
+    const data = serializeGameState(world, player, inventory, { survivalStats: stats });
+    const state = deserializeGameState(data);
+
+    expect(state.survivalStats.health).toBe(75);
+    expect(state.survivalStats.hunger).toBe(40);
+    expect(state.survivalStats.focus).toBe(30);
+  });
+
+  it('round-trips quest progress', () => {
+    const world = new World();
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    const inventory = new Inventory(36);
+    const quests = new QuestSystem([
+      new Quest({ id: 'chapter1', chapter: 1, name: 'Test', description: 'Test', objectives: [{ id: 'obj1', description: 'test', target: 1 }] }),
+    ]);
+    quests.start('chapter1');
+
+    const data = serializeGameState(world, player, inventory, { quests });
+    const state = deserializeGameState(data);
+
+    expect(state.quests.getStatus('chapter1')).toBe('active');
+  });
+
+  it('round-trips faction reputation', () => {
+    const world = new World();
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    const inventory = new Inventory(36);
+    const factions = new FactionSystem([
+      new Faction({ id: 'road_wardens', name: 'Road Wardens', description: 'Test' }),
+    ]);
+    factions.addReputation('road_wardens', 500);
+
+    const data = serializeGameState(world, player, inventory, { factions });
+    const state = deserializeGameState(data);
+
+    expect(state.factions.getReputation('road_wardens')).toBe(500);
   });
 });

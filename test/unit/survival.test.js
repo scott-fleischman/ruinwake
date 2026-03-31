@@ -122,4 +122,58 @@ describe('SurvivalStats', () => {
     // With resistance, should take less damage
     expect(healthWithResist).toBeGreaterThan(stats2.health);
   });
+
+  it('has a corruption stat that defaults to 0', () => {
+    const stats = new SurvivalStats();
+    expect(stats.corruption).toBe(0);
+  });
+
+  it('corruption increases when in corrupted zone', () => {
+    const stats = new SurvivalStats();
+    stats.setCorruptionZone(true);
+    stats.tick(10);
+    expect(stats.corruption).toBeGreaterThan(0);
+  });
+
+  it('corruption does not increase outside corrupted zones', () => {
+    const stats = new SurvivalStats();
+    stats.setCorruptionZone(false);
+    stats.tick(10);
+    expect(stats.corruption).toBe(0);
+  });
+
+  it('high corruption drains focus', () => {
+    const stats = new SurvivalStats();
+    stats.corruption = 80;
+    stats.tick(10);
+    expect(stats.focus).toBeLessThan(50);
+  });
+
+  it('applyInjury adds a timed injury effect', () => {
+    const stats = new SurvivalStats();
+    stats.applyInjury('bleeding', 30, 1);
+    expect(stats.hasInjury('bleeding')).toBe(true);
+  });
+
+  it('bleeding injury drains health over time', () => {
+    const stats = new SurvivalStats();
+    stats.applyInjury('bleeding', 30, 1);
+    stats.tick(10);
+    expect(stats.health).toBeLessThan(100);
+  });
+
+  it('poison injury drains health and stamina', () => {
+    const stats = new SurvivalStats();
+    stats.applyInjury('poison', 30, 1);
+    stats.stamina = 80; // not maxed so recovery doesn't mask it
+    stats.tick(1);
+    expect(stats.health).toBeLessThan(100);
+  });
+
+  it('injuries expire after their duration', () => {
+    const stats = new SurvivalStats();
+    stats.applyInjury('bleeding', 5, 1);
+    stats.tick(6);
+    expect(stats.hasInjury('bleeding')).toBe(false);
+  });
 });

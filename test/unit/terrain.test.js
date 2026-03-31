@@ -56,6 +56,40 @@ describe('generateTerrain', () => {
     }
     expect(heights.size).toBeGreaterThan(1);
   });
+
+  it('places ore veins underground', () => {
+    const world = new World();
+    generateTerrain(world, { seed: 42 });
+    const oreTypes = [BlockType.IRON_ORE, BlockType.COPPER_ORE, BlockType.COAL_ORE];
+    let oreCount = 0;
+    for (let x = -20; x < 20; x++) {
+      for (let z = -20; z < 20; z++) {
+        for (let y = 1; y < 25; y++) {
+          if (oreTypes.includes(world.getBlock(x, y, z))) {
+            oreCount++;
+          }
+        }
+      }
+    }
+    expect(oreCount).toBeGreaterThan(0);
+  });
+
+  it('places coal ore more commonly than iron ore', () => {
+    const world = new World();
+    generateTerrain(world, { seed: 42 });
+    let coal = 0;
+    let iron = 0;
+    for (let x = -30; x < 30; x++) {
+      for (let z = -30; z < 30; z++) {
+        for (let y = 1; y < 25; y++) {
+          const b = world.getBlock(x, y, z);
+          if (b === BlockType.COAL_ORE) coal++;
+          if (b === BlockType.IRON_ORE) iron++;
+        }
+      }
+    }
+    expect(coal).toBeGreaterThan(iron);
+  });
 });
 
 describe('getHeightAt', () => {
