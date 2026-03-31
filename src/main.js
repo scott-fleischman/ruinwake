@@ -22,6 +22,7 @@ import { Hotbar } from './core/hotbar.js';
 import { FearSystem } from './core/fear.js';
 import { NightDangerSystem } from './core/nightDanger.js';
 import { getStarterKit } from './core/starterKit.js';
+import { computeFogDistances } from './core/fogConfig.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -109,7 +110,8 @@ function startGame(config) {
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x87ceeb, 40, 80);
+  const initFog = computeFogDistances(1.0);
+  scene.fog = new THREE.Fog(0x87ceeb, initFog.near, initFog.far);
 
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 
@@ -291,7 +293,9 @@ function startGame(config) {
 
     updateDayNightLighting(gameClock.getPhase());
     const visMod = weatherSystem.getVisibilityModifier();
-    scene.fog.far = 80 * visMod;
+    const fogDist = computeFogDistances(visMod);
+    scene.fog.near = fogDist.near;
+    scene.fog.far = fogDist.far;
 
     camera.rotation.order = 'YXZ';
     camera.rotation.y = -player.yaw;
