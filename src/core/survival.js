@@ -9,6 +9,9 @@ const CORRUPTION_GAIN_PER_SEC = 1.0;
 const CORRUPTION_FOCUS_DRAIN_PER_SEC = 0.5;
 const BLEEDING_DAMAGE_PER_SEC = 0.5;
 const POISON_DAMAGE_PER_SEC = 0.3;
+const FRACTURE_SPEED_MULTIPLIER = 0.6;
+const FRACTURE_FALL_THRESHOLD = -15; // velocity.y must be more negative than this
+const FRACTURE_DURATION = 60; // seconds
 
 const BIOME_TEMPERATURES = {
   [BiomeType.SHIRE]: 0,
@@ -50,6 +53,24 @@ export class SurvivalStats {
 
   hasInjury(type) {
     return this._injuries.some(i => i.type === type);
+  }
+
+  /**
+   * Returns the movement speed multiplier due to fracture.
+   * 0.6 if fractured, 1.0 otherwise.
+   */
+  getFractureSpeedMultiplier() {
+    return this.hasInjury('fracture') ? FRACTURE_SPEED_MULTIPLIER : 1.0;
+  }
+
+  /**
+   * Check if a fall velocity should cause a fracture injury.
+   * Called on landing with the velocity.y value before it was zeroed.
+   */
+  checkFallFracture(velocityY) {
+    if (velocityY <= FRACTURE_FALL_THRESHOLD) {
+      this.applyInjury('fracture', FRACTURE_DURATION, 1);
+    }
   }
 
   tick(dt) {

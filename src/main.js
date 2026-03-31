@@ -7,6 +7,7 @@ import { InputHandler } from './input.js';
 import { mineBlock, raycast } from './core/actions.js';
 import { getEnemyDrops } from './core/enemy.js';
 import { getBiomeAt } from './core/terrain.js';
+import { BiomeType } from './core/biome.js';
 import { GameClock, Phase } from './core/gameClock.js';
 import { createGameConfig, applyConfig } from './core/gameConfig.js';
 import { races } from './core/race.js';
