@@ -66,7 +66,7 @@ export const allNPCs = [
   new NPC({
     id: 'old_tom',
     name: 'Old Tom the Innkeeper',
-    position: { x: 25, y: 33, z: -10 },
+    position: { x: 85, y: 33, z: 22 },
     factionId: 'road_wardens',
     dialogueId: 'ch2_roads',
     dialogue: {
