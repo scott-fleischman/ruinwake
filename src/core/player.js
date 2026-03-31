@@ -1,4 +1,5 @@
 export const DEFAULT_MOVE_SPEED = 5.0;
+const CROUCH_SPEED_MULTIPLIER = 0.5;
 
 export class Player {
   constructor({ x, y, z }, { moveSpeed = DEFAULT_MOVE_SPEED } = {}) {
@@ -8,6 +9,11 @@ export class Player {
     this.pitch = 0;
     this.moveSpeed = moveSpeed;
     this.onGround = false;
+    this.crouching = false;
+  }
+
+  setCrouch(active) {
+    this.crouching = active;
   }
 
   applyMovementInput(input, dt) {
@@ -31,7 +37,9 @@ export class Player {
     const worldX = dx * cosYaw - dz * sinYaw;
     const worldZ = dx * sinYaw + dz * cosYaw;
 
-    this.position.x += worldX * this.moveSpeed * dt;
-    this.position.z += worldZ * this.moveSpeed * dt;
+    const speed = this.crouching ? this.moveSpeed * CROUCH_SPEED_MULTIPLIER : this.moveSpeed;
+
+    this.position.x += worldX * speed * dt;
+    this.position.z += worldZ * speed * dt;
   }
 }

@@ -21,6 +21,18 @@ const ENEMY_STATS = {
   [EnemyType.WIGHT]: { health: 50, speed: 3.5, aggroRange: 14, damage: 15, attackRange: 1.5 },
 };
 
+const ENEMY_DROPS = {
+  [EnemyType.WOLF]: [{ type: 'leather', count: 1 }, { type: 'raw_meat', count: 1 }],
+  [EnemyType.GOBLIN]: [{ type: 'stick', count: 2 }, { type: 'iron_ore', count: 1 }],
+  [EnemyType.SPIDER]: [{ type: 'fiber', count: 2 }, { type: 'rope', count: 1 }],
+  [EnemyType.TROLL]: [{ type: 'stone', count: 3 }, { type: 'leather', count: 2 }],
+  [EnemyType.WIGHT]: [{ type: 'relic_shard', count: 1 }, { type: 'lore_fragment', count: 1 }],
+};
+
+export function getEnemyDrops(enemyType) {
+  return ENEMY_DROPS[enemyType] || [];
+}
+
 function dist(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;

@@ -45,6 +45,31 @@ export class CombatSystem {
     return hit;
   }
 
+  rangedAttack(playerPos, lookDir, enemies, damage, maxRange) {
+    const dir = normalize(lookDir);
+    const RANGED_CONE = 0.95; // tighter cone for ranged (~18 degrees)
+
+    for (const enemy of enemies) {
+      if (enemy.isDead()) continue;
+
+      const d = dist(playerPos, enemy.position);
+      if (d > maxRange) continue;
+
+      const toEnemy = normalize({
+        x: enemy.position.x - playerPos.x,
+        y: enemy.position.y - playerPos.y,
+        z: enemy.position.z - playerPos.z,
+      });
+
+      if (dot(dir, toEnemy) >= RANGED_CONE) {
+        enemy.takeDamage(damage);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   processEnemyAttacks(enemies, playerPos, survivalStats) {
     for (const enemy of enemies) {
       if (enemy.isDead()) continue;

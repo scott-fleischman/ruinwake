@@ -4,7 +4,7 @@ import { Phase } from './gameClock.js';
 const MAX_ENEMIES = 8;
 const MIN_SPAWN_DIST = 15;
 const MAX_SPAWN_DIST = 35;
-const SPAWN_TYPES = [EnemyType.WOLF, EnemyType.GOBLIN, EnemyType.SPIDER];
+const SPAWN_TYPES = [EnemyType.WOLF, EnemyType.GOBLIN, EnemyType.SPIDER, EnemyType.TROLL, EnemyType.WIGHT];
 
 export class EnemySpawner {
   constructor(rng) {

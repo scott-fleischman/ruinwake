@@ -1,4 +1,5 @@
 import { BlockType, isBlockSolid, blockDrops, ITEM_TO_BLOCK } from './block.js';
+import { getFood } from './food.js';
 
 export function mineBlock(world, inventory, x, y, z) {
   const block = world.getBlock(x, y, z);
@@ -36,6 +37,16 @@ export function interactPlace(world, inventory, eyePos, direction, maxDist) {
   if (!result) return { placed: false };
 
   return { placed: true, pos: { x: px, y: py, z: pz } };
+}
+
+export function eatFood(survivalStats, statusEffects, foodId) {
+  const food = getFood(foodId);
+  if (!food) return false;
+  survivalStats.eat(food.hungerRestore);
+  for (const effect of food.effects) {
+    statusEffects.apply({ type: effect.type, duration: effect.duration, strength: effect.strength });
+  }
+  return true;
 }
 
 export function raycast(world, origin, direction, maxDist) {
