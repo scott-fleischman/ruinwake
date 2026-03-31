@@ -17,6 +17,7 @@ export const BLOCK_COLORS = {
   [BlockType.STONE]: [0.53, 0.53, 0.53],
   [BlockType.WOOD]: [0.42, 0.26, 0.15],
   [BlockType.LEAVES]: [0.18, 0.43, 0.12],
+  [BlockType.WATER]: [0.20, 0.40, 0.70],
   [BlockType.SAND]: [0.83, 0.73, 0.42],
   [BlockType.CLAY]: [0.62, 0.45, 0.35],
   [BlockType.GRAVEL]: [0.55, 0.52, 0.50],
@@ -55,6 +56,10 @@ export const BLOCK_COLORS = {
 
 const DEFAULT_COLOR = [1, 0, 1];
 
+export function shouldRenderBlock(blockType) {
+  return blockType !== BlockType.AIR;
+}
+
 export function buildChunkGeometry(chunk, cx, cy, cz, world) {
   const positions = [];
   const colors = [];
@@ -64,7 +69,7 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
     for (let y = 0; y < CHUNK_SIZE; y++) {
       for (let z = 0; z < CHUNK_SIZE; z++) {
         const block = chunk.getBlock(x, y, z);
-        if (!isBlockSolid(block)) continue;
+        if (!shouldRenderBlock(block)) continue;
 
         const wx = cx * CHUNK_SIZE + x;
         const wy = cy * CHUNK_SIZE + y;
