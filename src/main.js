@@ -18,6 +18,10 @@ import { WeatherSystem } from './core/weather.js';
 import { FogOfWar } from './core/fogOfWar.js';
 import { ExperienceSystem } from './core/experience.js';
 import { Equipment } from './core/equipment.js';
+import { Hotbar } from './core/hotbar.js';
+import { FearSystem } from './core/fear.js';
+import { NightDangerSystem } from './core/nightDanger.js';
+import { getStarterKit } from './core/starterKit.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -84,6 +88,14 @@ function startGame(config) {
   const fogOfWar = new FogOfWar({ width: 600, height: 600, cellSize: 10 });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
+  const hotbar = new Hotbar(8);
+  const fearSystem = new FearSystem();
+  const nightDanger = new NightDangerSystem();
+
+  // Apply starter kit
+  const starterKit = getStarterKit(config.classId);
+  for (const item of starterKit) inventory.add(item.type, item.count);
+
   const enemies = [];
   let spawnSeed = config.seed;
   const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
@@ -180,6 +192,17 @@ function startGame(config) {
     // Crouch toggle
     player.setCrouch(!!input.keys['KeyC']);
 
+    // Guard toggle (G key)
+    combatSystem.setGuard(!!input.keys['KeyG']);
+
+    // Hotbar number keys
+    for (let i = 0; i < 8; i++) {
+      if (input.consumeKeyPress(`Digit${i + 1}`)) hotbar.selectSlot(i);
+    }
+
+    // Fear natural decay
+    fearSystem.tick(gameDt);
+
     const moveInput = input.getMovementInput();
     const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
     if (sprinting && survivalStats.stamina > 0) {
@@ -232,7 +255,13 @@ function startGame(config) {
       }
     }
 
-    // Enemy attacks
+    // Night fear and danger
+    const currentPhase = gameClock.getPhase();
+    if (currentPhase === Phase.NIGHT) {
+      fearSystem.addFear(gameDt * 0.5);
+    }
+
+    // Enemy attacks (with night damage multiplier)
     combatSystem.processEnemyAttacks(enemies, player.position, survivalStats);
 
     // Player melee attack (left click when no block hit)
@@ -294,13 +323,16 @@ function startGame(config) {
 
     const enemyCount = enemies.length;
     const crouchLabel = player.crouching ? ' [Crouching]' : '';
+    const guardLabel = combatSystem._guarding ? ' [Guard]' : '';
     const weather = weatherSystem.current;
     const lvl = experienceSystem.level;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
+    const fearLvl = Math.round(fearSystem.level);
+    const hotbarSlot = hotbar.selectedSlot + 1;
     hud.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}</div>
-      <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}</div>
-      <div style="margin-top:4px">Inventory: ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
+      <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
+      <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
+      <div style="margin-top:4px">[${hotbarSlot}] ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
     `;
   }
 
