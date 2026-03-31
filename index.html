@@ -68,6 +68,54 @@
       font-family: monospace; font-size: 16px; cursor: pointer;
     }
     #start-btn:hover { background: #5a8a3a; }
+    #crafting-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,20,0.92);
+      padding: 20px 30px;
+      border-radius: 10px;
+      border: 1px solid #555;
+      width: 400px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+    }
+    #crafting-panel h2 { color: #c9a84c; margin-bottom: 12px; font-size: 18px; }
+    #crafting-panel .recipe {
+      padding: 6px 8px;
+      margin: 2px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    #crafting-panel .recipe.selected { background: #3a5a2f; color: #fff; }
+    #crafting-panel .recipe.unavailable { color: #666; }
+    #crafting-panel .recipe.available { color: #aed581; }
+    #crafting-panel .hint { color: #888; font-size: 11px; margin-top: 10px; }
+    #quest-log {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background: rgba(10,10,20,0.88);
+      padding: 16px 20px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      width: 280px;
+      max-height: 50vh;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+    }
+    #quest-log h2 { color: #c9a84c; margin-bottom: 10px; font-size: 16px; }
+    #quest-log .quest { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+    #quest-log .quest-name { color: #aed581; font-weight: bold; }
+    #quest-log .objective { color: #999; margin-left: 8px; }
+    #quest-log .objective.complete { color: #6a6; text-decoration: line-through; }
+    #quest-log .hint { color: #888; font-size: 11px; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -96,6 +144,8 @@
   </div>
   <div id="hud"></div>
   <div id="crosshair">+</div>
+  <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
+  <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>
   <div id="instructions">
     <div style="font-size:22px;color:#c9a84c;margin-bottom:16px">Click to Play</div>
     <div style="text-align:left;line-height:2;font-size:15px">
@@ -106,7 +156,15 @@
       &nbsp; Shift — Sprint (drains stamina)<br><br>
       <b>Actions</b><br>
       &nbsp; Left Click — Mine block / Attack enemy<br>
-      &nbsp; Right Click — Place block from inventory<br><br>
+      &nbsp; Right Click — Place block from inventory<br>
+      &nbsp; F — Eat food from inventory<br>
+      &nbsp; G (hold) — Guard / Block<br><br>
+      <b>Menus</b><br>
+      &nbsp; E — Open/Close Crafting<br>
+      &nbsp; Q — Open/Close Quest Log<br>
+      &nbsp; 1-8 — Select Hotbar Slot<br>
+      &nbsp; C (hold) — Crouch<br>
+      &nbsp; V — Toggle Camera<br><br>
       <b>Other</b><br>
       &nbsp; ESC — Release mouse / Pause
     </div>

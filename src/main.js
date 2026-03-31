@@ -24,6 +24,14 @@ import { NightDangerSystem } from './core/nightDanger.js';
 import { getStarterKit } from './core/starterKit.js';
 import { computeFogDistances } from './core/fogConfig.js';
 import { clampToWorldBounds } from './core/worldBoundary.js';
+import { CraftingSystem } from './core/crafting.js';
+import { CraftingUI } from './core/craftingUI.js';
+import { allRecipes } from './core/recipeData.js';
+import { eatFood } from './core/actions.js';
+import { StatusEffectSystem } from './core/statusEffect.js';
+import { QuestSystem } from './core/quest.js';
+import { mainQuests } from './core/questData.js';
+import { Compass } from './core/compass.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -94,6 +102,12 @@ function startGame(config) {
   const fearSystem = new FearSystem();
   const nightDanger = new NightDangerSystem();
 
+  const craftingSystem = new CraftingSystem(allRecipes);
+  const craftingUI = new CraftingUI(craftingSystem);
+  const statusEffects = new StatusEffectSystem();
+  const questSystem = new QuestSystem(mainQuests);
+  const compass = new Compass();
+
   // Apply starter kit
   const starterKit = getStarterKit(config.classId);
   for (const item of starterKit) inventory.add(item.type, item.count);
@@ -159,8 +173,56 @@ function startGame(config) {
     dirLight.intensity = dirLevels[phase] || 0.8;
   }
 
+  // --- Crafting and Quest panel rendering ---
+  const craftingPanel = document.getElementById('crafting-panel');
+  const craftingList = document.getElementById('crafting-list');
+  const questList = document.getElementById('quest-list');
+
+  function updateCraftingPanel() {
+    craftingPanel.style.display = craftingUI.isOpen ? 'block' : 'none';
+    if (!craftingUI.isOpen) return;
+    const allRecipesList = craftingUI.getAllRecipes();
+    const available = craftingUI.getAvailableRecipes(inventory);
+    const availNames = new Set(available.map(r => r.name));
+    craftingList.innerHTML = allRecipesList.map((r, i) => {
+      const sel = i === craftingUI.selectedIndex ? ' selected' : '';
+      const avail = availNames.has(r.name) ? ' available' : ' unavailable';
+      const inputs = r.inputs.map(inp => `${inp.count} ${inp.type}`).join(', ');
+      const outputs = r.outputs.map(out => `${out.count} ${out.type}`).join(', ');
+      return `<div class="recipe${sel}${avail}">${r.name}: ${inputs} → ${outputs}</div>`;
+    }).join('');
+  }
+
+  function updateQuestPanel() {
+    const active = questSystem.getActiveQuests();
+    if (active.length === 0) {
+      // Show available quests instead
+      const allQ = mainQuests.filter(q => questSystem.getStatus(q.id) === 'available');
+      if (allQ.length === 0) {
+        questList.innerHTML = '<div style="color:#888">No active quests. Explore the world!</div>';
+        return;
+      }
+      questList.innerHTML = allQ.map(q => `
+        <div class="quest"><span class="quest-name">${q.name}</span> (available)<br>
+        <span style="color:#888">${q.description}</span></div>
+      `).join('');
+      return;
+    }
+    questList.innerHTML = active.map(q => {
+      const objs = q.objectives.map(o => {
+        const done = o.isComplete() ? ' complete' : '';
+        return `<div class="objective${done}">• ${o.description} (${o.progress}/${o.target})</div>`;
+      }).join('');
+      return `<div class="quest"><span class="quest-name">${q.name}</span><br>${objs}</div>`;
+    }).join('');
+  }
+
+  // Activate the first quest chapter automatically
+  questSystem.activate('ch1_embers');
+
   // --- Game loop ---
   let lastTime = performance.now();
+  let survivedFirstNight = false;
 
   function gameLoop(now) {
     requestAnimationFrame(gameLoop);
@@ -205,6 +267,49 @@ function startGame(config) {
 
     // Fear natural decay
     fearSystem.tick(gameDt);
+
+    // Crafting menu (E key)
+    if (input.consumeKeyPress('KeyE')) {
+      craftingUI.toggle();
+      updateCraftingPanel();
+    }
+
+    // Quest log (Q key)
+    if (input.consumeKeyPress('KeyQ')) {
+      const questPanel = document.getElementById('quest-log');
+      questPanel.style.display = questPanel.style.display === 'none' ? 'block' : 'none';
+      if (questPanel.style.display === 'block') updateQuestPanel();
+    }
+
+    // Crafting navigation and crafting
+    if (craftingUI.isOpen) {
+      if (input.consumeKeyPress('ArrowDown')) { craftingUI.selectNext(); updateCraftingPanel(); }
+      if (input.consumeKeyPress('ArrowUp')) { craftingUI.selectPrev(); updateCraftingPanel(); }
+      if (input.consumeKeyPress('Enter')) {
+        if (craftingUI.craftSelected(inventory)) {
+          updateCraftingPanel();
+        }
+      }
+    }
+
+    // Eat food (F key)
+    if (input.consumeKeyPress('KeyF')) {
+      const foodTypes = ['lembas', 'cooked_meat', 'stew', 'bread', 'trail_rations',
+        'dried_meat', 'honey', 'fish', 'apple', 'mushroom', 'berries', 'raw_meat'];
+      for (const ft of foodTypes) {
+        if (inventory.count(ft) > 0) {
+          const food = { hungerRestore: 15 };
+          if (ft === 'lembas') food.hungerRestore = 30;
+          else if (ft === 'cooked_meat' || ft === 'stew') food.hungerRestore = 25;
+          else if (ft === 'bread' || ft === 'trail_rations') food.hungerRestore = 15;
+          else if (ft === 'berries' || ft === 'raw_meat') food.hungerRestore = 5;
+          else if (ft === 'mushroom') food.hungerRestore = 8;
+          survivalStats.eat(food.hungerRestore);
+          inventory.remove(ft, 1);
+          break;
+        }
+      }
+    }
 
     const moveInput = input.getMovementInput();
     const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
@@ -288,6 +393,13 @@ function startGame(config) {
         experienceSystem.addExperience(25, 'combat');
         enemies.splice(i, 1);
       }
+    }
+
+    // Quest progression: survive first night
+    if (!survivedFirstNight && gameClock.day >= 2) {
+      survivedFirstNight = true;
+      questSystem.advanceObjective('ch1_embers', 'ch1_survive', 1);
+      experienceSystem.addExperience(50, 'quest');
     }
 
     // Render enemies
