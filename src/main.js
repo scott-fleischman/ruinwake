@@ -5,6 +5,8 @@ import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
 import { mineBlock, interactPlace, raycast } from './core/actions.js';
+import { getEnemyDrops } from './core/enemy.js';
+import { getBiomeAt } from './core/terrain.js';
 import { GameClock, Phase } from './core/gameClock.js';
 import { createGameConfig, applyConfig } from './core/gameConfig.js';
 import { races } from './core/race.js';
@@ -144,6 +146,11 @@ function startGame(config) {
 
     const gameDt = dt * GAME_TIME_SCALE;
     gameClock.tick(gameDt);
+
+    // Update biome temperature at player position
+    const biome = getBiomeAt(player.position.x, player.position.z, config.seed);
+    survivalStats.setBiomeTemperature(biome.type);
+
     survivalStats.tick(gameDt);
 
     if (input.locked) {
@@ -153,8 +160,11 @@ function startGame(config) {
       player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch));
     }
 
+    // Crouch toggle
+    player.setCrouch(!!input.keys['KeyC']);
+
     const moveInput = input.getMovementInput();
-    const sprinting = input.keys['ShiftLeft'] && moveInput.forward;
+    const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
     if (sprinting && survivalStats.stamina > 0) {
       const saved = player.moveSpeed;
       player.moveSpeed *= 1.6;
@@ -220,9 +230,13 @@ function startGame(config) {
       }
     }
 
-    // Remove long-dead enemies
+    // Collect loot from dead enemies and remove them
     for (let i = enemies.length - 1; i >= 0; i--) {
-      if (enemies[i].isDead()) enemies.splice(i, 1);
+      if (enemies[i].isDead()) {
+        const drops = getEnemyDrops(enemies[i].type);
+        for (const drop of drops) inventory.add(drop.type, drop.count);
+        enemies.splice(i, 1);
+      }
     }
 
     // Render enemies
@@ -243,12 +257,14 @@ function startGame(config) {
     const sta = Math.ceil(survivalStats.stamina);
     const hun = Math.ceil(survivalStats.hunger);
     const foc = Math.ceil(survivalStats.focus);
-    const invItems = inventory.getItems().slice(0, 6).map(i => `${i.type}:${i.count}`).join(' ');
+    const temp = survivalStats.temperature < -0.5 ? 'Cold' : survivalStats.temperature > 0.5 ? 'Hot' : 'Mild';
+    const invItems = inventory.getItems().slice(0, 8).map(i => `${i.type}:${i.count}`).join(' ');
 
     const enemyCount = enemies.length;
+    const crouchLabel = player.crouching ? ' [Crouching]' : '';
     hud.innerHTML = `
-      <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase}</div>
-      <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc}</div>
+      <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase} | ${biome.name}${crouchLabel}</div>
+      <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}</div>
       <div style="margin-top:4px">Inventory: ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
     `;
   }
