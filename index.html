@@ -34,13 +34,16 @@
       left: 50%;
       transform: translate(-50%, -50%);
       color: #ccc;
-      font-size: 18px;
+      font-size: 14px;
       text-align: center;
       cursor: pointer;
-      background: rgba(0,0,0,0.7);
-      padding: 30px;
+      background: rgba(0,0,0,0.85);
+      padding: 20px 24px;
       border-radius: 8px;
       display: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 380px;
     }
     #new-game {
       position: absolute;
@@ -220,34 +223,31 @@
   <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
   <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>
   <div id="instructions">
-    <div style="font-size:22px;color:#c9a84c;margin-bottom:16px">Click to Play</div>
-    <div style="text-align:left;line-height:2;font-size:15px">
-      <b>Movement</b><br>
-      &nbsp; W A S D — Move forward / left / back / right<br>
-      &nbsp; Mouse — Look around<br>
-      &nbsp; Space — Jump<br>
-      &nbsp; Shift — Sprint (drains stamina)<br><br>
-      <b>Actions</b><br>
-      &nbsp; Left Click — Mine block / Attack enemy<br>
-      &nbsp; Right Click — Place block from inventory<br>
-      &nbsp; F — Eat food from inventory<br>
-      &nbsp; R — Restore nearby site<br>
-      &nbsp; G (hold) — Guard / Block<br><br>
-      <b>Menus</b><br>
-      &nbsp; E — Open/Close Crafting<br>
-      &nbsp; I — Open/Close Inventory<br>
-      &nbsp; Q — Open/Close Quest Log<br>
-      &nbsp; T — Talk to nearby NPC<br>
-      &nbsp; 1-8 — Select Hotbar Slot<br>
-      &nbsp; C (hold) — Crouch<br>
-      &nbsp; V — Toggle Camera<br>
-      &nbsp; Tab — Open/Close Skill Trees<br>
-      &nbsp; M — Open/Close World Map<br><br>
-      <b>Other</b><br>
-      &nbsp; F5 — Save game<br>
-      &nbsp; F9 — Load game<br>
-      &nbsp; ESC — Release mouse / Pause
-    </div>
+    <div style="font-size:20px;color:#c9a84c;margin-bottom:12px">Click to Play</div>
+    <table style="text-align:left;font-size:13px;line-height:1.6;width:100%;border-collapse:collapse">
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Movement</td></tr>
+      <tr><td style="color:#aed581;width:90px;padding:1px 8px">WASD</td><td>Move</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Mouse</td><td>Look</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Space</td><td>Jump</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Shift</td><td>Sprint</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">C</td><td>Crouch</td></tr>
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Actions</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">LClick</td><td>Mine / Attack</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">RClick</td><td>Place block</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">F</td><td>Eat food</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">R</td><td>Restore site</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">T</td><td>Talk to NPC</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">G</td><td>Guard (hold)</td></tr>
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Menus</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">E</td><td>Crafting</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">I</td><td>Inventory</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Q</td><td>Quests</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Tab</td><td>Skills</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">M</td><td>Map</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">V</td><td>Camera toggle</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">1-8 / Scroll</td><td>Hotbar slot</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">F5 / F9</td><td>Save / Load</td></tr>
+    </table>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>
