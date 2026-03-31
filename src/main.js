@@ -59,6 +59,20 @@ document.getElementById('start-btn').addEventListener('click', () => {
   startGame(config);
 });
 
+// Item type to block type mapping for placement
+const ITEM_TO_BLOCK = {
+  [ItemType.DIRT]: BlockType.DIRT,
+  [ItemType.STONE]: BlockType.STONE,
+  [ItemType.WOOD]: BlockType.WOOD,
+  [ItemType.SAND]: BlockType.SAND,
+  [ItemType.COBBLESTONE]: BlockType.COBBLESTONE,
+  [ItemType.PLANKS]: BlockType.PLANKS,
+  [ItemType.CLAY]: BlockType.CLAY,
+  [ItemType.GRAVEL]: BlockType.GRAVEL,
+  [ItemType.GLASS]: BlockType.GLASS,
+  [ItemType.TORCH]: BlockType.TORCH,
+};
+
 function startGame(config) {
   const MOUSE_SENSITIVITY = 0.002;
   const JUMP_VELOCITY = 8.0;
@@ -178,20 +192,6 @@ function startGame(config) {
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
     const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
-
-    // Item type to block type mapping for placement
-    const ITEM_TO_BLOCK = {
-      [ItemType.DIRT]: BlockType.DIRT,
-      [ItemType.STONE]: BlockType.STONE,
-      [ItemType.WOOD]: BlockType.WOOD,
-      [ItemType.SAND]: BlockType.SAND,
-      [ItemType.COBBLESTONE]: BlockType.COBBLESTONE,
-      [ItemType.PLANKS]: BlockType.PLANKS,
-      [ItemType.CLAY]: BlockType.CLAY,
-      [ItemType.GRAVEL]: BlockType.GRAVEL,
-      [ItemType.GLASS]: BlockType.GLASS,
-      [ItemType.TORCH]: BlockType.TORCH,
-    };
 
     if (input.locked) {
       if (input.consumeRightClick()) {
