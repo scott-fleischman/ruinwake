@@ -557,11 +557,21 @@ function startGame(config) {
     const npcHint = nearbyNPC ? `<div style="color:#c9a84c;margin-top:4px">[T] Talk to ${nearbyNPC.name}</div>` : '';
     const dialogueLine = dialogueMessage ? `<div style="color:#eee;background:rgba(0,0,0,0.6);padding:6px 10px;margin-top:6px;border-radius:4px;max-width:400px">${dialogueMessage}</div>` : '';
 
+    // Restorable site hint
+    let siteHint = '';
+    for (const site of allRestorableSites) {
+      if (!site.restored && checkProximityTrigger(player.position, site.position, 10)) {
+        const reqs = site.requirements.map(r => `${r.count} ${r.type.replace(/_/g, ' ')}`).join(', ');
+        siteHint = `<div style="color:#aed581;margin-top:4px">[R] Restore ${site.name} (needs: ${reqs})</div>`;
+        break;
+      }
+    }
+
     hud.innerHTML = `
       <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
-      ${npcHint}${dialogueLine}
+      ${npcHint}${siteHint}${dialogueLine}
     `;
   }
 
