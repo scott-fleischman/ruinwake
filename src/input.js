@@ -10,6 +10,7 @@ export class InputHandler {
     this.scrollDelta = 0;
 
     document.addEventListener('keydown', (e) => {
+      if (e.code === 'Tab') e.preventDefault();
       if (!this.keys[e.code]) this._justPressed[e.code] = true;
       this.keys[e.code] = true;
     });

@@ -34,6 +34,9 @@ import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
 import { formatInventoryDisplay } from './core/inventoryUI.js';
 import { buildHUDState } from './core/hudState.js';
+import { SkillTreeSystem } from './core/skillTree.js';
+import { SkillTreeUI } from './core/skillTreeUI.js';
+import { skillTrees } from './core/skillTreeData.js';
 import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
 import { NPCSystem } from './core/npc.js';
@@ -108,6 +111,8 @@ function startGame(config) {
   const fogOfWar = new FogOfWar({ width: 600, height: 600, cellSize: 10 });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
+  const skillTreeSystem = new SkillTreeSystem(skillTrees);
+  const skillTreeUI = new SkillTreeUI(skillTreeSystem);
   const hotbar = new Hotbar(8);
   const fearSystem = new FearSystem();
   const nightDanger = new NightDangerSystem();
@@ -190,6 +195,34 @@ function startGame(config) {
     scene.fog.color.set(skyColor);
     ambientLight.intensity = ambientLevels[phase] || 0.6;
     dirLight.intensity = dirLevels[phase] || 0.8;
+  }
+
+  // --- Skill tree panel rendering ---
+  const skillPanel = document.getElementById('skill-panel');
+  const skillTreeNav = document.getElementById('skill-tree-nav');
+  const skillTreeNodes = document.getElementById('skill-tree-nodes');
+
+  function updateSkillPanel() {
+    skillPanel.style.display = skillTreeUI.isOpen ? 'block' : 'none';
+    if (!skillTreeUI.isOpen) return;
+    const tree = skillTreeUI.getCurrentTree();
+    skillPanel.querySelector('h2').textContent = `Skills [Tab] — ${tree.name} (${skillTreeUI.getSkillPoints()} pts)`;
+    skillTreeNav.textContent = `← ${skillTreeUI.currentTreeIndex + 1}/${skillTrees.length} →`;
+    const nodes = skillTreeUI.getNodes();
+    skillTreeNodes.innerHTML = nodes.map((n, i) => {
+      const sel = i === skillTreeUI.selectedNodeIndex ? ' selected' : '';
+      const status = n.unlocked ? ' unlocked' : n.available ? ' available' : ' locked';
+      const prereq = n.requires.length ? ` (needs: ${n.requires.join(', ')})` : '';
+      return `<div class="node${sel}${status}">${n.unlocked ? '✓' : n.available ? '○' : '·'} ${n.name} [${n.cost}] — ${n.description}${prereq}</div>`;
+    }).join('');
+  }
+
+  // Transfer XP skill points to skill tree system
+  function syncSkillPoints() {
+    while (experienceSystem.skillPoints > 0) {
+      experienceSystem.spendSkillPoint();
+      skillTreeSystem.addPoints(1);
+    }
   }
 
   // --- Crafting and Quest panel rendering ---
@@ -297,8 +330,27 @@ function startGame(config) {
       hotbar.clearSlot(i);
     }
 
+    // Sync skill points from XP system
+    syncSkillPoints();
+
     // Fear natural decay
     fearSystem.tick(gameDt);
+
+    // Skill tree (Tab key)
+    if (input.consumeKeyPress('Tab')) {
+      skillTreeUI.toggle();
+      updateSkillPanel();
+    }
+    if (skillTreeUI.isOpen) {
+      if (input.consumeKeyPress('ArrowRight')) { skillTreeUI.nextTree(); updateSkillPanel(); }
+      if (input.consumeKeyPress('ArrowLeft')) { skillTreeUI.prevTree(); updateSkillPanel(); }
+      if (input.consumeKeyPress('ArrowDown')) { skillTreeUI.selectedNodeIndex++; updateSkillPanel(); }
+      if (input.consumeKeyPress('ArrowUp')) { skillTreeUI.selectedNodeIndex = Math.max(0, skillTreeUI.selectedNodeIndex - 1); updateSkillPanel(); }
+      if (input.consumeKeyPress('Enter')) {
+        skillTreeUI.unlockSelected();
+        updateSkillPanel();
+      }
+    }
 
     // Crafting menu (E key)
     if (input.consumeKeyPress('KeyE')) {
