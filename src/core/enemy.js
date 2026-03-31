@@ -6,6 +6,14 @@ export const EnemyType = Object.freeze({
   WIGHT: 'wight',
   GUARDIAN: 'guardian',
   CONSTRUCT: 'construct',
+  ORC: 'orc',
+  GIANT_SPIDER: 'giant_spider',
+  SHADOW: 'shadow',
+  BARROW_WIGHT: 'barrow_wight',
+  GOBLIN_ARCHER: 'goblin_archer',
+  CORRUPTED_BEAR: 'corrupted_bear',
+  DARK_CONSTRUCT: 'dark_construct',
+  WRAITH: 'wraith',
 });
 
 export const EnemyState = Object.freeze({
@@ -23,6 +31,14 @@ const ENEMY_STATS = {
   [EnemyType.WIGHT]: { health: 50, speed: 3.5, aggroRange: 14, damage: 15, attackRange: 1.5 },
   [EnemyType.GUARDIAN]: { health: 150, speed: 1.5, aggroRange: 18, damage: 30, attackRange: 2.0 },
   [EnemyType.CONSTRUCT]: { health: 80, speed: 2.5, aggroRange: 12, damage: 20, attackRange: 2.0 },
+  [EnemyType.ORC]: { health: 50, speed: 3, aggroRange: 12, damage: 12, attackRange: 1.5 },
+  [EnemyType.GIANT_SPIDER]: { health: 45, speed: 4.5, aggroRange: 10, damage: 15, attackRange: 1.5 },
+  [EnemyType.SHADOW]: { health: 20, speed: 6, aggroRange: 16, damage: 18, attackRange: 1.2 },
+  [EnemyType.BARROW_WIGHT]: { health: 80, speed: 3, aggroRange: 16, damage: 22, attackRange: 1.8 },
+  [EnemyType.GOBLIN_ARCHER]: { health: 20, speed: 2.5, aggroRange: 18, damage: 8, attackRange: 8.0 },
+  [EnemyType.CORRUPTED_BEAR]: { health: 120, speed: 3, aggroRange: 14, damage: 20, attackRange: 2.0 },
+  [EnemyType.DARK_CONSTRUCT]: { health: 130, speed: 2, aggroRange: 14, damage: 28, attackRange: 2.2 },
+  [EnemyType.WRAITH]: { health: 70, speed: 4, aggroRange: 20, damage: 30, attackRange: 1.8 },
 };
 
 const ENEMY_DROPS = {
@@ -33,6 +49,14 @@ const ENEMY_DROPS = {
   [EnemyType.WIGHT]: [{ type: 'relic_shard', count: 1 }, { type: 'lore_fragment', count: 1 }],
   [EnemyType.GUARDIAN]: [{ type: 'relic_shard', count: 2 }, { type: 'iron_ore', count: 3 }],
   [EnemyType.CONSTRUCT]: [{ type: 'iron_ore', count: 2 }, { type: 'copper_ore', count: 2 }],
+  [EnemyType.ORC]: [{ type: 'iron_ore', count: 1 }, { type: 'leather', count: 1 }],
+  [EnemyType.GIANT_SPIDER]: [{ type: 'fiber', count: 3 }, { type: 'rope', count: 2 }],
+  [EnemyType.SHADOW]: [{ type: 'relic_shard', count: 1 }],
+  [EnemyType.BARROW_WIGHT]: [{ type: 'relic_shard', count: 2 }, { type: 'lore_fragment', count: 2 }],
+  [EnemyType.GOBLIN_ARCHER]: [{ type: 'stick', count: 3 }, { type: 'fiber', count: 1 }],
+  [EnemyType.CORRUPTED_BEAR]: [{ type: 'leather', count: 3 }, { type: 'raw_meat', count: 2 }],
+  [EnemyType.DARK_CONSTRUCT]: [{ type: 'iron_ore', count: 3 }, { type: 'relic_shard', count: 1 }],
+  [EnemyType.WRAITH]: [{ type: 'relic_shard', count: 3 }, { type: 'lore_fragment', count: 2 }],
 };
 
 export function getEnemyDrops(enemyType) {
