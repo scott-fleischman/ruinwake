@@ -43,6 +43,8 @@ import { NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
 import { findNearestInteractableNPC } from './core/npcInteraction.js';
 import { checkProximityTrigger } from './core/questTrigger.js';
+import { MapScreen } from './core/mapScreen.js';
+import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
 
@@ -123,6 +125,8 @@ function startGame(config) {
   const questSystem = new QuestSystem(mainQuests);
   const compass = new Compass();
   const npcSystem = new NPCSystem();
+  const mapScreen = new MapScreen(fogOfWar, allLandmarks);
+
   for (const npc of allNPCs) {
     // Place NPCs at terrain height
     npc.position.y = getHeightAt(npc.position.x, npc.position.z, config.seed) + 1;
@@ -195,6 +199,35 @@ function startGame(config) {
     scene.fog.color.set(skyColor);
     ambientLight.intensity = ambientLevels[phase] || 0.6;
     dirLight.intensity = dirLevels[phase] || 0.8;
+  }
+
+  // --- Map panel rendering ---
+  const mapPanel = document.getElementById('map-panel');
+  const mapCanvas = document.getElementById('map-canvas');
+
+  function updateMapPanel(playerPos) {
+    mapPanel.style.display = mapScreen.isOpen ? 'block' : 'none';
+    if (!mapScreen.isOpen) return;
+    const data = mapScreen.getMapData(playerPos);
+    const W = 460, H = 320;
+    // World coords: -64..64 mapped to 0..W, 0..H
+    const toX = (wx) => ((wx + 64) / 128) * W;
+    const toY = (wz) => ((wz + 64) / 128) * H;
+
+    let html = '';
+    // Landmarks as labeled dots
+    for (const lm of data.landmarks) {
+      const x = toX(lm.x);
+      const y = toY(lm.z);
+      html += `<div style="position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%);text-align:center"><div style="width:8px;height:8px;background:#c9a84c;border-radius:50%;margin:0 auto"></div><div style="font-size:9px;color:#c9a84c;white-space:nowrap">${lm.name}</div></div>`;
+    }
+    // Player position
+    const px = toX(data.playerPos.x);
+    const py = toY(data.playerPos.z);
+    html += `<div style="position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);width:10px;height:10px;background:#4caf50;border-radius:50%;border:2px solid #fff"></div>`;
+    // Explored percentage
+    html += `<div style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#888">Explored: ${Math.round(data.explored)}%</div>`;
+    mapCanvas.innerHTML = html;
   }
 
   // --- Skill tree panel rendering ---
@@ -335,6 +368,12 @@ function startGame(config) {
 
     // Fear natural decay
     fearSystem.tick(gameDt);
+
+    // Map screen (M key)
+    if (input.consumeKeyPress('KeyM')) {
+      mapScreen.toggle();
+      updateMapPanel(player.position);
+    }
 
     // Skill tree (Tab key)
     if (input.consumeKeyPress('Tab')) {
