@@ -32,6 +32,7 @@ import { StatusEffectSystem } from './core/statusEffect.js';
 import { QuestSystem } from './core/quest.js';
 import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
+import { formatInventoryDisplay } from './core/inventoryUI.js';
 import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
 import { NPCSystem } from './core/npc.js';
@@ -299,6 +300,19 @@ function startGame(config) {
     if (input.consumeKeyPress('KeyE')) {
       craftingUI.toggle();
       updateCraftingPanel();
+    }
+
+    // Inventory panel (I key)
+    if (input.consumeKeyPress('KeyI')) {
+      const invPanel = document.getElementById('inventory-panel');
+      const isShowing = invPanel.style.display !== 'none';
+      invPanel.style.display = isShowing ? 'none' : 'block';
+      if (!isShowing) {
+        const items = formatInventoryDisplay(inventory);
+        document.getElementById('inventory-list').innerHTML = items.length === 0
+          ? '<div style="color:#666">Empty</div>'
+          : items.map(i => `<div><span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
+      }
     }
 
     // Quest log (Q key)
