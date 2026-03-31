@@ -4,6 +4,8 @@ export const EnemyType = Object.freeze({
   SPIDER: 'spider',
   TROLL: 'troll',
   WIGHT: 'wight',
+  GUARDIAN: 'guardian',
+  CONSTRUCT: 'construct',
 });
 
 export const EnemyState = Object.freeze({
@@ -19,6 +21,8 @@ const ENEMY_STATS = {
   [EnemyType.SPIDER]: { health: 20, speed: 5, aggroRange: 8, damage: 10, attackRange: 1.2 },
   [EnemyType.TROLL]: { health: 100, speed: 2, aggroRange: 15, damage: 25, attackRange: 2.5 },
   [EnemyType.WIGHT]: { health: 50, speed: 3.5, aggroRange: 14, damage: 15, attackRange: 1.5 },
+  [EnemyType.GUARDIAN]: { health: 150, speed: 1.5, aggroRange: 18, damage: 30, attackRange: 2.0 },
+  [EnemyType.CONSTRUCT]: { health: 80, speed: 2.5, aggroRange: 12, damage: 20, attackRange: 2.0 },
 };
 
 const ENEMY_DROPS = {
@@ -27,6 +31,8 @@ const ENEMY_DROPS = {
   [EnemyType.SPIDER]: [{ type: 'fiber', count: 2 }, { type: 'rope', count: 1 }],
   [EnemyType.TROLL]: [{ type: 'stone', count: 3 }, { type: 'leather', count: 2 }],
   [EnemyType.WIGHT]: [{ type: 'relic_shard', count: 1 }, { type: 'lore_fragment', count: 1 }],
+  [EnemyType.GUARDIAN]: [{ type: 'relic_shard', count: 2 }, { type: 'iron_ore', count: 3 }],
+  [EnemyType.CONSTRUCT]: [{ type: 'iron_ore', count: 2 }, { type: 'copper_ore', count: 2 }],
 };
 
 export function getEnemyDrops(enemyType) {
