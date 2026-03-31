@@ -463,7 +463,7 @@ function startGame(config) {
         const items = formatInventoryDisplay(inventory);
         const itemsHtml = items.length === 0
           ? '<div style="color:#666">Empty</div>'
-          : items.map(i => `<div><span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
+          : items.map(i => `<div>${getItemIcon(i.type)} <span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
         // Faction reputation display
         const factionHtml = factionSystem.getAllFactions().map(f => {
           const rep = factionSystem.getReputation(f.id);
@@ -824,9 +824,10 @@ function startGame(config) {
     for (let i = 0; i < 8; i++) {
       const item = hotbar.getSlot(i);
       const sel = i === hotbar.selectedSlot ? ' selected' : '';
+      const icon = item ? getItemIcon(item.type) : '';
       const itemName = item ? item.type.replace(/_/g, ' ') : '';
       const itemCount = item ? item.count : '';
-      hotbarHTML += `<div class="slot${sel}"><span class="num">${i + 1}</span><span class="item-name">${itemName}</span><span class="item-count">${itemCount}</span></div>`;
+      hotbarHTML += `<div class="slot${sel}"><span class="num">${i + 1}</span><div style="font-size:18px">${icon}</div><span class="item-name">${itemName}</span><span class="item-count">${itemCount}</span></div>`;
     }
     hotbarBar.innerHTML = hotbarHTML;
 
