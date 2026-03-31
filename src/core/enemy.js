@@ -64,6 +64,7 @@ export function getEnemyDrops(enemyType) {
 }
 
 import { dist } from './math3d.js';
+import { isBlockSolid } from './block.js';
 
 export class Enemy {
   constructor(position, type) {
@@ -80,7 +81,7 @@ export class Enemy {
     this.attackCooldown = 0;
   }
 
-  updateAI(playerPos, dt, getHeight) {
+  updateAI(playerPos, dt, getHeight, world) {
     if (this.isDead()) {
       this.state = EnemyState.DEAD;
       return;
@@ -99,8 +100,25 @@ export class Enemy {
       const dz = playerPos.z - this.position.z;
       const len = Math.sqrt(dx * dx + dz * dz);
       if (len > 0.1) {
-        this.position.x += (dx / len) * this.speed * dt;
-        this.position.z += (dz / len) * this.speed * dt;
+        const moveX = (dx / len) * this.speed * dt;
+        const moveZ = (dz / len) * this.speed * dt;
+
+        if (world) {
+          // Try X axis independently
+          const newX = this.position.x + moveX;
+          if (!this._collidesWithBlock(newX, this.position.z, world)) {
+            this.position.x = newX;
+          }
+
+          // Try Z axis independently
+          const newZ = this.position.z + moveZ;
+          if (!this._collidesWithBlock(this.position.x, newZ, world)) {
+            this.position.z = newZ;
+          }
+        } else {
+          this.position.x += moveX;
+          this.position.z += moveZ;
+        }
       }
     }
 
@@ -109,6 +127,15 @@ export class Enemy {
     }
 
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+  }
+
+  _collidesWithBlock(x, z, world) {
+    const bx = Math.floor(x);
+    const by = Math.floor(this.position.y);
+    const bz = Math.floor(z);
+    // Check feet level and head level (one block up)
+    return isBlockSolid(world.getBlock(bx, by, bz)) ||
+           isBlockSolid(world.getBlock(bx, by + 1, bz));
   }
 
   canAttack(playerPos) {
