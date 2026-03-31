@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { mineBlock, placeBlock, raycast } from '../../src/core/actions.js';
+import { mineBlock, placeBlock, raycast, interactPlace } from '../../src/core/actions.js';
 import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
+import { ItemType } from '../../src/core/item.js';
 import { Inventory } from '../../src/core/inventory.js';
 
 describe('mineBlock', () => {
@@ -13,12 +14,21 @@ describe('mineBlock', () => {
     expect(world.getBlock(5, 10, 5)).toBe(BlockType.AIR);
   });
 
-  it('adds the block to inventory', () => {
+  it('adds drops from the drop table to inventory', () => {
     const world = new World();
     world.setBlock(5, 10, 5, BlockType.STONE);
     const inv = new Inventory(10);
     mineBlock(world, inv, 5, 10, 5);
-    expect(inv.count(BlockType.STONE)).toBe(1);
+    expect(inv.count(ItemType.STONE)).toBe(1);
+  });
+
+  it('grass drops dirt and fiber', () => {
+    const world = new World();
+    world.setBlock(5, 10, 5, BlockType.GRASS);
+    const inv = new Inventory(10);
+    mineBlock(world, inv, 5, 10, 5);
+    expect(inv.count(ItemType.DIRT)).toBe(1);
+    expect(inv.count(ItemType.FIBER)).toBe(1);
   });
 
   it('does nothing when mining air', () => {
@@ -30,20 +40,20 @@ describe('mineBlock', () => {
 });
 
 describe('placeBlock', () => {
-  it('places a block from inventory', () => {
+  it('places a block converting from item type', () => {
     const world = new World();
     const inv = new Inventory(10);
-    inv.add(BlockType.DIRT, 5);
-    const result = placeBlock(world, inv, 3, 33, 3, BlockType.DIRT);
+    inv.add(ItemType.DIRT, 5);
+    const result = placeBlock(world, inv, 3, 33, 3, ItemType.DIRT);
     expect(result).toBe(true);
     expect(world.getBlock(3, 33, 3)).toBe(BlockType.DIRT);
-    expect(inv.count(BlockType.DIRT)).toBe(4);
+    expect(inv.count(ItemType.DIRT)).toBe(4);
   });
 
-  it('fails when inventory lacks the block type', () => {
+  it('fails when inventory lacks the item type', () => {
     const world = new World();
     const inv = new Inventory(10);
-    const result = placeBlock(world, inv, 3, 33, 3, BlockType.DIRT);
+    const result = placeBlock(world, inv, 3, 33, 3, ItemType.DIRT);
     expect(result).toBe(false);
     expect(world.getBlock(3, 33, 3)).toBe(BlockType.AIR);
   });
@@ -52,10 +62,76 @@ describe('placeBlock', () => {
     const world = new World();
     world.setBlock(3, 33, 3, BlockType.STONE);
     const inv = new Inventory(10);
-    inv.add(BlockType.DIRT, 5);
-    const result = placeBlock(world, inv, 3, 33, 3, BlockType.DIRT);
+    inv.add(ItemType.DIRT, 5);
+    const result = placeBlock(world, inv, 3, 33, 3, ItemType.DIRT);
     expect(result).toBe(false);
-    expect(inv.count(BlockType.DIRT)).toBe(5);
+    expect(inv.count(ItemType.DIRT)).toBe(5);
+  });
+
+  it('fails for non-placeable item types', () => {
+    const world = new World();
+    const inv = new Inventory(10);
+    inv.add(ItemType.STICK, 5);
+    const result = placeBlock(world, inv, 3, 33, 3, ItemType.STICK);
+    expect(result).toBe(false);
+  });
+});
+
+describe('interactPlace', () => {
+  it('raycasts, finds a surface, and places the first placeable item', () => {
+    const world = new World();
+    // Put a floor block
+    world.setBlock(0, 32, -3, BlockType.STONE);
+    const inv = new Inventory(10);
+    inv.add(ItemType.DIRT, 3);
+
+    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const dir = { x: 0, y: 0, z: -1 };
+
+    const result = interactPlace(world, inv, eyePos, dir, 6);
+    expect(result.placed).toBe(true);
+    // Block placed on the +Z face of the stone block
+    expect(world.getBlock(0, 32, -2)).toBe(BlockType.DIRT);
+    expect(inv.count(ItemType.DIRT)).toBe(2);
+  });
+
+  it('returns not placed when no block in range', () => {
+    const world = new World();
+    const inv = new Inventory(10);
+    inv.add(ItemType.DIRT, 3);
+
+    const eyePos = { x: 0.5, y: 50, z: 0.5 };
+    const dir = { x: 0, y: 0, z: -1 };
+
+    const result = interactPlace(world, inv, eyePos, dir, 6);
+    expect(result.placed).toBe(false);
+  });
+
+  it('returns not placed when inventory has no placeable items', () => {
+    const world = new World();
+    world.setBlock(0, 32, -3, BlockType.STONE);
+    const inv = new Inventory(10);
+    inv.add(ItemType.STICK, 5); // not placeable
+
+    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const dir = { x: 0, y: 0, z: -1 };
+
+    const result = interactPlace(world, inv, eyePos, dir, 6);
+    expect(result.placed).toBe(false);
+  });
+
+  it('returns the position where the block was placed', () => {
+    const world = new World();
+    world.setBlock(0, 32, -3, BlockType.STONE);
+    const inv = new Inventory(10);
+    inv.add(ItemType.STONE, 1);
+
+    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const dir = { x: 0, y: 0, z: -1 };
+
+    const result = interactPlace(world, inv, eyePos, dir, 6);
+    expect(result.placed).toBe(true);
+    expect(result.pos).toEqual({ x: 0, y: 32, z: -2 });
   });
 });
 
