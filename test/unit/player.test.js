@@ -86,4 +86,24 @@ describe('Player', () => {
     // Crouching player should move less distance
     expect(Math.abs(player2.position.z)).toBeLessThan(Math.abs(player1.position.z));
   });
+
+  it('defaults cameraMode to first_person', () => {
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    expect(player.cameraMode).toBe('first_person');
+  });
+
+  it('toggleCamera cycles first_person to third_person_behind', () => {
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    expect(player.cameraMode).toBe('first_person');
+    player.toggleCamera();
+    expect(player.cameraMode).toBe('third_person_behind');
+  });
+
+  it('toggleCamera cycles third_person_behind back to first_person', () => {
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    player.toggleCamera();
+    expect(player.cameraMode).toBe('third_person_behind');
+    player.toggleCamera();
+    expect(player.cameraMode).toBe('first_person');
+  });
 });
