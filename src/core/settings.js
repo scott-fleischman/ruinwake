@@ -1,3 +1,12 @@
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+export const SENSITIVITY_MIN = 0.5;
+export const SENSITIVITY_MAX = 3.0;
+export const FOV_MIN = 60;
+export const FOV_MAX = 110;
+
 export class Settings {
   constructor() {
     this.sensitivity = 1.0;
@@ -7,11 +16,11 @@ export class Settings {
   }
 
   setSensitivity(value) {
-    this.sensitivity = Math.max(0.5, Math.min(3.0, value));
+    this.sensitivity = clamp(value, SENSITIVITY_MIN, SENSITIVITY_MAX);
   }
 
   setFov(value) {
-    this.fov = Math.max(60, Math.min(110, value));
+    this.fov = clamp(value, FOV_MIN, FOV_MAX);
   }
 
   toggleTutorial() {

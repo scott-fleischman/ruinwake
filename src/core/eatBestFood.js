@@ -11,11 +11,9 @@ export function eatBestFood(inventory, survivalStats, statusEffects) {
       const food = getFood(foodId);
       survivalStats.eat(food.hungerRestore);
       inventory.remove(foodId, 1);
-      // Apply food effects to status effect system if provided
-      if (statusEffects && food.effects && food.effects.length > 0) {
-        for (const effect of food.effects) {
-          statusEffects.apply({ type: effect.type, duration: effect.duration, strength: effect.strength });
-        }
+      // Apply food effects (e.g. stamina_regen, health_regen) to status system
+      if (statusEffects && food.effects) {
+        for (const eff of food.effects) statusEffects.apply(eff);
       }
       return true;
     }
