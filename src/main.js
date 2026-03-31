@@ -61,6 +61,7 @@ import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, ge
 import { StealthSystem } from './core/stealth.js';
 import { sideQuests } from './core/sideQuestData.js';
 import { getItemIcon } from './core/itemIcons.js';
+import { canAcceptQuestFromNPC, acceptQuestFromNPC } from './core/npcQuestAccept.js';
 import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { Settings } from './core/settings.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
@@ -561,11 +562,19 @@ function startGame(config) {
       }
     }
 
-    // NPC interaction (T key)
+    // NPC interaction (T key) — talk and accept quests
     if (input.consumeKeyPress('KeyT')) {
       const nearNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
       if (nearNPC) {
-        dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)}`;
+        // Try to accept quest from NPC
+        if (canAcceptQuestFromNPC(nearNPC, questSystem)) {
+          acceptQuestFromNPC(nearNPC, questSystem);
+          dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)} [Quest accepted!]`;
+        } else {
+          dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)}`;
+        }
+        // Advance ch2 "meet NPC" objective when talking to any quest NPC
+        questSystem.advanceObjective('ch2_roads', 'ch2_meet_npc', 1);
         dialogueTimer = 5;
       }
     }
