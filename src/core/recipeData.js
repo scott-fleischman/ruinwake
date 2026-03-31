@@ -26,13 +26,13 @@ export const allRecipes = [
   new Recipe('Cook Fish', [{ type: ItemType.RAW_FISH, count: 1 }], [{ type: ItemType.COOKED_FISH, count: 1 }], 'campfire'),
 
   // Kitchen (advanced cooking)
-  new Recipe('Hearth Stew', [{ type: ItemType.COOKED_MEAT, count: 2 }, { type: ItemType.RAW_MUSHROOM, count: 1 }], [{ type: ItemType.COOKED_MEAT, count: 1 }], 'kitchen'),
-  new Recipe('Trail Rations', [{ type: ItemType.COOKED_MEAT, count: 1 }, { type: ItemType.RAW_BERRIES, count: 2 }], [{ type: ItemType.COOKED_MEAT, count: 2 }], 'kitchen'),
-  new Recipe('Herb Salad', [{ type: ItemType.RAW_BERRIES, count: 2 }, { type: ItemType.RAW_MUSHROOM, count: 2 }], [{ type: ItemType.RAW_BERRIES, count: 1 }], 'kitchen'),
+  new Recipe('Hearth Stew', [{ type: ItemType.COOKED_MEAT, count: 2 }, { type: ItemType.RAW_MUSHROOM, count: 1 }], [{ type: ItemType.STEW, count: 2 }], 'kitchen'),
+  new Recipe('Trail Rations', [{ type: ItemType.COOKED_MEAT, count: 1 }, { type: ItemType.RAW_BERRIES, count: 2 }], [{ type: ItemType.TRAIL_RATIONS, count: 3 }], 'kitchen'),
+  new Recipe('Herb Salad', [{ type: ItemType.RAW_BERRIES, count: 2 }, { type: ItemType.RAW_MUSHROOM, count: 2 }], [{ type: ItemType.HERB_SALAD, count: 2 }], 'kitchen'),
 
   // Building
-  new Recipe('Thatch Block', [{ type: ItemType.FIBER, count: 4 }], [{ type: ItemType.FIBER, count: 1 }], 'workbench'),
-  new Recipe('Stone Brick', [{ type: ItemType.STONE, count: 4 }], [{ type: ItemType.COBBLESTONE, count: 2 }], 'workbench'),
+  new Recipe('Thatch Block', [{ type: ItemType.FIBER, count: 4 }], [{ type: ItemType.THATCH, count: 4 }], 'workbench'),
+  new Recipe('Stone Brick', [{ type: ItemType.STONE, count: 4 }], [{ type: ItemType.STONE_BRICK, count: 4 }], 'workbench'),
 
   // Loom
   new Recipe('Rope from Fiber (Loom)', [{ type: ItemType.FIBER, count: 2 }], [{ type: ItemType.ROPE, count: 2 }], 'loom'),
@@ -41,11 +41,11 @@ export const allRecipes = [
 
   // Additional workbench
   new Recipe('Oak Planks', [{ type: ItemType.WOOD, count: 2 }], [{ type: ItemType.OAK_PLANKS, count: 4 }], 'workbench'),
-  new Recipe('Copper Pickaxe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.COPPER_INGOT, count: 3 }], [{ type: ItemType.STONE_PICKAXE, count: 1 }], 'workbench'),
+  new Recipe('Copper Pickaxe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.COPPER_INGOT, count: 3 }], [{ type: ItemType.COPPER_PICKAXE, count: 1 }], 'workbench'),
 
   // Additional forge
-  new Recipe('Iron Sword', [{ type: ItemType.IRON_INGOT, count: 2 }, { type: ItemType.STICK, count: 1 }], [{ type: ItemType.IRON_INGOT, count: 1 }], 'forge'),
-  new Recipe('Iron Hammer', [{ type: ItemType.IRON_INGOT, count: 3 }, { type: ItemType.STICK, count: 2 }], [{ type: ItemType.IRON_INGOT, count: 1 }], 'forge'),
+  new Recipe('Iron Sword', [{ type: ItemType.IRON_INGOT, count: 2 }, { type: ItemType.STICK, count: 1 }], [{ type: ItemType.IRON_SWORD, count: 1 }], 'forge'),
+  new Recipe('Iron Hammer', [{ type: ItemType.IRON_INGOT, count: 3 }, { type: ItemType.STICK, count: 2 }], [{ type: ItemType.IRON_HAMMER, count: 1 }], 'forge'),
 ];
 
 export function getRecipesByStation(station) {
