@@ -13,9 +13,9 @@ describe('TALL_GRASS billboard sprite (crossed planes)', () => {
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
     // A full cube exposed on all 6 faces produces 24 verts (6 faces * 4 verts).
-    // Crossed planes should produce only 8 verts (2 planes * 4 verts).
+    // 3 crossed planes produce 12 verts (3 planes * 4 verts).
     expect(geo).not.toBeNull();
-    expect(geo.vertexCount).toBe(8);
+    expect(geo.vertexCount).toBe(12);
   });
 
   it('produces 4 triangles (12 indices) for crossed planes', () => {
@@ -24,8 +24,8 @@ describe('TALL_GRASS billboard sprite (crossed planes)', () => {
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
     expect(geo).not.toBeNull();
-    // 2 planes * 2 triangles per plane * 3 indices per triangle = 12
-    expect(geo.indices.length).toBe(12);
+    // 3 planes * 4 triangles per plane (double-sided) * 3 indices = 36
+    expect(geo.indices.length).toBe(36);
   });
 
   it('places vertices diagonally across the block', () => {

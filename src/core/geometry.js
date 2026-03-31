@@ -67,12 +67,14 @@ function vertexNoise(wx, wy, wz, channel) {
   return ((h & 0xffff) / 0xffff - 0.5) * 0.1;
 }
 
-// Two diagonal planes forming an X-shape for billboard rendering
+// Three intersecting planes forming a 3D asterisk — looks like grass from all angles
 const CROSSED_PLANES = [
-  // Plane 1: diagonal from (0,0,0)-(1,1,1) corner
-  { verts: [[0, 0, 0], [0, 1, 0], [1, 1, 1], [1, 0, 1]] },
-  // Plane 2: diagonal from (1,0,0)-(0,1,1) corner
-  { verts: [[1, 0, 0], [1, 1, 0], [0, 1, 1], [0, 0, 1]] },
+  // Plane 1: diagonal X-Z (corner to corner)
+  { verts: [[0.1, 0, 0.1], [0.1, 0.8, 0.1], [0.9, 0.8, 0.9], [0.9, 0, 0.9]] },
+  // Plane 2: other diagonal X-Z
+  { verts: [[0.9, 0, 0.1], [0.9, 0.8, 0.1], [0.1, 0.8, 0.9], [0.1, 0, 0.9]] },
+  // Plane 3: center cross along X axis
+  { verts: [[0.1, 0, 0.5], [0.1, 0.8, 0.5], [0.9, 0.8, 0.5], [0.9, 0, 0.5]] },
 ];
 
 // Colors for specific faces of multi-colored blocks
@@ -116,7 +118,7 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
         const wy = cy * CHUNK_SIZE + y;
         const wz = cz * CHUNK_SIZE + z;
 
-        // TALL_GRASS uses crossed billboard planes instead of a cube
+        // TALL_GRASS uses 3 crossed planes forming a 3D asterisk
         if (block === BlockType.TALL_GRASS) {
           const color = BLOCK_COLORS[block] || DEFAULT_COLOR;
           for (const plane of CROSSED_PLANES) {
@@ -132,9 +134,15 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
                 color[2] + vertexNoise(vx, vy, vz, 2)
               );
             }
+            // Front face
             indices.push(
               vertStart, vertStart + 1, vertStart + 2,
               vertStart, vertStart + 2, vertStart + 3
+            );
+            // Back face (reversed winding for double-sided)
+            indices.push(
+              vertStart + 2, vertStart + 1, vertStart,
+              vertStart + 3, vertStart + 2, vertStart
             );
           }
           continue;
