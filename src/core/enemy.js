@@ -80,7 +80,7 @@ export class Enemy {
     this.attackCooldown = 0;
   }
 
-  updateAI(playerPos, dt) {
+  updateAI(playerPos, dt, getHeight) {
     if (this.isDead()) {
       this.state = EnemyState.DEAD;
       return;
@@ -90,10 +90,7 @@ export class Enemy {
 
     if (d > this.aggroRange * 1.5) {
       this.state = EnemyState.IDLE;
-      return;
-    }
-
-    if (d <= this.aggroRange) {
+    } else if (d <= this.aggroRange) {
       this.state = EnemyState.CHASE;
     }
 
@@ -105,6 +102,10 @@ export class Enemy {
         this.position.x += (dx / len) * this.speed * dt;
         this.position.z += (dz / len) * this.speed * dt;
       }
+    }
+
+    if (getHeight) {
+      this.position.y = getHeight(Math.floor(this.position.x), Math.floor(this.position.z)) + 1;
     }
 
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);

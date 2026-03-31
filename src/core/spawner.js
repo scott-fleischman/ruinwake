@@ -15,7 +15,7 @@ export class EnemySpawner {
     this.rng = rng;
   }
 
-  trySpawn({ phase, playerPos, existingCount, surfaceY }) {
+  trySpawn({ phase, playerPos, existingCount, surfaceY, getHeight }) {
     if (phase !== Phase.NIGHT && phase !== Phase.DUSK) return [];
     if (existingCount >= MAX_ENEMIES) return [];
 
@@ -30,7 +30,8 @@ export class EnemySpawner {
       const typeIdx = Math.floor(this.rng() * SPAWN_TYPES.length);
       const type = SPAWN_TYPES[typeIdx];
 
-      enemies.push(new Enemy({ x, y: surfaceY, z }, type));
+      const y = getHeight ? getHeight(x, z) + 1 : surfaceY;
+      enemies.push(new Enemy({ x, y, z }, type));
     }
 
     return enemies;
