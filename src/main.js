@@ -549,6 +549,59 @@ function startGame(config) {
       eatBestFood(inventory, survivalStats);
     }
 
+    // Use relic ability (X key)
+    if (input.consumeKeyPress('KeyX')) {
+      const result = relicSystem.useRelic(survivalStats.focus);
+      if (result) {
+        survivalStats.focus = Math.max(0, survivalStats.focus - result.focusCost);
+        if (result.ability === RelicAbility.HEAL_WOUND) {
+          survivalStats.health = Math.min(survivalStats.maxHealth, survivalStats.health + 20);
+          dialogueMessage = 'Healing light surrounds you...';
+        } else if (result.ability === RelicAbility.WARD_LIGHT) {
+          fearSystem.reduceFear(30);
+          dialogueMessage = 'A warm light pushes back the darkness.';
+        } else if (result.ability === RelicAbility.CALM_FEAR) {
+          fearSystem.reduceFear(50);
+          dialogueMessage = 'A calm washes over you.';
+        } else {
+          dialogueMessage = `Used: ${relicSystem.getEquippedRelic().name}`;
+        }
+        dialogueTimer = 3;
+      } else if (relicSystem.getEquippedRelic()) {
+        dialogueMessage = relicSystem.getEquippedRelic().cooldown > 0 ? 'Relic on cooldown' : 'Not enough focus';
+        dialogueTimer = 2;
+      }
+    }
+    relicSystem.tick(gameDt);
+
+    // Auto-discover nearby items (caches, lore, relics)
+    const nearbyDisc = discoverySystem.findNearby(player.position, 5);
+    for (const disc of nearbyDisc) {
+      if (disc.discover()) {
+        for (const r of disc.reward) inventory.add(r.type, r.count);
+        experienceSystem.addExperience(20, 'exploration');
+        if (disc.type === 'lore_book' || disc.type === 'inscription') {
+          loreJournal.addEntry(new LoreEntry({
+            id: disc.id, title: disc.id.replace(/_/g, ' '),
+            text: `Found near ${Math.floor(disc.position.x)}, ${Math.floor(disc.position.z)}`,
+            category: disc.type === 'lore_book' ? LoreCategory.HISTORY : LoreCategory.INSCRIPTION,
+          }));
+        }
+        dialogueMessage = `Discovered: ${disc.type.replace(/_/g, ' ')}!`;
+        dialogueTimer = 3;
+      }
+    }
+
+    // Unlock fast travel at restored sites
+    for (const site of allRestorableSites) {
+      if (site.restored && !fastTravel.isUnlocked(site.id)) {
+        fastTravel.unlockWaypoint({ id: site.id, name: site.name, position: { ...site.position } });
+      }
+    }
+
+    // Shelter quality affects night danger
+    const shelter = shelterSystem.evaluate(world, player.position);
+
     const moveInput = input.getMovementInput();
     const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
     if (sprinting && survivalStats.stamina > 0) {
