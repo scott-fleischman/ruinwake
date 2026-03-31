@@ -80,12 +80,12 @@ describe('placeBlock', () => {
 describe('interactPlace', () => {
   it('raycasts, finds a surface, and places the first placeable item', () => {
     const world = new World();
-    // Put a floor block
+    // Put a wall block at eye level
     world.setBlock(0, 32, -3, BlockType.STONE);
     const inv = new Inventory(10);
     inv.add(ItemType.DIRT, 3);
 
-    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const eyePos = { x: 0.5, y: 32.5, z: 0.5 };
     const dir = { x: 0, y: 0, z: -1 };
 
     const result = interactPlace(world, inv, eyePos, dir, 6);
@@ -100,7 +100,7 @@ describe('interactPlace', () => {
     const inv = new Inventory(10);
     inv.add(ItemType.DIRT, 3);
 
-    const eyePos = { x: 0.5, y: 50, z: 0.5 };
+    const eyePos = { x: 0.5, y: 50.5, z: 0.5 };
     const dir = { x: 0, y: 0, z: -1 };
 
     const result = interactPlace(world, inv, eyePos, dir, 6);
@@ -113,7 +113,7 @@ describe('interactPlace', () => {
     const inv = new Inventory(10);
     inv.add(ItemType.STICK, 5); // not placeable
 
-    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const eyePos = { x: 0.5, y: 32.5, z: 0.5 };
     const dir = { x: 0, y: 0, z: -1 };
 
     const result = interactPlace(world, inv, eyePos, dir, 6);
@@ -126,7 +126,7 @@ describe('interactPlace', () => {
     const inv = new Inventory(10);
     inv.add(ItemType.STONE, 1);
 
-    const eyePos = { x: 0.5, y: 33.5, z: 0.5 };
+    const eyePos = { x: 0.5, y: 32.5, z: 0.5 };
     const dir = { x: 0, y: 0, z: -1 };
 
     const result = interactPlace(world, inv, eyePos, dir, 6);

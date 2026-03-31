@@ -69,3 +69,16 @@ const DROP_TABLE = {
 export function blockDrops(blockType) {
   return DROP_TABLE[blockType] || [];
 }
+
+export const ITEM_TO_BLOCK = Object.freeze({
+  [ItemType.DIRT]: BlockType.DIRT,
+  [ItemType.STONE]: BlockType.STONE,
+  [ItemType.WOOD]: BlockType.WOOD,
+  [ItemType.SAND]: BlockType.SAND,
+  [ItemType.COBBLESTONE]: BlockType.COBBLESTONE,
+  [ItemType.PLANKS]: BlockType.PLANKS,
+  [ItemType.CLAY]: BlockType.CLAY,
+  [ItemType.GRAVEL]: BlockType.GRAVEL,
+  [ItemType.GLASS]: BlockType.GLASS,
+  [ItemType.TORCH]: BlockType.TORCH,
+});

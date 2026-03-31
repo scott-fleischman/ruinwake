@@ -1,18 +1,41 @@
-import { BlockType, isBlockSolid } from './block.js';
+import { BlockType, isBlockSolid, blockDrops, ITEM_TO_BLOCK } from './block.js';
 
 export function mineBlock(world, inventory, x, y, z) {
   const block = world.getBlock(x, y, z);
   if (!isBlockSolid(block)) return false;
   world.setBlock(x, y, z, BlockType.AIR);
-  inventory.add(block, 1);
+  const drops = blockDrops(block);
+  for (const drop of drops) {
+    inventory.add(drop.type, drop.count);
+  }
   return true;
 }
 
-export function placeBlock(world, inventory, x, y, z, blockType) {
+export function placeBlock(world, inventory, x, y, z, itemType) {
+  const blockType = ITEM_TO_BLOCK[itemType];
+  if (blockType === undefined) return false;
   if (isBlockSolid(world.getBlock(x, y, z))) return false;
-  if (!inventory.remove(blockType, 1)) return false;
+  if (!inventory.remove(itemType, 1)) return false;
   world.setBlock(x, y, z, blockType);
   return true;
+}
+
+export function interactPlace(world, inventory, eyePos, direction, maxDist) {
+  const hit = raycast(world, eyePos, direction, maxDist);
+  if (!hit) return { placed: false };
+
+  const px = hit.blockPos.x + hit.normal.x;
+  const py = hit.blockPos.y + hit.normal.y;
+  const pz = hit.blockPos.z + hit.normal.z;
+
+  const items = inventory.getItems();
+  const placeable = items.find(i => ITEM_TO_BLOCK[i.type] !== undefined);
+  if (!placeable) return { placed: false };
+
+  const result = placeBlock(world, inventory, px, py, pz, placeable.type);
+  if (!result) return { placed: false };
+
+  return { placed: true, pos: { x: px, y: py, z: pz } };
 }
 
 export function raycast(world, origin, direction, maxDist) {
