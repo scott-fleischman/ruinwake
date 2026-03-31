@@ -34,6 +34,7 @@ import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
 import { formatInventoryDisplay } from './core/inventoryUI.js';
 import { buildHUDState } from './core/hudState.js';
+import { eatBestFood } from './core/eatBestFood.js';
 import { SkillTreeSystem } from './core/skillTree.js';
 import { SkillTreeUI } from './core/skillTreeUI.js';
 import { skillTrees } from './core/skillTreeData.js';
@@ -492,21 +493,7 @@ function startGame(config) {
 
     // Eat food (F key)
     if (input.consumeKeyPress('KeyF')) {
-      const foodTypes = ['lembas', 'cooked_meat', 'stew', 'bread', 'trail_rations',
-        'dried_meat', 'honey', 'fish', 'apple', 'mushroom', 'berries', 'raw_meat'];
-      for (const ft of foodTypes) {
-        if (inventory.count(ft) > 0) {
-          const food = { hungerRestore: 15 };
-          if (ft === 'lembas') food.hungerRestore = 30;
-          else if (ft === 'cooked_meat' || ft === 'stew') food.hungerRestore = 25;
-          else if (ft === 'bread' || ft === 'trail_rations') food.hungerRestore = 15;
-          else if (ft === 'berries' || ft === 'raw_meat') food.hungerRestore = 5;
-          else if (ft === 'mushroom') food.hungerRestore = 8;
-          survivalStats.eat(food.hungerRestore);
-          inventory.remove(ft, 1);
-          break;
-        }
-      }
+      eatBestFood(inventory, survivalStats);
     }
 
     const moveInput = input.getMovementInput();
