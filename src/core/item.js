@@ -37,10 +37,21 @@ export const ItemType = Object.freeze({
   IRON_PICKAXE: 'iron_pickaxe',
   IRON_AXE: 'iron_axe',
 
+  // Armor and equipment
+  LEATHER_ARMOR: 'leather_armor',
+  BANDAGE: 'bandage',
+
   // Misc
   TORCH: 'torch',
   BEDROLL: 'bedroll',
   MAP: 'map',
   LORE_FRAGMENT: 'lore_fragment',
   RELIC_SHARD: 'relic_shard',
+
+  // Additional block items
+  DARK_STONE: 'dark_stone',
+  OAK_PLANKS: 'oak_planks',
+  BIRCH_WOOD: 'birch_wood',
+  SLATE: 'slate',
+  MARBLE: 'marble',
 });

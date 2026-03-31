@@ -38,6 +38,15 @@ export const BlockType = Object.freeze({
   ICE: 28,
   MOSSY_STONE: 29,
   CORRUPTED_STONE: 30,
+  DARK_STONE: 31,
+  OAK_PLANKS: 32,
+  BIRCH_WOOD: 33,
+  REED: 34,
+  MUD: 35,
+  SLATE: 36,
+  MARBLE: 37,
+  OBSIDIAN: 38,
+  CRYSTAL: 39,
 });
 
 const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH]);

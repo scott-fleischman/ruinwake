@@ -33,6 +33,19 @@ export const allRecipes = [
   // Building
   new Recipe('Thatch Block', [{ type: ItemType.FIBER, count: 4 }], [{ type: ItemType.FIBER, count: 1 }], 'workbench'),
   new Recipe('Stone Brick', [{ type: ItemType.STONE, count: 4 }], [{ type: ItemType.COBBLESTONE, count: 2 }], 'workbench'),
+
+  // Loom
+  new Recipe('Rope from Fiber (Loom)', [{ type: ItemType.FIBER, count: 2 }], [{ type: ItemType.ROPE, count: 2 }], 'loom'),
+  new Recipe('Bandage', [{ type: ItemType.FIBER, count: 3 }], [{ type: ItemType.BANDAGE, count: 2 }], 'loom'),
+  new Recipe('Leather Armor', [{ type: ItemType.LEATHER, count: 5 }, { type: ItemType.ROPE, count: 2 }], [{ type: ItemType.LEATHER_ARMOR, count: 1 }], 'loom'),
+
+  // Additional workbench
+  new Recipe('Oak Planks', [{ type: ItemType.WOOD, count: 2 }], [{ type: ItemType.OAK_PLANKS, count: 4 }], 'workbench'),
+  new Recipe('Copper Pickaxe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.COPPER_INGOT, count: 3 }], [{ type: ItemType.STONE_PICKAXE, count: 1 }], 'workbench'),
+
+  // Additional forge
+  new Recipe('Iron Sword', [{ type: ItemType.IRON_INGOT, count: 2 }, { type: ItemType.STICK, count: 1 }], [{ type: ItemType.IRON_INGOT, count: 1 }], 'forge'),
+  new Recipe('Iron Hammer', [{ type: ItemType.IRON_INGOT, count: 3 }, { type: ItemType.STICK, count: 2 }], [{ type: ItemType.IRON_INGOT, count: 1 }], 'forge'),
 ];
 
 export function getRecipesByStation(station) {

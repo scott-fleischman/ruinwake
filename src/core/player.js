@@ -10,6 +10,13 @@ export class Player {
     this.moveSpeed = moveSpeed;
     this.onGround = false;
     this.crouching = false;
+    this.cameraMode = 'first_person';
+  }
+
+  toggleCamera() {
+    this.cameraMode = this.cameraMode === 'first_person'
+      ? 'third_person_behind'
+      : 'first_person';
   }
 
   setCrouch(active) {
