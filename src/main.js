@@ -4,7 +4,8 @@ import { generateTerrain, SURFACE_Y, getHeightAt } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
-import { blockDrops } from './core/block.js';
+import { BlockType, blockDrops } from './core/block.js';
+import { ItemType } from './core/item.js';
 import { raycast } from './core/actions.js';
 import { GameClock, Phase } from './core/gameClock.js';
 import { createGameConfig, applyConfig } from './core/gameConfig.js';
@@ -174,6 +175,24 @@ function startGame(config) {
     applyGravity(player, dt);
     resolveCollision(player, world, dt);
 
+    // Shared look direction and eye position for both click handlers
+    const forward = getLookDirection(player);
+    const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
+
+    // Item type to block type mapping for placement
+    const ITEM_TO_BLOCK = {
+      [ItemType.DIRT]: BlockType.DIRT,
+      [ItemType.STONE]: BlockType.STONE,
+      [ItemType.WOOD]: BlockType.WOOD,
+      [ItemType.SAND]: BlockType.SAND,
+      [ItemType.COBBLESTONE]: BlockType.COBBLESTONE,
+      [ItemType.PLANKS]: BlockType.PLANKS,
+      [ItemType.CLAY]: BlockType.CLAY,
+      [ItemType.GRAVEL]: BlockType.GRAVEL,
+      [ItemType.GLASS]: BlockType.GLASS,
+      [ItemType.TORCH]: BlockType.TORCH,
+    };
+
     if (input.locked) {
       if (input.consumeRightClick()) {
         const hit = raycast(world, eyePos, forward, 6);
@@ -181,11 +200,13 @@ function startGame(config) {
           const px = hit.blockPos.x + hit.normal.x;
           const py = hit.blockPos.y + hit.normal.y;
           const pz = hit.blockPos.z + hit.normal.z;
+          // Find first placeable item in inventory
           const items = inventory.getItems();
-          if (items.length > 0) {
-            const item = items[0];
-            if (inventory.remove(item.type, 1)) {
-              world.setBlock(px, py, pz, item.type);
+          const placeable = items.find(i => ITEM_TO_BLOCK[i.type] !== undefined);
+          if (placeable) {
+            const blockId = ITEM_TO_BLOCK[placeable.type];
+            if (inventory.remove(placeable.type, 1)) {
+              world.setBlock(px, py, pz, blockId);
               worldRenderer.markDirty(px, py, pz);
             }
           }
@@ -219,8 +240,6 @@ function startGame(config) {
 
     // Player melee attack (left click when no block hit)
     if (input.locked && input.consumeLeftClick()) {
-      const forward = getLookDirection(player);
-      const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
       const blockHit = raycast(world, eyePos, forward, 6);
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
@@ -263,8 +282,7 @@ function startGame(config) {
     hud.innerHTML = `
       <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc}</div>
-      <div>${invItems || 'inventory empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
-      <div style="margin-top:8px;color:#888;font-size:11px">WASD:Move Space:Jump Shift:Sprint LClick:Mine RClick:Place ESC:Menu</div>
+      <div style="margin-top:4px">Inventory: ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
     `;
   }
 
