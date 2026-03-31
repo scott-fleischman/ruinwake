@@ -731,32 +731,44 @@ function startGame(config, jumpStateId) {
       }
     }
 
-    // Dialogue choice navigation
+    // Dialogue state machine rendering and input
     if (dialogueManager.isActive()) {
       const dialoguePanel = document.getElementById('dialogue-panel');
       dialoguePanel.style.display = 'block';
+      const dState = dialogueManager.getState();
+
       document.getElementById('dialogue-message').innerHTML = dialogueManager.getMessage();
       const choices = dialogueManager.getChoices();
-      document.getElementById('dialogue-choices').innerHTML = choices.map((c, i) => {
-        const sel = i === dialogueManager.selectedIndex ? 'color:#c9a84c;' : 'color:#888;';
-        return `<div style="${sel}cursor:pointer;padding:3px 0">${i === dialogueManager.selectedIndex ? '▸ ' : '  '}${c.text}</div>`;
-      }).join('');
 
-      if (input.consumeKeyPress('ArrowDown')) dialogueManager.selectNext();
-      if (input.consumeKeyPress('ArrowUp')) dialogueManager.selectPrev();
-      if (input.consumeKeyPress('Enter')) {
-        const choices2 = dialogueManager.getChoices();
-        const selected = choices2[dialogueManager.selectedIndex];
-        if (selected && selected.action === 'accept_quest') {
-          const nearNPC2 = findNearestInteractableNPC(npcSystem, player.position, 5);
-          if (nearNPC2) acceptQuestFromNPC(nearNPC2, questSystem);
-          dialogueManager.dismiss();
-          dialogueMessage = 'Quest accepted!';
-          dialogueTimer = 3;
-        } else {
-          dialogueManager.selectChoice(dialogueManager.selectedIndex);
+      if (dState === 'choices') {
+        document.getElementById('dialogue-choices').innerHTML = choices.map((c, i) => {
+          const sel = i === dialogueManager.selectedIndex ? 'color:#c9a84c;' : 'color:#888;';
+          return `<div style="${sel}cursor:pointer;padding:3px 0">${i === dialogueManager.selectedIndex ? '▸ ' : '  '}${c.text}</div>`;
+        }).join('');
+
+        if (input.consumeKeyPress('ArrowDown')) dialogueManager.selectNext();
+        if (input.consumeKeyPress('ArrowUp')) dialogueManager.selectPrev();
+        if (input.consumeKeyPress('Enter')) {
+          const selected = choices[dialogueManager.selectedIndex];
+          if (selected && selected.action === 'accept_quest') {
+            const nearNPC2 = findNearestInteractableNPC(npcSystem, player.position, 5);
+            if (nearNPC2) acceptQuestFromNPC(nearNPC2, questSystem);
+            dialogueManager.dismiss();
+            dialogueMessage = 'Quest accepted!';
+            dialogueTimer = 3;
+          } else {
+            dialogueManager.selectChoice(dialogueManager.selectedIndex);
+          }
+        }
+      } else if (dState === 'response') {
+        // Show response with "press Enter to continue" hint
+        document.getElementById('dialogue-choices').innerHTML =
+          '<div style="color:#666;padding:6px 0;font-style:italic">Press Enter to continue...</div>';
+        if (input.consumeKeyPress('Enter')) {
+          dialogueManager.acknowledge();
         }
       }
+
       if (input.consumeKeyPress('Escape') || input.consumeKeyPress('KeyT')) {
         dialogueManager.dismiss();
       }
