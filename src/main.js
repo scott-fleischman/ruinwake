@@ -38,6 +38,8 @@ import { placeBlock } from './core/actions.js';
 import { NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
 import { findNearestInteractableNPC } from './core/npcInteraction.js';
+import { checkProximityTrigger } from './core/questTrigger.js';
+import { allRestorableSites } from './core/restorableSiteData.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -463,6 +465,34 @@ function startGame(config) {
       survivedFirstNight = true;
       questSystem.advanceObjective('ch1_embers', 'ch1_survive', 1);
       experienceSystem.addExperience(50, 'quest');
+    }
+
+    // Quest progression: reach outpost (starter watch-post)
+    const outpost = allRestorableSites.find(s => s.id === 'starter_watchpost');
+    if (outpost && checkProximityTrigger(player.position, outpost.position, 10)) {
+      questSystem.advanceObjective('ch1_embers', 'ch1_reach_outpost', 1);
+    }
+
+    // R key to attempt site restoration when near a restorable site
+    if (input.consumeKeyPress('KeyR')) {
+      for (const site of allRestorableSites) {
+        if (site.restored) continue;
+        if (checkProximityTrigger(player.position, site.position, 8)) {
+          if (site.restore(inventory)) {
+            dialogueMessage = `Restored: ${site.name}!`;
+            dialogueTimer = 5;
+            experienceSystem.addExperience(100, 'restoration');
+            // If it's the watch-post, advance ward quest
+            if (site.id === 'starter_watchpost') {
+              questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
+            }
+          } else {
+            dialogueMessage = `Need materials to restore ${site.name}`;
+            dialogueTimer = 3;
+          }
+          break;
+        }
+      }
     }
 
     // Render enemies and NPCs
