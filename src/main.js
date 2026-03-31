@@ -14,6 +14,7 @@ import { classes } from './core/playerClass.js';
 import { CombatSystem } from './core/combat.js';
 import { EnemySpawner } from './core/spawner.js';
 import { EnemyRenderer } from './render/enemyRenderer.js';
+import { NPCRenderer } from './render/npcRenderer.js';
 import { WeatherSystem } from './core/weather.js';
 import { FogOfWar } from './core/fogOfWar.js';
 import { ExperienceSystem } from './core/experience.js';
@@ -33,6 +34,9 @@ import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
 import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
+import { NPCSystem } from './core/npc.js';
+import { allNPCs } from './core/npcData.js';
+import { findNearestInteractableNPC } from './core/npcInteraction.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -108,6 +112,10 @@ function startGame(config) {
   const statusEffects = new StatusEffectSystem();
   const questSystem = new QuestSystem(mainQuests);
   const compass = new Compass();
+  const npcSystem = new NPCSystem();
+  for (const npc of allNPCs) npcSystem.addNPC(npc);
+  let dialogueMessage = '';
+  let dialogueTimer = 0;
 
   // Apply starter kit
   const starterKit = getStarterKit(config.classId);
@@ -140,6 +148,7 @@ function startGame(config) {
 
   const worldRenderer = new WorldRenderer(scene, world);
   const enemyRenderer = new EnemyRenderer(scene);
+  const npcRenderer = new NPCRenderer(scene);
 
   // --- Input ---
   const input = new InputHandler(renderer.domElement);
@@ -306,6 +315,19 @@ function startGame(config) {
       }
     }
 
+    // NPC interaction (T key)
+    if (input.consumeKeyPress('KeyT')) {
+      const nearNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
+      if (nearNPC) {
+        dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)}`;
+        dialogueTimer = 5;
+      }
+    }
+    if (dialogueTimer > 0) {
+      dialogueTimer -= dt;
+      if (dialogueTimer <= 0) dialogueMessage = '';
+    }
+
     // Eat food (F key)
     if (input.consumeKeyPress('KeyF')) {
       const foodTypes = ['lembas', 'cooked_meat', 'stew', 'bread', 'trail_rations',
@@ -425,8 +447,9 @@ function startGame(config) {
       experienceSystem.addExperience(50, 'quest');
     }
 
-    // Render enemies
+    // Render enemies and NPCs
     enemyRenderer.sync(enemies);
+    npcRenderer.sync(allNPCs);
 
     updateDayNightLighting(gameClock.getPhase());
     const visMod = weatherSystem.getVisibilityModifier();
@@ -478,11 +501,17 @@ function startGame(config) {
       hotbarDisplay += sel ? `[${label}]` : ` ${label} `;
     }
 
+    // NPC proximity hint
+    const nearbyNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
+    const npcHint = nearbyNPC ? `<div style="color:#c9a84c;margin-top:4px">[T] Talk to ${nearbyNPC.name}</div>` : '';
+    const dialogueLine = dialogueMessage ? `<div style="color:#eee;background:rgba(0,0,0,0.6);padding:6px 10px;margin-top:6px;border-radius:4px;max-width:400px">${dialogueMessage}</div>` : '';
+
     hud.innerHTML = `
       <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
       <div style="margin-top:4px">${hotbarDisplay}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
+      ${npcHint}${dialogueLine}
     `;
   }
 

@@ -7,6 +7,8 @@ const ENEMY_COLORS = {
   [EnemyType.SPIDER]: 0x332211,
   [EnemyType.TROLL]: 0x665544,
   [EnemyType.WIGHT]: 0x553366,
+  [EnemyType.GUARDIAN]: 0x997744,
+  [EnemyType.CONSTRUCT]: 0x444466,
 };
 
 const ENEMY_SCALES = {
@@ -15,6 +17,8 @@ const ENEMY_SCALES = {
   [EnemyType.SPIDER]: { w: 1.0, h: 0.4, d: 1.0 },
   [EnemyType.TROLL]: { w: 1.2, h: 2.5, d: 1.2 },
   [EnemyType.WIGHT]: { w: 0.6, h: 1.8, d: 0.6 },
+  [EnemyType.GUARDIAN]: { w: 1.4, h: 3.0, d: 1.4 },
+  [EnemyType.CONSTRUCT]: { w: 1.0, h: 2.0, d: 1.0 },
 };
 
 export class EnemyRenderer {
