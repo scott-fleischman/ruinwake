@@ -61,6 +61,7 @@ import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, ge
 import { StealthSystem } from './core/stealth.js';
 import { sideQuests } from './core/sideQuestData.js';
 import { getItemIcon } from './core/itemIcons.js';
+import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { Settings } from './core/settings.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
@@ -374,6 +375,8 @@ function startGame(config) {
     if (questSystem.activate(sq.id)) activated++;
   }
 
+  const questTriggers = new QuestWorldTriggers();
+
   // --- Game loop ---
   let lastTime = performance.now();
   let survivedFirstNight = false;
@@ -526,16 +529,6 @@ function startGame(config) {
         const itemsHtml = items.length === 0
           ? '<div style="color:#666">Empty</div>'
           : items.map(i => `<div>${getItemIcon(i.type)} <span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
-        // Equipment display
-        const equipData = getEquipmentDisplayData(equipment);
-        const equipHtml = equipData.map(e => {
-          const itemLabel = e.item ? `<span style="color:#aed581">${e.item.name || e.item.id}</span>` : '<span style="color:#555">empty</span>';
-          return `<div><span style="color:#c9a84c">${e.label}:</span> ${itemLabel}</div>`;
-        }).join('');
-        const equipWeapons = getEquippableWeapons(inventory);
-        const weaponBtns = equipWeapons.map(w =>
-          `<div class="equip-weapon" data-id="${w.id}" data-dmg="${w.damage}" style="cursor:pointer;color:#aed581;margin:2px 0">${getItemIcon(w.id)} ${w.name} (dmg:${w.damage}) <span style="color:#c9a84c">[Equip]</span></div>`
-        ).join('');
         // Faction reputation display
         const factionHtml = factionSystem.getAllFactions().map(f => {
           const rep = factionSystem.getReputation(f.id);
@@ -543,23 +536,8 @@ function startGame(config) {
           return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
         }).join('');
         document.getElementById('inventory-list').innerHTML = itemsHtml
-          + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Equipment</div>'
-          + equipHtml
-          + (weaponBtns ? '<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px;color:#aaa;font-size:11px">Equip Weapons</div>' + weaponBtns : '')
           + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Factions</div>'
           + factionHtml;
-        // Attach equip click handlers
-        document.querySelectorAll('.equip-weapon').forEach(el => {
-          el.addEventListener('click', () => {
-            const weaponId = el.dataset.id;
-            const weaponDmg = parseInt(el.dataset.dmg) || 2;
-            if (inventory.count(weaponId) > 0) {
-              inventory.remove(weaponId, 1);
-              const prev = equipment.equip({ id: weaponId, name: weaponId.replace(/_/g, ' '), slot: EquipSlot.MAIN_HAND, weapon: { damage: weaponDmg } });
-              if (prev) inventory.add(prev.id, 1);
-            }
-          });
-        });
       }
     }
 
@@ -649,19 +627,6 @@ function startGame(config) {
       eatBestFood(inventory, survivalStats, statusEffects);
     }
 
-    // Throw item (H key)
-    if (input.consumeKeyPress('KeyH')) {
-      const throwForward = getLookDirection(player);
-      const throwResult = handleThrowInput(inventory, player.position, throwForward, enemies);
-      if (throwResult) {
-        dialogueMessage = 'Hit!';
-        dialogueTimer = 1.5;
-      } else if (inventory.count('stone') > 0 || inventory.count('oil_flask') > 0 || inventory.count('smoke_bomb') > 0 || inventory.count('bait') > 0) {
-        dialogueMessage = 'Missed!';
-        dialogueTimer = 1.5;
-      }
-    }
-
     // Use relic ability (X key)
     if (input.consumeKeyPress('KeyX')) {
       const result = relicSystem.useRelic(survivalStats.focus);
@@ -734,7 +699,7 @@ function startGame(config) {
 
     applyGravity(player, dt);
     resolveCollision(player, world, dt);
-    clampToWorldBounds(player.position, 64);
+    clampToWorldBounds(player.position, 300);
 
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
@@ -808,16 +773,9 @@ function startGame(config) {
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
         const mainHand = equipment.get('main_hand');
-        const equippedTool = (mainHand && mainHand.tool) || null;
-        const mineResult = mineBlockWithTool(world, inventory, bx, by, bz, equippedTool);
-        if (mineResult.mined) {
-          worldRenderer.markDirty(bx, by, bz);
-          if (mineResult.broken) {
-            equipment.unequip('main_hand');
-            dialogueMessage = 'Your tool broke!';
-            dialogueTimer = 2;
-          }
-        }
+        const equippedToolType = (mainHand && mainHand.toolType) || null;
+        mineBlock(world, inventory, bx, by, bz, equippedToolType);
+        worldRenderer.markDirty(bx, by, bz);
       } else {
         const weaponDmg = getWeaponDamage(equipment);
         combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
@@ -846,6 +804,17 @@ function startGame(config) {
     const outpost = allRestorableSites.find(s => s.id === 'starter_watchpost');
     if (outpost && checkProximityTrigger(player.position, outpost.position, 10)) {
       questSystem.advanceObjective('ch1_embers', 'ch1_reach_outpost', 1);
+    }
+
+    // Quest world triggers for chapters 2-8
+    const firedTriggers = questTriggers.checkTriggers(player.position);
+    for (const trigger of firedTriggers) {
+      // Auto-activate chapter if available
+      questSystem.activate(trigger.questId);
+      if (trigger.type === 'reach_location' || trigger.type === 'explore_area') {
+        questSystem.advanceObjective(trigger.questId, trigger.objectiveId, 1);
+        experienceSystem.addExperience(30, 'exploration');
+      }
     }
 
     // R key to attempt site restoration when near a restorable site
@@ -923,10 +892,8 @@ function startGame(config) {
     const invItems = inventory.getItems().slice(0, 8).map(i => `${i.type}:${i.count}`).join(' ');
 
     const enemyCount = enemies.length;
-    const sneakingLabel = player.crouching ? ' [Sneaking]' : '';
+    const crouchLabel = player.crouching ? ' [Crouching]' : '';
     const guardLabel = combatSystem._guarding ? ' [Guard]' : '';
-    const mainHandEquip = equipment.get('main_hand');
-    const toolDurLabel = mainHandEquip && mainHandEquip.tool ? ` | ${getToolDurabilityDisplay(mainHandEquip.tool)}` : '';
     const weather = weatherSystem.current;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
     const questLabel = hudData.activeQuestName ? ` | Quest: ${hudData.activeQuestName}` : '';
@@ -966,7 +933,7 @@ function startGame(config) {
       : '';
 
     hudElement.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${sneakingLabel}${guardLabel}${toolDurLabel}</div>
+      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
       <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${effectsLine}

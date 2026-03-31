@@ -4,7 +4,7 @@ import { getBiome, BiomeType } from './biome.js';
 
 export const SURFACE_Y = 32;
 const DIRT_DEPTH = 3;
-const TERRAIN_EXTENT = 64;
+export const TERRAIN_EXTENT = 300;
 const HEIGHT_SCALE = 0.02;
 const BIOME_SCALE = 0.02;
 

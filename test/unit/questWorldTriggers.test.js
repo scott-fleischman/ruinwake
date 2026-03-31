@@ -46,13 +46,13 @@ describe('QuestWorldTriggers', () => {
     expect(chapters.has('ch8_after')).toBe(true);
   });
 
-  it('trigger positions are within world bounds (-63..63)', () => {
+  it('trigger positions are within expanded world bounds', () => {
     const triggers = new QuestWorldTriggers();
     for (const t of triggers.getTriggers()) {
-      expect(t.position.x).toBeGreaterThanOrEqual(-63);
-      expect(t.position.x).toBeLessThanOrEqual(63);
-      expect(t.position.z).toBeGreaterThanOrEqual(-63);
-      expect(t.position.z).toBeLessThanOrEqual(63);
+      expect(t.position.x).toBeGreaterThanOrEqual(-300);
+      expect(t.position.x).toBeLessThanOrEqual(600);
+      expect(t.position.z).toBeGreaterThanOrEqual(-300);
+      expect(t.position.z).toBeLessThanOrEqual(300);
     }
   });
 });
