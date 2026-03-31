@@ -14,6 +14,7 @@ import { ExperienceSystem } from '../../src/core/experience.js';
 import { QuestSystem } from '../../src/core/quest.js';
 import { mainQuests } from '../../src/core/questData.js';
 import { BlockType } from '../../src/core/block.js';
+import { ToolType } from '../../src/core/tool.js';
 import { applyGravity, resolveCollision } from '../../src/core/physics.js';
 
 describe('Headless gameplay loop', () => {
@@ -33,7 +34,7 @@ describe('Headless gameplay loop', () => {
         for (let y = h; y >= h - 3; y--) {
           const block = world.getBlock(x, y, z);
           if (block === BlockType.WOOD) {
-            mineBlock(world, inv, x, y, z);
+            mineBlock(world, inv, x, y, z, ToolType.AXE);
             woodMined = true;
             break;
           }
@@ -49,7 +50,7 @@ describe('Headless gameplay loop', () => {
         for (let y = h - 1; y >= h - 5; y--) {
           const block = world.getBlock(x, y, z);
           if (block === BlockType.STONE) {
-            mineBlock(world, inv, x, y, z);
+            mineBlock(world, inv, x, y, z, ToolType.PICKAXE);
             stoneMined = true;
             break;
           }
@@ -117,7 +118,7 @@ describe('Headless gameplay loop', () => {
     const h = getHeightAt(0, 0, 42);
     for (let y = h; y >= h - 10; y--) {
       if (world.getBlock(0, y, 0) === BlockType.STONE) {
-        mineBlock(world, inv, 0, y, 0);
+        mineBlock(world, inv, 0, y, 0, ToolType.PICKAXE);
         break;
       }
     }

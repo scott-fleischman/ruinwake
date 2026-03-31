@@ -4,13 +4,14 @@ import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 import { ItemType } from '../../src/core/item.js';
 import { Inventory } from '../../src/core/inventory.js';
+import { ToolType } from '../../src/core/tool.js';
 
 describe('mineBlock', () => {
   it('removes the block from the world', () => {
     const world = new World();
     world.setBlock(5, 10, 5, BlockType.STONE);
     const inv = new Inventory(10);
-    mineBlock(world, inv, 5, 10, 5);
+    mineBlock(world, inv, 5, 10, 5, ToolType.PICKAXE);
     expect(world.getBlock(5, 10, 5)).toBe(BlockType.AIR);
   });
 
@@ -18,7 +19,7 @@ describe('mineBlock', () => {
     const world = new World();
     world.setBlock(5, 10, 5, BlockType.STONE);
     const inv = new Inventory(10);
-    mineBlock(world, inv, 5, 10, 5);
+    mineBlock(world, inv, 5, 10, 5, ToolType.PICKAXE);
     expect(inv.count(ItemType.STONE)).toBe(1);
   });
 

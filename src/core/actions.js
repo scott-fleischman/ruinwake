@@ -1,9 +1,10 @@
-import { BlockType, isBlockSolid, blockDrops, ITEM_TO_BLOCK } from './block.js';
+import { BlockType, isBlockSolid, blockDrops, ITEM_TO_BLOCK, canMine } from './block.js';
 import { getFood } from './food.js';
 
-export function mineBlock(world, inventory, x, y, z) {
+export function mineBlock(world, inventory, x, y, z, tool) {
   const block = world.getBlock(x, y, z);
   if (!isBlockSolid(block)) return false;
+  if (!canMine(block, tool || null)) return false;
   world.setBlock(x, y, z, BlockType.AIR);
   const drops = blockDrops(block);
   for (const drop of drops) {

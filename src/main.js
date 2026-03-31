@@ -59,6 +59,7 @@ import { calculateDamageReduction } from './core/armorReduction.js';
 import { RestSystem } from './core/rest.js';
 import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, getWeaponDamage } from './core/systemWiring.js';
 import { sideQuests } from './core/sideQuestData.js';
+import { getItemIcon } from './core/itemIcons.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');

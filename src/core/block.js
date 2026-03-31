@@ -86,6 +86,55 @@ export function blockDrops(blockType) {
   return DROP_TABLE[blockType] || [];
 }
 
+export const HARDNESS = Object.freeze({
+  [BlockType.DIRT]: 'hand',
+  [BlockType.GRASS]: 'hand',
+  [BlockType.LEAVES]: 'hand',
+  [BlockType.TALL_GRASS]: 'hand',
+  [BlockType.SAND]: 'hand',
+  [BlockType.CLAY]: 'hand',
+  [BlockType.GRAVEL]: 'hand',
+  [BlockType.SNOW]: 'hand',
+  [BlockType.MUD]: 'hand',
+  [BlockType.THATCH]: 'hand',
+  [BlockType.REED]: 'hand',
+  [BlockType.WOOD]: 'axe',
+  [BlockType.BIRCH_WOOD]: 'axe',
+  [BlockType.PLANKS]: 'axe',
+  [BlockType.OAK_PLANKS]: 'axe',
+  [BlockType.STONE]: 'pickaxe',
+  [BlockType.IRON_ORE]: 'pickaxe',
+  [BlockType.COPPER_ORE]: 'pickaxe',
+  [BlockType.COAL_ORE]: 'pickaxe',
+  [BlockType.COBBLESTONE]: 'pickaxe',
+  [BlockType.STONE_BRICK]: 'pickaxe',
+  [BlockType.SLATE]: 'pickaxe',
+  [BlockType.MARBLE]: 'pickaxe',
+  [BlockType.DARK_STONE]: 'pickaxe',
+  [BlockType.MOSSY_STONE]: 'pickaxe',
+  [BlockType.CORRUPTED_STONE]: 'pickaxe',
+  [BlockType.OBSIDIAN]: 'pickaxe',
+  [BlockType.CRYSTAL]: 'pickaxe',
+  [BlockType.ICE]: 'pickaxe',
+  [BlockType.IRON_BLOCK]: 'pickaxe',
+  [BlockType.COPPER_BLOCK]: 'pickaxe',
+  [BlockType.GLASS]: 'hand',
+  [BlockType.CAMPFIRE]: 'hand',
+  [BlockType.WORKBENCH]: 'axe',
+  [BlockType.FORGE]: 'pickaxe',
+  [BlockType.KITCHEN]: 'axe',
+  [BlockType.LOOM]: 'axe',
+  [BlockType.RUNE_TABLE]: 'pickaxe',
+  [BlockType.TORCH]: 'hand',
+});
+
+export function canMine(blockType, toolType) {
+  const required = HARDNESS[blockType] || 'hand';
+  if (required === 'hand') return true;
+  if (toolType == null) return false;
+  return toolType === required;
+}
+
 export const ITEM_TO_BLOCK = Object.freeze({
   [ItemType.DIRT]: BlockType.DIRT,
   [ItemType.STONE]: BlockType.STONE,
