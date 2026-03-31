@@ -40,7 +40,7 @@ import { SkillTreeUI } from './core/skillTreeUI.js';
 import { skillTrees } from './core/skillTreeData.js';
 import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
-import { NPCSystem } from './core/npc.js';
+import { NPC, NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
 import { findNearestInteractableNPC } from './core/npcInteraction.js';
 import { checkProximityTrigger } from './core/questTrigger.js';
@@ -65,12 +65,20 @@ import { canAcceptQuestFromNPC, acceptQuestFromNPC } from './core/npcQuestAccept
 import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { FreshnessTracker } from './core/freshness.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
+import { getRaceSpeedModifier, getRaceSprintMultiplier, getRaceStealthBonus, getRestorationRewards, getCorruptedRelicCost, getCorruptionSpawnChance } from './core/raceTraits.js';
 import { Settings } from './core/settings.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
 import { DeathSystem } from './core/deathSystem.js';
 import { CreativeMode } from './core/creativeMode.js';
 import { DialogueManager } from './core/dialogueManager.js';
+import { getDifficultyModifiers } from './core/difficulty.js';
+import { applyDifficultyToHungerDt, applyDifficultyToEnemyDamage } from './core/difficultyApply.js';
+import { getRaceStartingReputation } from './core/raceReputation.js';
+import { getStartingSkillUnlocks } from './core/startingSkills.js';
+import { getQuestMarkers } from './core/questMarkers.js';
+import { getClassPassiveEffect } from './core/classPassives.js';
+import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -111,6 +119,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
     classId: classSelect.value,
     difficulty: document.getElementById('difficulty-select').value,
     seed: parseInt(document.getElementById('seed-input').value) || 42,
+    worldName: document.getElementById('world-name').value,
+    characterName: document.getElementById('character-name').value,
   });
   document.getElementById('new-game').style.display = 'none';
   startGame(config);
@@ -135,6 +145,10 @@ function startGame(config) {
   }
 
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
+
+  // Gap 1: Get difficulty modifiers for use in game loop
+  const difficultyMods = getDifficultyModifiers(config.difficulty);
+
   // Set player spawn height based on terrain heightmap
   const spawnHeight = getHeightAt(0, 0, config.seed);
   player.position.y = spawnHeight + 2;
@@ -146,6 +160,13 @@ function startGame(config) {
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
   const skillTreeSystem = new SkillTreeSystem(skillTrees);
+
+  // Gap 3: Apply race/class starting skill unlocks
+  const startingUnlocks = getStartingSkillUnlocks(config.raceId, config.classId);
+  for (const nodeId of startingUnlocks) {
+    skillTreeSystem.grantStartingUnlock(nodeId);
+  }
+
   const skillTreeUI = new SkillTreeUI(skillTreeSystem);
   const hotbar = new Hotbar(8);
   const fearSystem = new FearSystem();
@@ -157,11 +178,21 @@ function startGame(config) {
   const questSystem = createCombinedQuestSystem();
   const compass = new Compass();
   const factionSystem = createFactionSystem();
+
+  // Gap 2: Apply race-based starting reputation
+  const raceRep = getRaceStartingReputation(config.raceId);
+  factionSystem.applyRaceModifiers(config.raceId, raceRep);
+
   const npcSystem = new NPCSystem();
   const mapScreen = new MapScreen(fogOfWar, allLandmarks);
 
   // Stealth system based on race perception
   const stealthSystem = new StealthSystem(race.statModifiers.perception || 50);
+  // Apply hobbit racial stealth bonus (+3)
+  const racialStealthBonus = getRaceStealthBonus(config.raceId);
+  if (racialStealthBonus > 0) {
+    stealthSystem.addModifier('race_stealth', racialStealthBonus);
+  }
 
   // Newly wired systems
   const relicSystem = new RelicSystem();
@@ -180,6 +211,12 @@ function startGame(config) {
   const dialogueManager = new DialogueManager();
   const spawnPos = { x: 0, y: getHeightAt(0, 0, config.seed) + 2, z: 0 };
   let isDead = false;
+
+  // Apply class passive effect
+  const classPassive = getClassPassiveEffect(config.classId);
+
+  // Give player a starter map item
+  inventory.add('map_fragment', 1);
 
   // Determine racial building style
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
@@ -282,6 +319,14 @@ function startGame(config) {
       const x = toX(lm.x);
       const y = toY(lm.z);
       html += `<div style="position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%);text-align:center"><div style="width:8px;height:8px;background:#c9a84c;border-radius:50%;margin:0 auto"></div><div style="font-size:9px;color:#c9a84c;white-space:nowrap">${lm.name}</div></div>`;
+    }
+    // Gap 4: Quest objective markers (red dots)
+    const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
+    const questMarkerList = getQuestMarkers(questTriggers, activeQuestIds);
+    for (const qm of questMarkerList) {
+      const qx = toX(qm.x);
+      const qy = toY(qm.z);
+      html += `<div style="position:absolute;left:${qx}px;top:${qy}px;transform:translate(-50%,-50%);text-align:center"><div style="width:8px;height:8px;background:#e53935;border-radius:50%;margin:0 auto"></div><div style="font-size:9px;color:#e53935;white-space:nowrap">${qm.label}</div></div>`;
     }
     // Player position
     const px = toX(data.playerPos.x);
@@ -432,7 +477,8 @@ function startGame(config) {
 
     weatherSystem.tick(gameDt);
     if (!creativeMode.noHunger()) {
-      survivalStats.tick(gameDt);
+      // Gap 1: Apply difficulty hunger drain multiplier to survival tick
+      survivalStats.tick(applyDifficultyToHungerDt(gameDt, difficultyMods));
     }
 
     // Reveal fog around player
@@ -781,15 +827,24 @@ function startGame(config) {
       if (input.keys['ShiftLeft']) player.position.y -= flySpd;
       player.velocity.y = 0;
     } else {
+      // Race speed modifier (elf in forest/mirkwood = 1.2x)
+      const raceSpeedMod = getRaceSpeedModifier(config.raceId, biome.type);
+      // Fracture injury reduces speed by 40%
+      const fractureMod = survivalStats.getFractureSpeedMultiplier();
+
       const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
       if (sprinting && survivalStats.stamina > 0) {
         const saved = player.moveSpeed;
-        player.moveSpeed *= 1.6;
+        const sprintMod = getRaceSprintMultiplier(config.raceId);
+        player.moveSpeed *= 1.6 * sprintMod * raceSpeedMod * fractureMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
         survivalStats.applySprint(gameDt);
       } else {
+        const saved = player.moveSpeed;
+        player.moveSpeed *= raceSpeedMod * fractureMod;
         player.applyMovementInput(moveInput, dt);
+        player.moveSpeed = saved;
       }
 
       if (input.getJump() && player.onGround) {
@@ -797,8 +852,15 @@ function startGame(config) {
         player.onGround = false;
       }
 
+      // Track fall velocity before collision resolves it
+      const preLandVelocityY = player.velocity.y;
+      const wasOnGround = player.onGround;
       applyGravity(player, dt);
       resolveCollision(player, world, dt);
+      // Check for fracture on landing (was falling, now on ground)
+      if (!wasOnGround && player.onGround && preLandVelocityY < 0) {
+        survivalStats.checkFallFracture(preLandVelocityY);
+      }
     }
     clampToWorldBounds(player.position, 300);
 
@@ -860,6 +922,8 @@ function startGame(config) {
         if (enemy.isDead()) continue;
         if (enemy.canAttack(player.position)) {
           let damage = enemy.performAttack();
+          // Gap 1: Apply difficulty enemy damage multiplier
+          damage = applyDifficultyToEnemyDamage(damage, difficultyMods);
           if (combatSystem._guarding) damage *= 0.5;
           damage = applyArmorReduction(damage, equipment);
           survivalStats.takeDamage(damage);
@@ -923,7 +987,9 @@ function startGame(config) {
         if (site.restored) continue;
         if (checkProximityTrigger(player.position, site.position, 8)) {
           if (site.restore(inventory)) {
-            dialogueMessage = `Restored: ${site.name}!`;
+            // Get structured restoration rewards
+            const rewards = getRestorationRewards(site.id);
+            dialogueMessage = rewards.message;
             dialogueTimer = 5;
             experienceSystem.addExperience(100, 'restoration');
             // Grant +50 reputation to relevant faction
@@ -936,6 +1002,23 @@ function startGame(config) {
             };
             const siteFaction = siteFactionMap[site.id];
             if (siteFaction) factionSystem.addReputation(siteFaction, 50);
+            // Add merchant NPC at restored site
+            const merchant = rewards.merchant;
+            merchant.position = { ...site.position };
+            const merchantNPC = new NPC(merchant);
+            npcSystem.addNPC(merchantNPC);
+            // Place OAK_PLANKS roof to visually restore the ruin
+            const roofBlock = rewards.roofBlock;
+            const ruinRadius = 3;
+            const ruinHeight = 4;
+            const sx = Math.floor(site.position.x);
+            const sy = Math.floor(site.position.y) + 1;
+            const sz = Math.floor(site.position.z);
+            for (let dx = -ruinRadius; dx <= ruinRadius; dx++) {
+              for (let dz = -ruinRadius; dz <= ruinRadius; dz++) {
+                world.setBlock(sx + dx, sy + ruinHeight, sz + dz, roofBlock);
+              }
+            }
             // If it's the watch-post, advance ward quest
             if (site.id === 'starter_watchpost') {
               questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
@@ -958,6 +1041,14 @@ function startGame(config) {
     const fogDist = computeFogDistances(visMod);
     scene.fog.near = fogDist.near;
     scene.fog.far = fogDist.far;
+
+    // Corruption tints fog near Dol Guldur (Sec 22.2)
+    const corruptDist = Math.sqrt((player.position.x - 420) ** 2 + (player.position.z - 90) ** 2);
+    const corruptT = Math.max(0, 1 - corruptDist / 100);
+    if (corruptT > 0.1) {
+      const cc = getCorruptionFogColor(corruptT);
+      scene.fog.color.setRGB(cc.r, cc.g, cc.b);
+    }
 
     camera.rotation.order = 'YXZ';
     camera.rotation.y = -player.yaw;
@@ -1033,7 +1124,7 @@ function startGame(config) {
       : '';
 
     hudElement.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}${creativeMode.enabled ? ' [CREATIVE]' : ''}</div>
+      <div>${config.characterName ? config.characterName + ' — ' : ''}${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}${creativeMode.enabled ? ' [CREATIVE]' : ''}</div>
       <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${effectsLine}
