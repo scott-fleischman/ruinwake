@@ -48,6 +48,7 @@ import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
+import { placeRuin } from './core/ruinGenerator.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
 import { ShelterSystem } from './core/shelter.js';
 import { LoreJournal, LoreEntry, LoreCategory } from './core/loreJournal.js';
@@ -113,6 +114,13 @@ function startGame(config) {
   const world = new World();
   generateTerrain(world, { seed: config.seed });
 
+  // Place ruin structures at restorable site positions
+  const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
+  for (const site of allRestorableSites) {
+    const h = getHeightAt(site.position.x, site.position.z, config.seed);
+    placeRuin(world, { x: site.position.x, y: h + 1, z: site.position.z }, ruinSizes[site.id] || 'small');
+  }
+
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
   // Set player spawn height based on terrain heightmap
   const spawnHeight = getHeightAt(0, 0, config.seed);
@@ -152,9 +160,13 @@ function startGame(config) {
   const restSystem = new RestSystem();
 
   for (const npc of allNPCs) {
-    // Place NPCs at safe height above terrain and vegetation
-    const npcH = getHeightAt(npc.position.x, npc.position.z, config.seed);
-    npc.position.y = findSafeY(world, Math.floor(npc.position.x), Math.floor(npc.position.z), npcH);
+    // Place a small shelter for each NPC
+    const nx = Math.floor(npc.position.x);
+    const nz = Math.floor(npc.position.z);
+    const nh = getHeightAt(nx, nz, config.seed);
+    placeRuin(world, { x: nx - 4, y: nh + 1, z: nz - 4 }, 'small');
+    // Place NPCs at safe height above terrain and structures
+    npc.position.y = findSafeY(world, nx, nz, nh);
     npcSystem.addNPC(npc);
   }
   let dialogueMessage = '';
@@ -661,7 +673,7 @@ function startGame(config) {
     const getHeight = (x, z) => getHeightAt(x, z, config.seed);
     for (const enemy of enemies) {
       if (!enemy.isDead()) {
-        enemy.updateAI(player.position, dt, getHeight);
+        enemy.updateAI(player.position, dt, getHeight, world);
       }
     }
 
@@ -690,7 +702,9 @@ function startGame(config) {
       const blockHit = raycast(world, eyePos, forward, 6);
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
-        mineBlock(world, inventory, bx, by, bz);
+        const mainHand = equipment.get('main_hand');
+        const equippedToolType = (mainHand && mainHand.toolType) || null;
+        mineBlock(world, inventory, bx, by, bz, equippedToolType);
         worldRenderer.markDirty(bx, by, bz);
       } else {
         const weaponDmg = getWeaponDamage(equipment);
