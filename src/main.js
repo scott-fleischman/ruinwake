@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { World } from './core/world.js';
-import { generateTerrain, SURFACE_Y, getHeightAt } from './core/terrain.js';
+import { generateTerrain, getHeightAt } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
@@ -559,15 +559,16 @@ function startGame(config) {
         phase: gameClock.getPhase(),
         playerPos: player.position,
         existingCount: aliveCount,
-        surfaceY: SURFACE_Y,
+        getHeight: (x, z) => getHeightAt(x, z, config.seed),
       });
       enemies.push(...newEnemies);
     }
 
     // Enemy AI
+    const getHeight = (x, z) => getHeightAt(x, z, config.seed);
     for (const enemy of enemies) {
       if (!enemy.isDead()) {
-        enemy.updateAI(player.position, dt);
+        enemy.updateAI(player.position, dt, getHeight);
       }
     }
 
@@ -668,7 +669,7 @@ function startGame(config) {
     renderer.render(scene, camera);
 
     const phase = gameClock.getPhase();
-    const hud = buildHUDState({
+    const hudData = buildHUDState({
       survivalStats,
       questSystem,
       compass,
@@ -683,9 +684,9 @@ function startGame(config) {
     const guardLabel = combatSystem._guarding ? ' [Guard]' : '';
     const weather = weatherSystem.current;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
-    const questLabel = hud.activeQuestName ? ` | Quest: ${hud.activeQuestName}` : '';
-    const compassLabel = hud.compassCardinal ? ` ${hud.compassCardinal}` : '';
-    const fearLvl = hud.fearLevel;
+    const questLabel = hudData.activeQuestName ? ` | Quest: ${hudData.activeQuestName}` : '';
+    const compassLabel = hudData.compassCardinal ? ` ${hudData.compassCardinal}` : '';
+    const fearLvl = hudData.fearLevel;
     // Update visual hotbar bar
     const hotbarBar = document.getElementById('hotbar-bar');
     let hotbarHTML = '';
