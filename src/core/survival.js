@@ -5,6 +5,10 @@ const STARVATION_DAMAGE_PER_SEC = 0.5;
 const STAMINA_RECOVERY_PER_SEC = 5;
 const SPRINT_DRAIN_PER_SEC = 10;
 const COLD_DAMAGE_PER_SEC = 0.3;
+const CORRUPTION_GAIN_PER_SEC = 1.0;
+const CORRUPTION_FOCUS_DRAIN_PER_SEC = 0.5;
+const BLEEDING_DAMAGE_PER_SEC = 0.5;
+const POISON_DAMAGE_PER_SEC = 0.3;
 
 const BIOME_TEMPERATURES = {
   [BiomeType.SHIRE]: 0,
@@ -26,10 +30,26 @@ export class SurvivalStats {
     this.maxFocus = 100;
     this.temperature = 0;
     this.coldResistance = 0;
+    this.corruption = 0;
+    this._inCorruptedZone = false;
+    this._injuries = [];
   }
 
   setBiomeTemperature(biomeType) {
     this.temperature = BIOME_TEMPERATURES[biomeType] ?? 0;
+  }
+
+  setCorruptionZone(active) {
+    this._inCorruptedZone = active;
+  }
+
+  applyInjury(type, duration, strength) {
+    this._injuries = this._injuries.filter(i => i.type !== type);
+    this._injuries.push({ type, remaining: duration, strength });
+  }
+
+  hasInjury(type) {
+    return this._injuries.some(i => i.type === type);
   }
 
   tick(dt) {
@@ -46,6 +66,25 @@ export class SurvivalStats {
         this.health = Math.max(0, this.health - COLD_DAMAGE_PER_SEC * Math.abs(effectiveTemp) * dt);
       }
     }
+
+    // Corruption
+    if (this._inCorruptedZone) {
+      this.corruption = Math.min(100, this.corruption + CORRUPTION_GAIN_PER_SEC * dt);
+    }
+    if (this.corruption > 50) {
+      this.focus = Math.max(0, this.focus - CORRUPTION_FOCUS_DRAIN_PER_SEC * (this.corruption / 100) * dt);
+    }
+
+    // Injuries
+    for (const injury of this._injuries) {
+      injury.remaining -= dt;
+      if (injury.type === 'bleeding') {
+        this.health = Math.max(0, this.health - BLEEDING_DAMAGE_PER_SEC * injury.strength * dt);
+      } else if (injury.type === 'poison') {
+        this.health = Math.max(0, this.health - POISON_DAMAGE_PER_SEC * injury.strength * dt);
+      }
+    }
+    this._injuries = this._injuries.filter(i => i.remaining > 0);
 
     this.stamina = Math.min(this.maxStamina, this.stamina + STAMINA_RECOVERY_PER_SEC * dt);
   }

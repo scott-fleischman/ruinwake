@@ -1,15 +1,15 @@
 import { World } from './world.js';
 import { Player } from './player.js';
 import { Inventory } from './inventory.js';
-import { CHUNK_SIZE } from './chunk.js';
+import { SurvivalStats } from './survival.js';
 
-export function serializeGameState(world, player, inventory) {
+export function serializeGameState(world, player, inventory, extra = {}) {
   const chunks = {};
   for (const [key, chunk] of world.chunks) {
     chunks[key] = Array.from(chunk.blocks);
   }
 
-  return JSON.stringify({
+  const state = {
     player: {
       position: player.position,
       velocity: player.velocity,
@@ -19,7 +19,30 @@ export function serializeGameState(world, player, inventory) {
     },
     inventory: inventory.getItems(),
     chunks,
-  });
+  };
+
+  if (extra.survivalStats) {
+    const s = extra.survivalStats;
+    state.survivalStats = {
+      health: s.health,
+      maxHealth: s.maxHealth,
+      stamina: s.stamina,
+      hunger: s.hunger,
+      focus: s.focus,
+      corruption: s.corruption,
+      temperature: s.temperature,
+    };
+  }
+
+  if (extra.quests) {
+    state.quests = extra.quests.serialize();
+  }
+
+  if (extra.factions) {
+    state.factions = extra.factions.serialize();
+  }
+
+  return JSON.stringify(state);
 }
 
 export function deserializeGameState(json) {
@@ -44,5 +67,21 @@ export function deserializeGameState(json) {
     inventory.add(item.type, item.count);
   }
 
-  return { world, player, inventory };
+  const result = { world, player, inventory };
+
+  if (data.survivalStats) {
+    const stats = new SurvivalStats();
+    Object.assign(stats, data.survivalStats);
+    result.survivalStats = stats;
+  }
+
+  if (data.quests) {
+    result.questData = data.quests;
+  }
+
+  if (data.factions) {
+    result.factionData = data.factions;
+  }
+
+  return result;
 }

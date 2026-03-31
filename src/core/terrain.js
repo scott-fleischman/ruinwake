@@ -39,13 +39,33 @@ export function getHeightAt(x, z, seed) {
   return Math.floor(biome.minHeight + t * (biome.maxHeight - biome.minHeight));
 }
 
-function fillColumn(world, x, z, surfaceY, surfaceBlock) {
+const ORE_SCALE = 0.1;
+const ORE_CONFIGS = [
+  { type: BlockType.COAL_ORE, threshold: 0.7, maxY: 28 },
+  { type: BlockType.COPPER_ORE, threshold: 0.75, maxY: 24 },
+  { type: BlockType.IRON_ORE, threshold: 0.8, maxY: 20 },
+];
+
+function getOreType(x, y, z, seed) {
+  for (const ore of ORE_CONFIGS) {
+    if (y > ore.maxY) continue;
+    const n = simplex2D(
+      x * ORE_SCALE + y * 0.3 + seed * 0.1 + ore.type * 100,
+      z * ORE_SCALE + y * 0.3
+    );
+    if (n > ore.threshold) return ore.type;
+  }
+  return null;
+}
+
+function fillColumn(world, x, z, surfaceY, surfaceBlock, seed) {
   world.setBlock(x, surfaceY, z, surfaceBlock);
   for (let dy = 1; dy <= DIRT_DEPTH; dy++) {
     world.setBlock(x, surfaceY - dy, z, BlockType.DIRT);
   }
   for (let y = 0; y < surfaceY - DIRT_DEPTH; y++) {
-    world.setBlock(x, y, z, BlockType.STONE);
+    const ore = getOreType(x, y, z, seed);
+    world.setBlock(x, y, z, ore || BlockType.STONE);
   }
 }
 
@@ -74,7 +94,7 @@ export function generateTerrain(world, { seed = 0 } = {}) {
     for (let z = -TERRAIN_EXTENT; z < TERRAIN_EXTENT; z++) {
       const biome = getBiomeAt(x, z, seed);
       const h = getHeightAt(x, z, seed);
-      fillColumn(world, x, z, h, biome.surfaceBlock);
+      fillColumn(world, x, z, h, biome.surfaceBlock, seed);
     }
   }
   // Place trees based on biome density

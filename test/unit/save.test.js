@@ -84,29 +84,37 @@ describe('save/load', () => {
     const world = new World();
     const player = new Player({ x: 0, y: 33, z: 0 });
     const inventory = new Inventory(36);
-    const quests = new QuestSystem([
+    const questDefs = [
       new Quest({ id: 'chapter1', chapter: 1, name: 'Test', description: 'Test', objectives: [{ id: 'obj1', description: 'test', target: 1 }] }),
-    ]);
-    quests.start('chapter1');
+    ];
+    const quests = new QuestSystem(questDefs);
+    quests.activate('chapter1');
 
     const data = serializeGameState(world, player, inventory, { quests });
     const state = deserializeGameState(data);
 
-    expect(state.quests.getStatus('chapter1')).toBe('active');
+    // Reconstruct quest system from definitions + saved data
+    const loaded = new QuestSystem(questDefs);
+    loaded.deserialize(state.questData);
+    expect(loaded.getStatus('chapter1')).toBe('active');
   });
 
   it('round-trips faction reputation', () => {
     const world = new World();
     const player = new Player({ x: 0, y: 33, z: 0 });
     const inventory = new Inventory(36);
-    const factions = new FactionSystem([
+    const factionDefs = [
       new Faction({ id: 'road_wardens', name: 'Road Wardens', description: 'Test' }),
-    ]);
+    ];
+    const factions = new FactionSystem(factionDefs);
     factions.addReputation('road_wardens', 500);
 
     const data = serializeGameState(world, player, inventory, { factions });
     const state = deserializeGameState(data);
 
-    expect(state.factions.getReputation('road_wardens')).toBe(500);
+    // Reconstruct faction system from definitions + saved data
+    const loaded = new FactionSystem(factionDefs);
+    loaded.deserialize(state.factionData);
+    expect(loaded.getReputation('road_wardens')).toBe(500);
   });
 });
