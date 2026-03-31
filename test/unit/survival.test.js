@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SurvivalStats } from '../../src/core/survival.js';
+import { BiomeType } from '../../src/core/biome.js';
 
 describe('SurvivalStats', () => {
   it('starts with full health, stamina, hunger, and focus', () => {
@@ -80,5 +81,45 @@ describe('SurvivalStats', () => {
     const stats = new SurvivalStats();
     stats.takeDamage(100);
     expect(stats.isDead()).toBe(true);
+  });
+
+  it('has a temperature stat that defaults to comfortable', () => {
+    const stats = new SurvivalStats();
+    expect(stats.temperature).toBe(0);
+  });
+
+  it('setBiomeTemperature shifts temperature based on biome', () => {
+    const stats = new SurvivalStats();
+    stats.setBiomeTemperature(BiomeType.MOUNTAIN);
+    expect(stats.temperature).toBeLessThan(0);
+  });
+
+  it('mountain cold drains health slowly over time', () => {
+    const stats = new SurvivalStats();
+    stats.setBiomeTemperature(BiomeType.MOUNTAIN);
+    stats.tick(60);
+    expect(stats.health).toBeLessThan(100);
+  });
+
+  it('shire temperature does not cause cold damage', () => {
+    const stats = new SurvivalStats();
+    stats.setBiomeTemperature(BiomeType.SHIRE);
+    stats.tick(60);
+    // Only hunger should drain, not cold damage at comfortable temp
+    expect(stats.health).toBe(100);
+  });
+
+  it('cold resistance effect reduces cold damage', () => {
+    const stats = new SurvivalStats();
+    stats.setBiomeTemperature(BiomeType.MOUNTAIN);
+    stats.coldResistance = 1;
+    stats.tick(60);
+    const healthWithResist = stats.health;
+
+    const stats2 = new SurvivalStats();
+    stats2.setBiomeTemperature(BiomeType.MOUNTAIN);
+    stats2.tick(60);
+    // With resistance, should take less damage
+    expect(healthWithResist).toBeGreaterThan(stats2.health);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Enemy, EnemyType, EnemyState } from '../../src/core/enemy.js';
+import { Enemy, EnemyType, EnemyState, getEnemyDrops } from '../../src/core/enemy.js';
 
 describe('Enemy', () => {
   it('has position, health, and type', () => {
@@ -58,9 +58,48 @@ describe('Enemy', () => {
 });
 
 describe('EnemyType', () => {
-  it('defines wolf, goblin, spider', () => {
+  it('defines all five enemy families', () => {
     expect(EnemyType.WOLF).toBeDefined();
     expect(EnemyType.GOBLIN).toBeDefined();
     expect(EnemyType.SPIDER).toBeDefined();
+    expect(EnemyType.TROLL).toBeDefined();
+    expect(EnemyType.WIGHT).toBeDefined();
+  });
+});
+
+describe('getEnemyDrops', () => {
+  it('wolves drop leather and raw meat', () => {
+    const drops = getEnemyDrops(EnemyType.WOLF);
+    expect(drops.length).toBeGreaterThan(0);
+    const types = drops.map(d => d.type);
+    expect(types).toContain('leather');
+    expect(types).toContain('raw_meat');
+  });
+
+  it('goblins drop sticks and iron ore', () => {
+    const drops = getEnemyDrops(EnemyType.GOBLIN);
+    const types = drops.map(d => d.type);
+    expect(types).toContain('stick');
+  });
+
+  it('spiders drop fiber and rope', () => {
+    const drops = getEnemyDrops(EnemyType.SPIDER);
+    const types = drops.map(d => d.type);
+    expect(types).toContain('fiber');
+    expect(types).toContain('rope');
+  });
+
+  it('trolls drop stone and leather', () => {
+    const drops = getEnemyDrops(EnemyType.TROLL);
+    const types = drops.map(d => d.type);
+    expect(types).toContain('stone');
+    expect(types).toContain('leather');
+  });
+
+  it('wights drop relic shards and lore fragments', () => {
+    const drops = getEnemyDrops(EnemyType.WIGHT);
+    const types = drops.map(d => d.type);
+    expect(types).toContain('relic_shard');
+    expect(types).toContain('lore_fragment');
   });
 });

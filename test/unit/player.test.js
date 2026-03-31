@@ -62,4 +62,28 @@ describe('Player', () => {
     player.applyMovementInput(input, 1.0);
     expect(player.position.y).toBe(33);
   });
+
+  it('starts not crouching', () => {
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    expect(player.crouching).toBe(false);
+  });
+
+  it('can toggle crouch on and off', () => {
+    const player = new Player({ x: 0, y: 33, z: 0 });
+    player.setCrouch(true);
+    expect(player.crouching).toBe(true);
+    player.setCrouch(false);
+    expect(player.crouching).toBe(false);
+  });
+
+  it('moves slower when crouching', () => {
+    const player1 = new Player({ x: 0, y: 33, z: 0 });
+    const player2 = new Player({ x: 0, y: 33, z: 0 });
+    player2.setCrouch(true);
+    const input = { forward: true, back: false, left: false, right: false };
+    player1.applyMovementInput(input, 1.0);
+    player2.applyMovementInput(input, 1.0);
+    // Crouching player should move less distance
+    expect(Math.abs(player2.position.z)).toBeLessThan(Math.abs(player1.position.z));
+  });
 });

@@ -61,4 +61,35 @@ describe('CombatSystem', () => {
     combat.processEnemyAttacks([enemy], playerPos, stats);
     expect(stats.health).toBe(100);
   });
+
+  it('ranged attack hits enemy at distance beyond melee range', () => {
+    const combat = new CombatSystem();
+    const enemy = new Enemy({ x: 10, y: 33, z: 0 }, EnemyType.WOLF);
+    const playerPos = { x: 0, y: 33, z: 0 };
+    const lookDir = { x: 1, y: 0, z: 0 };
+
+    const hit = combat.rangedAttack(playerPos, lookDir, [enemy], 8, 20);
+    expect(hit).toBe(true);
+    expect(enemy.health).toBeLessThan(30);
+  });
+
+  it('ranged attack misses enemies outside max range', () => {
+    const combat = new CombatSystem();
+    const enemy = new Enemy({ x: 30, y: 33, z: 0 }, EnemyType.WOLF);
+    const playerPos = { x: 0, y: 33, z: 0 };
+    const lookDir = { x: 1, y: 0, z: 0 };
+
+    const hit = combat.rangedAttack(playerPos, lookDir, [enemy], 8, 20);
+    expect(hit).toBe(false);
+  });
+
+  it('ranged attack misses enemies outside aim cone', () => {
+    const combat = new CombatSystem();
+    const enemy = new Enemy({ x: 0, y: 33, z: 10 }, EnemyType.WOLF);
+    const playerPos = { x: 0, y: 33, z: 0 };
+    const lookDir = { x: 1, y: 0, z: 0 }; // looking +X, enemy is +Z
+
+    const hit = combat.rangedAttack(playerPos, lookDir, [enemy], 8, 20);
+    expect(hit).toBe(false);
+  });
 });

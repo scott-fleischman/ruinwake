@@ -71,4 +71,23 @@ describe('EnemySpawner', () => {
       expect(validTypes).toContain(enemy.type);
     }
   });
+
+  it('can spawn trolls and wights at night', () => {
+    // With enough spawns, all 5 types should appear
+    const types = new Set();
+    for (let seed = 0; seed < 100; seed++) {
+      let i = seed;
+      const rng = () => { i = (i * 1103515245 + 12345) & 0x7fffffff; return i / 0x7fffffff; };
+      const spawner = new EnemySpawner(rng);
+      const result = spawner.trySpawn({
+        phase: Phase.NIGHT,
+        playerPos: { x: 0, y: 33, z: 0 },
+        existingCount: 0,
+        surfaceY: 33,
+      });
+      for (const e of result) types.add(e.type);
+    }
+    expect(types.has(EnemyType.TROLL)).toBe(true);
+    expect(types.has(EnemyType.WIGHT)).toBe(true);
+  });
 });

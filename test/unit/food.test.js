@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { Food, FoodCategory, FoodEffect, foods, getFood } from '../../src/core/food.js';
+import { SurvivalStats } from '../../src/core/survival.js';
+import { StatusEffectSystem } from '../../src/core/statusEffect.js';
+import { eatFood } from '../../src/core/actions.js';
 
 describe('FoodCategory', () => {
   it('defines spec categories', () => {
@@ -63,5 +66,33 @@ describe('foods registry', () => {
     for (const m of meals) {
       expect(m.effects.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('eatFood', () => {
+  it('restores hunger and applies status effects from food', () => {
+    const stats = new SurvivalStats();
+    const effects = new StatusEffectSystem();
+    stats.hunger = 30;
+    const result = eatFood(stats, effects, 'cooked_meat');
+    expect(result).toBe(true);
+    expect(stats.hunger).toBe(55); // 30 + 25
+    expect(effects.has(FoodEffect.STAMINA_REGEN)).toBe(true);
+  });
+
+  it('returns false for unknown food id', () => {
+    const stats = new SurvivalStats();
+    const effects = new StatusEffectSystem();
+    const result = eatFood(stats, effects, 'unknown_food');
+    expect(result).toBe(false);
+  });
+
+  it('raw food restores hunger but applies no effects', () => {
+    const stats = new SurvivalStats();
+    const effects = new StatusEffectSystem();
+    stats.hunger = 50;
+    eatFood(stats, effects, 'raw_berries');
+    expect(stats.hunger).toBe(58); // 50 + 8
+    expect(effects.getActive()).toHaveLength(0);
   });
 });
