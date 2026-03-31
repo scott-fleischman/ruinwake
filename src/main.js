@@ -113,7 +113,11 @@ function startGame(config) {
   const questSystem = new QuestSystem(mainQuests);
   const compass = new Compass();
   const npcSystem = new NPCSystem();
-  for (const npc of allNPCs) npcSystem.addNPC(npc);
+  for (const npc of allNPCs) {
+    // Place NPCs at terrain height
+    npc.position.y = getHeightAt(npc.position.x, npc.position.z, config.seed) + 1;
+    npcSystem.addNPC(npc);
+  }
   let dialogueMessage = '';
   let dialogueTimer = 0;
 

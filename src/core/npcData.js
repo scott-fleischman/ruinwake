@@ -4,7 +4,7 @@ export const allNPCs = [
   new NPC({
     id: 'ranger_hal',
     name: 'Hal the Ranger',
-    position: { x: 35, y: 33, z: 30 },
+    position: { x: 10, y: 33, z: 8 },
     factionId: 'road_wardens',
     dialogueId: 'ch1_embers',
     dialogue: {
@@ -66,7 +66,7 @@ export const allNPCs = [
   new NPC({
     id: 'old_tom',
     name: 'Old Tom the Innkeeper',
-    position: { x: 80, y: 33, z: 22 },
+    position: { x: 25, y: 33, z: -10 },
     factionId: 'road_wardens',
     dialogueId: 'ch2_roads',
     dialogue: {
