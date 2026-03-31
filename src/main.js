@@ -23,6 +23,7 @@ import { FearSystem } from './core/fear.js';
 import { NightDangerSystem } from './core/nightDanger.js';
 import { getStarterKit } from './core/starterKit.js';
 import { computeFogDistances } from './core/fogConfig.js';
+import { clampToWorldBounds } from './core/worldBoundary.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -224,6 +225,7 @@ function startGame(config) {
 
     applyGravity(player, dt);
     resolveCollision(player, world, dt);
+    clampToWorldBounds(player.position, 64);
 
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
