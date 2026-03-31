@@ -382,7 +382,9 @@ function startGame(config) {
           if (loaded.survivalStats) Object.assign(survivalStats, loaded.survivalStats);
           if (loaded.questData) questSystem.deserialize(loaded.questData);
           // Force re-render all chunks
-          worldRenderer.update(player.position.x, player.position.z, 4, true);
+          for (const key of worldRenderer.meshes.keys()) {
+            worldRenderer.dirty.add(key);
+          }
           dialogueMessage = 'Game loaded!';
           dialogueTimer = 2;
         } else {
