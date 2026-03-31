@@ -14,6 +14,10 @@ import { classes } from './core/playerClass.js';
 import { CombatSystem } from './core/combat.js';
 import { EnemySpawner } from './core/spawner.js';
 import { EnemyRenderer } from './render/enemyRenderer.js';
+import { WeatherSystem } from './core/weather.js';
+import { FogOfWar } from './core/fogOfWar.js';
+import { ExperienceSystem } from './core/experience.js';
+import { Equipment } from './core/equipment.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -76,6 +80,10 @@ function startGame(config) {
 
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
+  const weatherSystem = new WeatherSystem(config.seed);
+  const fogOfWar = new FogOfWar({ width: 600, height: 600, cellSize: 10 });
+  const experienceSystem = new ExperienceSystem();
+  const equipment = new Equipment();
   const enemies = [];
   let spawnSeed = config.seed;
   const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
@@ -151,7 +159,11 @@ function startGame(config) {
     const biome = getBiomeAt(player.position.x, player.position.z, config.seed);
     survivalStats.setBiomeTemperature(biome.type);
 
+    weatherSystem.tick(gameDt);
     survivalStats.tick(gameDt);
+
+    // Reveal fog around player
+    fogOfWar.reveal(player.position.x, player.position.z, 20);
 
     if (input.locked) {
       const mouse = input.consumeMouse();
@@ -235,11 +247,12 @@ function startGame(config) {
       }
     }
 
-    // Collect loot from dead enemies and remove them
+    // Collect loot from dead enemies, grant XP, and remove them
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (enemies[i].isDead()) {
         const drops = getEnemyDrops(enemies[i].type);
         for (const drop of drops) inventory.add(drop.type, drop.count);
+        experienceSystem.addExperience(25, 'combat');
         enemies.splice(i, 1);
       }
     }
@@ -248,6 +261,8 @@ function startGame(config) {
     enemyRenderer.sync(enemies);
 
     updateDayNightLighting(gameClock.getPhase());
+    const visMod = weatherSystem.getVisibilityModifier();
+    scene.fog.far = 80 * visMod;
 
     camera.rotation.order = 'YXZ';
     camera.rotation.y = -player.yaw;
@@ -279,10 +294,13 @@ function startGame(config) {
 
     const enemyCount = enemies.length;
     const crouchLabel = player.crouching ? ' [Crouching]' : '';
+    const weather = weatherSystem.current;
+    const lvl = experienceSystem.level;
+    const explored = Math.round(fogOfWar.getRevealedPercentage());
     hud.innerHTML = `
-      <div>${race.name} ${cls.name} | Day ${gameClock.day} — ${phase} | ${biome.name}${crouchLabel}</div>
+      <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}</div>
-      <div style="margin-top:4px">Inventory: ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''}</div>
+      <div style="margin-top:4px">Inventory: ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
     `;
   }
 
