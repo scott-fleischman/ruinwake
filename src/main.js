@@ -48,6 +48,16 @@ import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
+import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
+import { ShelterSystem } from './core/shelter.js';
+import { LoreJournal, LoreEntry, LoreCategory } from './core/loreJournal.js';
+import { FastTravelSystem } from './core/fastTravel.js';
+import { DiscoverySystem } from './core/discoverable.js';
+import { allDiscoverables } from './core/discoverableData.js';
+import { calculateDamageReduction } from './core/armorReduction.js';
+import { RestSystem } from './core/rest.js';
+import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, getWeaponDamage } from './core/systemWiring.js';
+import { sideQuests } from './core/sideQuestData.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -123,10 +133,23 @@ function startGame(config) {
   const craftingSystem = new CraftingSystem(allRecipes);
   const craftingUI = new CraftingUI(craftingSystem);
   const statusEffects = new StatusEffectSystem();
-  const questSystem = new QuestSystem(mainQuests);
+  const questSystem = createCombinedQuestSystem();
   const compass = new Compass();
+  const factionSystem = createFactionSystem();
   const npcSystem = new NPCSystem();
   const mapScreen = new MapScreen(fogOfWar, allLandmarks);
+
+  // Newly wired systems
+  const relicSystem = new RelicSystem();
+  // Give player a starting relic if their class has one
+  if (config.classId === 'man_scholar' || config.classId === 'elf_warden') {
+    relicSystem.equipRelic(new Relic({ id: 'ward_light', name: 'Ward Light Stone', ability: RelicAbility.WARD_LIGHT, focusCost: 10 }));
+  }
+  const shelterSystem = new ShelterSystem();
+  const loreJournal = new LoreJournal();
+  const fastTravel = new FastTravelSystem();
+  const discoverySystem = new DiscoverySystem(allDiscoverables);
+  const restSystem = new RestSystem();
 
   for (const npc of allNPCs) {
     // Place NPCs at safe height above terrain and vegetation
@@ -290,8 +313,8 @@ function startGame(config) {
   function updateQuestPanel() {
     const active = questSystem.getActiveQuests();
     if (active.length === 0) {
-      // Show available quests instead
-      const allQ = mainQuests.filter(q => questSystem.getStatus(q.id) === 'available');
+      // Show available quests instead (main + side)
+      const allQ = questSystem.quests.filter(q => questSystem.getStatus(q.id) === 'available');
       if (allQ.length === 0) {
         questList.innerHTML = '<div style="color:#888">No active quests. Explore the world!</div>';
         return;
@@ -313,6 +336,14 @@ function startGame(config) {
 
   // Activate the first quest chapter automatically
   questSystem.activate('ch1_embers');
+
+  // Auto-activate first 3 side quests that have no prerequisites
+  const autoActivateCount = 3;
+  let activated = 0;
+  for (const sq of sideQuests) {
+    if (activated >= autoActivateCount) break;
+    if (questSystem.activate(sq.id)) activated++;
+  }
 
   // --- Game loop ---
   let lastTime = performance.now();
@@ -417,9 +448,18 @@ function startGame(config) {
       invPanel.style.display = isShowing ? 'none' : 'block';
       if (!isShowing) {
         const items = formatInventoryDisplay(inventory);
-        document.getElementById('inventory-list').innerHTML = items.length === 0
+        const itemsHtml = items.length === 0
           ? '<div style="color:#666">Empty</div>'
           : items.map(i => `<div><span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
+        // Faction reputation display
+        const factionHtml = factionSystem.getAllFactions().map(f => {
+          const rep = factionSystem.getReputation(f.id);
+          const tier = factionSystem.getTier(f.id);
+          return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
+        }).join('');
+        document.getElementById('inventory-list').innerHTML = itemsHtml
+          + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Factions</div>'
+          + factionHtml;
       }
     }
 
@@ -578,8 +618,19 @@ function startGame(config) {
       fearSystem.addFear(gameDt * 0.5);
     }
 
-    // Enemy attacks (with night damage multiplier)
-    combatSystem.processEnemyAttacks(enemies, player.position, survivalStats);
+    // Enemy attacks (with armor reduction)
+    // Override processEnemyAttacks to apply armor reduction before damage
+    for (const enemy of enemies) {
+      if (enemy.isDead()) continue;
+      if (enemy.canAttack(player.position)) {
+        let damage = enemy.performAttack();
+        if (combatSystem._guarding) {
+          damage *= 0.5;
+        }
+        damage = applyArmorReduction(damage, equipment);
+        survivalStats.takeDamage(damage);
+      }
+    }
 
     // Player melee attack (left click when no block hit)
     if (input.locked && input.consumeLeftClick()) {
@@ -589,7 +640,8 @@ function startGame(config) {
         mineBlock(world, inventory, bx, by, bz);
         worldRenderer.markDirty(bx, by, bz);
       } else {
-        combatSystem.playerAttack(player.position, forward, enemies, 10);
+        const weaponDmg = getWeaponDamage(equipment);
+        combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
       }
     }
 
@@ -599,6 +651,7 @@ function startGame(config) {
         const drops = getEnemyDrops(enemies[i].type);
         for (const drop of drops) inventory.add(drop.type, drop.count);
         experienceSystem.addExperience(25, 'combat');
+        factionSystem.addReputation('road_wardens', 10);
         enemies.splice(i, 1);
       }
     }
@@ -625,6 +678,16 @@ function startGame(config) {
             dialogueMessage = `Restored: ${site.name}!`;
             dialogueTimer = 5;
             experienceSystem.addExperience(100, 'restoration');
+            // Grant +50 reputation to relevant faction
+            const siteFactionMap = {
+              starter_watchpost: 'road_wardens',
+              roadside_hall: 'road_wardens',
+              mountain_workshop: 'dwarven_crafters',
+              forest_beacon: 'woodland_guardians',
+              ward_bastion: 'rivendell_keepers',
+            };
+            const siteFaction = siteFactionMap[site.id];
+            if (siteFaction) factionSystem.addReputation(siteFaction, 50);
             // If it's the watch-post, advance ward quest
             if (site.id === 'starter_watchpost') {
               questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
