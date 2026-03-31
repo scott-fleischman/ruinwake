@@ -173,7 +173,7 @@ function startGame(config) {
   const input = new InputHandler(renderer.domElement);
 
   // --- UI elements ---
-  const hud = document.getElementById('hud');
+  const hudElement = document.getElementById('hud');
   const crosshair = document.getElementById('crosshair');
   crosshair.style.display = 'block';
 
@@ -714,9 +714,9 @@ function startGame(config) {
       }
     }
 
-    hud.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${hud.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
-      <div>HP: ${hud.health}/${hud.maxHealth} | STA: ${hud.stamina} | HUN: ${hud.hunger} | FOC: ${hud.focus} | ${hud.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
+    hudElement.innerHTML = `
+      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
+      <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${npcHint}${siteHint}${dialogueLine}
     `;
