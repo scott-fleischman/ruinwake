@@ -7,6 +7,7 @@ export class InputHandler {
     this.locked = false;
     this.leftClick = false;
     this.rightClick = false;
+    this.scrollDelta = 0;
 
     document.addEventListener('keydown', (e) => {
       if (!this.keys[e.code]) this._justPressed[e.code] = true;
@@ -37,6 +38,11 @@ export class InputHandler {
       if (!this.locked) return;
       this.mouseDx += e.movementX;
       this.mouseDy += e.movementY;
+    });
+
+    document.addEventListener('wheel', (e) => {
+      if (!this.locked) return;
+      this.scrollDelta += Math.sign(e.deltaY);
     });
   }
 
@@ -76,6 +82,12 @@ export class InputHandler {
   consumeKeyPress(code) {
     const v = !!this._justPressed[code];
     this._justPressed[code] = false;
+    return v;
+  }
+
+  consumeScroll() {
+    const v = this.scrollDelta;
+    this.scrollDelta = 0;
     return v;
   }
 }

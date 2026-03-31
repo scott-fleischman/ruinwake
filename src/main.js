@@ -32,6 +32,8 @@ import { StatusEffectSystem } from './core/statusEffect.js';
 import { QuestSystem } from './core/quest.js';
 import { mainQuests } from './core/questData.js';
 import { Compass } from './core/compass.js';
+import { ITEM_TO_BLOCK } from './core/block.js';
+import { placeBlock } from './core/actions.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -260,9 +262,22 @@ function startGame(config) {
     // Guard toggle (G key)
     combatSystem.setGuard(!!input.keys['KeyG']);
 
-    // Hotbar number keys
+    // Hotbar number keys and scrollwheel
     for (let i = 0; i < 8; i++) {
       if (input.consumeKeyPress(`Digit${i + 1}`)) hotbar.selectSlot(i);
+    }
+    const scroll = input.consumeScroll();
+    if (scroll > 0) hotbar.scrollNext();
+    else if (scroll < 0) hotbar.scrollPrev();
+
+    // Auto-populate hotbar from inventory (placeable items)
+    const invItems2 = inventory.getItems();
+    const placeableItems = invItems2.filter(i => ITEM_TO_BLOCK[i.type] !== undefined);
+    for (let i = 0; i < Math.min(placeableItems.length, 8); i++) {
+      hotbar.setSlot(i, { type: placeableItems[i].type, count: placeableItems[i].count });
+    }
+    for (let i = placeableItems.length; i < 8; i++) {
+      hotbar.clearSlot(i);
     }
 
     // Fear natural decay
@@ -337,9 +352,18 @@ function startGame(config) {
     const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
 
     if (input.locked && input.consumeRightClick()) {
-      const result = interactPlace(world, inventory, eyePos, forward, 6);
-      if (result.placed) {
-        worldRenderer.markDirty(result.pos.x, result.pos.y, result.pos.z);
+      const hit = raycast(world, eyePos, forward, 6);
+      if (hit) {
+        const selectedItem = hotbar.getSelectedItem();
+        const itemType = selectedItem ? selectedItem.type : null;
+        if (itemType && ITEM_TO_BLOCK[itemType] !== undefined) {
+          const px = hit.blockPos.x + hit.normal.x;
+          const py = hit.blockPos.y + hit.normal.y;
+          const pz = hit.blockPos.z + hit.normal.z;
+          if (placeBlock(world, inventory, px, py, pz, itemType)) {
+            worldRenderer.markDirty(px, py, pz);
+          }
+        }
       }
     }
 
@@ -446,11 +470,20 @@ function startGame(config) {
     const lvl = experienceSystem.level;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
     const fearLvl = Math.round(fearSystem.level);
-    const hotbarSlot = hotbar.selectedSlot + 1;
+    // Build hotbar display
+    let hotbarDisplay = '';
+    for (let i = 0; i < 8; i++) {
+      const item = hotbar.getSlot(i);
+      const sel = i === hotbar.selectedSlot;
+      const label = item ? `${item.type}` : '·';
+      hotbarDisplay += sel ? `[${label}]` : ` ${label} `;
+    }
+
     hud.innerHTML = `
       <div>${race.name} ${cls.name} Lv${lvl} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${crouchLabel}${guardLabel}</div>
       <div>HP: ${hp}/${survivalStats.maxHealth} | STA: ${sta} | HUN: ${hun} | FOC: ${foc} | ${temp}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}</div>
-      <div style="margin-top:4px">[${hotbarSlot}] ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
+      <div style="margin-top:4px">${hotbarDisplay}</div>
+      <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
     `;
   }
 
