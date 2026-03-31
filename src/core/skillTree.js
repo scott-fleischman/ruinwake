@@ -66,6 +66,18 @@ export class SkillTreeSystem {
     return result;
   }
 
+  /**
+   * Grant a starting unlock for free (no skill point cost, no prerequisite check).
+   * Used for race/class starting skills (Sec 11.3).
+   */
+  grantStartingUnlock(nodeId) {
+    if (this._unlocked.has(nodeId)) return false;
+    const node = this._allNodes.get(nodeId);
+    if (!node) return false;
+    this._unlocked.add(nodeId);
+    return true;
+  }
+
   getUnlocked() {
     return [...this._unlocked];
   }

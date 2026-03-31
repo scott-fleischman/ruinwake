@@ -17,8 +17,15 @@ const DIFFICULTY_HEALTH_SCALE = {
   [Difficulty.HARSH]: 0.8,
 };
 
-export function createGameConfig({ raceId, classId, difficulty, seed }) {
-  return { raceId, classId, difficulty, seed };
+export function createGameConfig({ raceId, classId, difficulty, seed, worldName, characterName }) {
+  return {
+    raceId,
+    classId,
+    difficulty,
+    seed,
+    worldName: worldName || '',
+    characterName: characterName || '',
+  };
 }
 
 export function applyConfig(config) {

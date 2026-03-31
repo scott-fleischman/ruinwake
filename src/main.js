@@ -756,9 +756,13 @@ function startGame(config) {
 
     // Use relic ability (X key)
     if (input.consumeKeyPress('KeyX')) {
+      // Gap 4: Corruption/magic interaction — check if in corrupted zone
+      const inCorruptedZone = biome.type === BiomeType.MIRKWOOD;
       const result = relicSystem.useRelic(survivalStats.focus);
       if (result) {
-        survivalStats.focus = Math.max(0, survivalStats.focus - result.focusCost);
+        // Apply corruption-modified focus cost (50% higher in corrupted zones)
+        const effectiveCost = getCorruptedRelicCost(result.focusCost, inCorruptedZone);
+        survivalStats.focus = Math.max(0, survivalStats.focus - effectiveCost);
         if (result.ability === RelicAbility.HEAL_WOUND) {
           survivalStats.health = Math.min(survivalStats.maxHealth, survivalStats.health + 20);
           dialogueMessage = 'Healing light surrounds you...';
@@ -770,6 +774,15 @@ function startGame(config) {
           dialogueMessage = 'A calm washes over you.';
         } else {
           dialogueMessage = `Used: ${relicSystem.getEquippedRelic().name}`;
+        }
+        // Corruption may spawn enemies and show warning
+        if (inCorruptedZone) {
+          dialogueMessage = 'The corruption resists your power... ' + dialogueMessage;
+          const spawnChance = getCorruptionSpawnChance(true);
+          if (Math.random() < spawnChance) {
+            const corruptEnemy = spawner.spawn(player.position, biome.type);
+            if (corruptEnemy) enemies.push(corruptEnemy);
+          }
         }
         dialogueTimer = 3;
       } else if (relicSystem.getEquippedRelic()) {
