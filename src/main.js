@@ -1090,6 +1090,7 @@ function startGame(config) {
       questSystem,
       compass,
       playerYaw: player.yaw,
+      playerPos: player.position,
       fearSystem,
       experienceSystem,
       statusEffects,
@@ -1140,7 +1141,7 @@ function startGame(config) {
     hudElement.innerHTML = `
       <div>${config.characterName ? config.characterName + ' — ' : ''}${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}${creativeMode.enabled ? ' [CREATIVE]' : ''}</div>
       <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
-      <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
+      <div style="margin-top:2px;font-size:11px;color:#888">Pos: ${hudData.playerX}, ${hudData.playerZ} | ${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${effectsLine}
       ${npcHint}${siteHint}${dialogueLine}
     `;

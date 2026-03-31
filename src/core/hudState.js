@@ -4,6 +4,7 @@ export function buildHUDState(opts = {}) {
     questSystem,
     compass,
     playerYaw = 0,
+    playerPos,
     fearSystem,
     experienceSystem,
     statusEffects,
@@ -36,6 +37,11 @@ export function buildHUDState(opts = {}) {
     state.fearLevel = Math.round(fearSystem.level);
   } else {
     state.fearLevel = 0;
+  }
+
+  if (playerPos) {
+    state.playerX = Math.round(playerPos.x);
+    state.playerZ = Math.round(playerPos.z);
   }
 
   if (experienceSystem) {
