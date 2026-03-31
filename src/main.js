@@ -39,6 +39,7 @@ import { NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
 import { findNearestInteractableNPC } from './core/npcInteraction.js';
 import { checkProximityTrigger } from './core/questTrigger.js';
+import { serializeGameState, deserializeGameState } from './core/save.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
 
 // --- New game UI ---
@@ -346,6 +347,52 @@ function startGame(config) {
     if (dialogueTimer > 0) {
       dialogueTimer -= dt;
       if (dialogueTimer <= 0) dialogueMessage = '';
+    }
+
+    // Save game (F5)
+    if (input.consumeKeyPress('F5')) {
+      try {
+        const saveData = serializeGameState(world, player, inventory, {
+          survivalStats,
+          quests: questSystem,
+        });
+        localStorage.setItem('lotry_save', saveData);
+        dialogueMessage = 'Game saved!';
+        dialogueTimer = 2;
+      } catch (e) {
+        dialogueMessage = 'Save failed!';
+        dialogueTimer = 2;
+      }
+    }
+
+    // Load game (F9)
+    if (input.consumeKeyPress('F9')) {
+      try {
+        const saveData = localStorage.getItem('lotry_save');
+        if (saveData) {
+          const loaded = deserializeGameState(saveData);
+          Object.assign(player.position, loaded.player.position);
+          player.velocity = loaded.player.velocity;
+          player.yaw = loaded.player.yaw;
+          player.pitch = loaded.player.pitch;
+          player.onGround = loaded.player.onGround;
+          // Reload inventory
+          for (const item of inventory.getItems()) inventory.remove(item.type, item.count);
+          for (const item of loaded.inventory.getItems()) inventory.add(item.type, item.count);
+          if (loaded.survivalStats) Object.assign(survivalStats, loaded.survivalStats);
+          if (loaded.questData) questSystem.deserialize(loaded.questData);
+          // Force re-render all chunks
+          worldRenderer.update(player.position.x, player.position.z, 4, true);
+          dialogueMessage = 'Game loaded!';
+          dialogueTimer = 2;
+        } else {
+          dialogueMessage = 'No save found';
+          dialogueTimer = 2;
+        }
+      } catch (e) {
+        dialogueMessage = 'Load failed!';
+        dialogueTimer = 2;
+      }
     }
 
     // Eat food (F key)
