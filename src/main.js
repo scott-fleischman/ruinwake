@@ -63,6 +63,8 @@ import { sideQuests } from './core/sideQuestData.js';
 import { getItemIcon } from './core/itemIcons.js';
 import { canAcceptQuestFromNPC, acceptQuestFromNPC } from './core/npcQuestAccept.js';
 import { QuestWorldTriggers } from './core/questWorldTriggers.js';
+import { FreshnessTracker } from './core/freshness.js';
+import { getBuildingBonus } from './core/buildingStyle.js';
 import { Settings } from './core/settings.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
@@ -169,6 +171,10 @@ function startGame(config) {
   const fastTravel = new FastTravelSystem();
   const discoverySystem = new DiscoverySystem(allDiscoverables);
   const restSystem = new RestSystem();
+  const freshnessTracker = new FreshnessTracker();
+
+  // Determine racial building style
+  const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
 
   for (const npc of allNPCs) {
     // Place a small shelter for each NPC
@@ -688,6 +694,12 @@ function startGame(config) {
 
     // Shelter quality affects night danger
     const shelter = shelterSystem.evaluate(world, player.position);
+    // Apply building style bonus to shelter warmth
+    const styleBonus = getBuildingBonus(racialStyle);
+    const effectiveWarmth = shelter.warmth + (styleBonus.temperature || 0) * 0.1;
+
+    // Tick freshness on perishable food
+    freshnessTracker.tick(gameDt);
 
     const moveInput = input.getMovementInput();
     const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
