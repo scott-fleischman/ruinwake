@@ -1,0 +1,261 @@
+import { describe, it, expect } from 'vitest';
+import { RestorableSite, RestorationSystem } from '../../src/core/restoration.js';
+import { Inventory } from '../../src/core/inventory.js';
+
+describe('RestorableSite', () => {
+  it('creates a site with id, name, description, requirements, and restored flag', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower on the frontier road.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+    expect(site.id).toBe('old_watchtower');
+    expect(site.name).toBe('Old Watchtower');
+    expect(site.description).toBe('A crumbling watchtower on the frontier road.');
+    expect(site.requirements).toEqual([
+      { type: 'stone', count: 10 },
+      { type: 'wood', count: 5 },
+    ]);
+    expect(site.restored).toBe(false);
+  });
+
+  it('canRestore returns true when inventory has all required items', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 15);
+    inv.add('wood', 10);
+
+    expect(site.canRestore(inv)).toBe(true);
+  });
+
+  it('canRestore returns false when inventory is missing an item', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 15);
+    // No wood at all
+
+    expect(site.canRestore(inv)).toBe(false);
+  });
+
+  it('canRestore returns false when inventory has insufficient quantity', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 3);
+    inv.add('wood', 5);
+
+    expect(site.canRestore(inv)).toBe(false);
+  });
+
+  it('restore consumes required items and sets restored to true', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 15);
+    inv.add('wood', 10);
+
+    const result = site.restore(inv);
+    expect(result).toBe(true);
+    expect(site.restored).toBe(true);
+    expect(inv.count('stone')).toBe(5);
+    expect(inv.count('wood')).toBe(5);
+  });
+
+  it('restore fails and does not consume items when inventory is insufficient', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 3);
+    inv.add('wood', 10);
+
+    const result = site.restore(inv);
+    expect(result).toBe(false);
+    expect(site.restored).toBe(false);
+    expect(inv.count('stone')).toBe(3);
+    expect(inv.count('wood')).toBe(10);
+  });
+
+  it('restore fails if site is already restored', () => {
+    const site = new RestorableSite({
+      id: 'old_watchtower',
+      name: 'Old Watchtower',
+      description: 'A crumbling watchtower.',
+      requirements: [
+        { type: 'stone', count: 10 },
+        { type: 'wood', count: 5 },
+      ],
+    });
+
+    const inv = new Inventory(20);
+    inv.add('stone', 20);
+    inv.add('wood', 20);
+
+    site.restore(inv);
+    expect(site.restored).toBe(true);
+
+    // Try restoring again -- should fail and not consume more items
+    const result = site.restore(inv);
+    expect(result).toBe(false);
+    expect(inv.count('stone')).toBe(10);
+    expect(inv.count('wood')).toBe(15);
+  });
+});
+
+describe('RestorationSystem', () => {
+  function makeSystem() {
+    const sites = [
+      new RestorableSite({
+        id: 'old_watchtower',
+        name: 'Old Watchtower',
+        description: 'A crumbling watchtower.',
+        position: { x: 20, y: 33, z: 20 },
+        requirements: [
+          { type: 'stone', count: 10 },
+          { type: 'wood', count: 5 },
+        ],
+      }),
+      new RestorableSite({
+        id: 'broken_bridge',
+        name: 'Broken Bridge',
+        description: 'A shattered stone bridge.',
+        position: { x: 80, y: 33, z: 40 },
+        requirements: [
+          { type: 'stone', count: 20 },
+          { type: 'iron_ore', count: 5 },
+        ],
+      }),
+      new RestorableSite({
+        id: 'ruined_shrine',
+        name: 'Ruined Shrine',
+        description: 'An ancient shrine overrun by corruption.',
+        position: { x: 50, y: 33, z: 50 },
+        requirements: [
+          { type: 'relic_shard', count: 3 },
+          { type: 'stone', count: 5 },
+        ],
+      }),
+    ];
+    return new RestorationSystem(sites);
+  }
+
+  it('tracks multiple sites and can get site by id', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+    expect(tower).toBeDefined();
+    expect(tower.name).toBe('Old Watchtower');
+
+    const bridge = system.getSite('broken_bridge');
+    expect(bridge).toBeDefined();
+    expect(bridge.name).toBe('Broken Bridge');
+  });
+
+  it('getSite returns undefined for unknown id', () => {
+    const system = makeSystem();
+    expect(system.getSite('nonexistent')).toBeUndefined();
+  });
+
+  it('getCorruptionReduction returns 0 when no sites are restored', () => {
+    const system = makeSystem();
+    const reduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+    expect(reduction).toBe(0);
+  });
+
+  it('restored sites reduce nearby corruption', () => {
+    const system = makeSystem();
+
+    // Restore the watchtower
+    const inv = new Inventory(40);
+    inv.add('stone', 50);
+    inv.add('wood', 20);
+    const tower = system.getSite('old_watchtower');
+    tower.restore(inv);
+
+    // Check corruption reduction near the restored site
+    const reduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+    expect(reduction).toBeGreaterThan(0);
+  });
+
+  it('corruption reduction is 0 far from any restored site', () => {
+    const system = makeSystem();
+
+    const inv = new Inventory(40);
+    inv.add('stone', 50);
+    inv.add('wood', 20);
+    const tower = system.getSite('old_watchtower');
+    tower.restore(inv);
+
+    // Far away from all sites
+    const reduction = system.getCorruptionReduction({ x: 500, y: 33, z: 500 });
+    expect(reduction).toBe(0);
+  });
+
+  it('multiple restored sites stack corruption reduction', () => {
+    const system = makeSystem();
+
+    const inv = new Inventory(40);
+    inv.add('stone', 100);
+    inv.add('wood', 50);
+    inv.add('relic_shard', 10);
+
+    system.getSite('old_watchtower').restore(inv);
+    system.getSite('ruined_shrine').restore(inv);
+
+    // Position between the two restored sites -- should get stacked reduction
+    const reductionBoth = system.getCorruptionReduction({ x: 35, y: 33, z: 35 });
+    // Compare with reduction from just one site
+    const system2 = makeSystem();
+    const inv2 = new Inventory(40);
+    inv2.add('stone', 50);
+    inv2.add('wood', 20);
+    system2.getSite('old_watchtower').restore(inv2);
+    const reductionOne = system2.getCorruptionReduction({ x: 35, y: 33, z: 35 });
+
+    expect(reductionBoth).toBeGreaterThan(reductionOne);
+  });
+});
