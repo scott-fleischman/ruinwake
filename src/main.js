@@ -4,9 +4,7 @@ import { generateTerrain, SURFACE_Y, getHeightAt } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
-import { BlockType, blockDrops } from './core/block.js';
-import { ItemType } from './core/item.js';
-import { raycast } from './core/actions.js';
+import { mineBlock, interactPlace, raycast } from './core/actions.js';
 import { GameClock, Phase } from './core/gameClock.js';
 import { createGameConfig, applyConfig } from './core/gameConfig.js';
 import { races } from './core/race.js';
@@ -58,20 +56,6 @@ document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('new-game').style.display = 'none';
   startGame(config);
 });
-
-// Item type to block type mapping for placement
-const ITEM_TO_BLOCK = {
-  [ItemType.DIRT]: BlockType.DIRT,
-  [ItemType.STONE]: BlockType.STONE,
-  [ItemType.WOOD]: BlockType.WOOD,
-  [ItemType.SAND]: BlockType.SAND,
-  [ItemType.COBBLESTONE]: BlockType.COBBLESTONE,
-  [ItemType.PLANKS]: BlockType.PLANKS,
-  [ItemType.CLAY]: BlockType.CLAY,
-  [ItemType.GRAVEL]: BlockType.GRAVEL,
-  [ItemType.GLASS]: BlockType.GLASS,
-  [ItemType.TORCH]: BlockType.TORCH,
-};
 
 function startGame(config) {
   const MOUSE_SENSITIVITY = 0.002;
@@ -193,24 +177,10 @@ function startGame(config) {
     const forward = getLookDirection(player);
     const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
 
-    if (input.locked) {
-      if (input.consumeRightClick()) {
-        const hit = raycast(world, eyePos, forward, 6);
-        if (hit) {
-          const px = hit.blockPos.x + hit.normal.x;
-          const py = hit.blockPos.y + hit.normal.y;
-          const pz = hit.blockPos.z + hit.normal.z;
-          // Find first placeable item in inventory
-          const items = inventory.getItems();
-          const placeable = items.find(i => ITEM_TO_BLOCK[i.type] !== undefined);
-          if (placeable) {
-            const blockId = ITEM_TO_BLOCK[placeable.type];
-            if (inventory.remove(placeable.type, 1)) {
-              world.setBlock(px, py, pz, blockId);
-              worldRenderer.markDirty(px, py, pz);
-            }
-          }
-        }
+    if (input.locked && input.consumeRightClick()) {
+      const result = interactPlace(world, inventory, eyePos, forward, 6);
+      if (result.placed) {
+        worldRenderer.markDirty(result.pos.x, result.pos.y, result.pos.z);
       }
     }
 
@@ -243,10 +213,7 @@ function startGame(config) {
       const blockHit = raycast(world, eyePos, forward, 6);
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
-        const blockType = world.getBlock(bx, by, bz);
-        const drops = blockDrops(blockType);
-        world.setBlock(bx, by, bz, 0);
-        for (const drop of drops) inventory.add(drop.type, drop.count);
+        mineBlock(world, inventory, bx, by, bz);
         worldRenderer.markDirty(bx, by, bz);
       } else {
         combatSystem.playerAttack(player.position, forward, enemies, 10);
