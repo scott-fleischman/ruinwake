@@ -80,6 +80,7 @@ import { getStartingSkillUnlocks } from './core/startingSkills.js';
 import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
+import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -114,6 +115,8 @@ classSelect.addEventListener('change', updateClassInfo);
 updateClassOptions();
 
 // --- Start game ---
+let pendingJumpState = null;
+
 document.getElementById('start-btn').addEventListener('click', () => {
   const config = createGameConfig({
     raceId: raceSelect.value,
@@ -124,10 +127,32 @@ document.getElementById('start-btn').addEventListener('click', () => {
     characterName: document.getElementById('character-name').value,
   });
   document.getElementById('new-game').style.display = 'none';
-  startGame(config);
+  startGame(config, pendingJumpState);
+  pendingJumpState = null;
 });
 
-function startGame(config) {
+// --- Jump-to-state menu ---
+document.getElementById('jump-btn').addEventListener('click', () => {
+  const menu = document.getElementById('jump-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  const list = document.getElementById('jump-list');
+  list.innerHTML = JUMP_STATES.map(s => `
+    <div style="padding:5px 8px;margin:2px 0;border-radius:4px;cursor:pointer;font-size:12px;color:#aed581;border:1px solid #333;background:${pendingJumpState === s.id ? '#3a5a2f' : 'transparent'}"
+         data-jump="${s.id}">
+      <b>${s.name}</b> (${s.percent}%)<br>
+      <span style="color:#888">${s.description}</span>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-jump]').forEach(el => {
+    el.addEventListener('click', () => {
+      pendingJumpState = el.getAttribute('data-jump');
+      list.querySelectorAll('[data-jump]').forEach(e => e.style.background = 'transparent');
+      el.style.background = '#3a5a2f';
+    });
+  });
+});
+
+function startGame(config, jumpStateId) {
   const BASE_MOUSE_SENSITIVITY = 0.002;
   const settings = new Settings();
   const JUMP_VELOCITY = 8.0;
@@ -437,6 +462,33 @@ function startGame(config) {
   }
 
   const questTriggers = new QuestWorldTriggers();
+  const progress = new GameProgress();
+
+  // Apply jump state if selected
+  if (jumpStateId) {
+    const jumpState = JUMP_STATES.find(s => s.id === jumpStateId);
+    if (jumpState) {
+      jumpState.applyState({
+        questSystem, inventory, survivalStats, experienceSystem, player,
+        progress, factionSystem, getHeightAt, seed: config.seed,
+      });
+    }
+  }
+
+  // --- Progress panel rendering ---
+  function updateProgressPanel() {
+    const panel = document.getElementById('progress-panel');
+    if (panel.style.display === 'none') return;
+    const pct = progress.getPercentage();
+    document.getElementById('progress-fill').style.width = `${pct}%`;
+    document.getElementById('progress-pct').textContent = `${pct}% Complete`;
+    const bd = progress.getBreakdown().filter(b => b.total > 0);
+    document.getElementById('progress-list').innerHTML = bd.map(b => {
+      const done = b.current >= b.total;
+      const color = done ? '#6a6' : '#aaa';
+      return `<div style="color:${color}">${done ? '✓' : '○'} ${b.label}: ${b.current}/${b.total}</div>`;
+    }).join('');
+  }
 
   // --- Game loop ---
   let lastTime = performance.now();
@@ -485,6 +537,13 @@ function startGame(config) {
     // Reveal fog around player
     fogOfWar.reveal(player.position.x, player.position.z, 20);
 
+    // Track landmark visits for progress
+    for (const lm of allLandmarks) {
+      if (checkProximityTrigger(player.position, lm.position, lm.radius)) {
+        progress.visitLandmark(lm.id);
+      }
+    }
+
     if (input.locked) {
       const mouse = input.consumeMouse();
       const mouseSens = settings.getMouseSensitivity(BASE_MOUSE_SENSITIVITY);
@@ -530,6 +589,13 @@ function startGame(config) {
 
     // Status effects tick
     statusEffects.tick(gameDt);
+
+    // Completion tracker (backtick key)
+    if (input.consumeKeyPress('Backquote')) {
+      const pp = document.getElementById('progress-panel');
+      pp.style.display = pp.style.display === 'none' ? 'block' : 'none';
+    }
+    updateProgressPanel();
 
     // Map screen (M key) — update every frame while open so player dot moves
     if (input.consumeKeyPress('KeyM')) {
@@ -660,6 +726,7 @@ function startGame(config) {
         choices.push({ text: 'What do you need?', response: `${nearNPC.name}: Any help restoring the old sites would be welcome.` });
         choices.push({ text: 'Farewell', response: null });
         dialogueManager.startDialogue(`${nearNPC.name}: ${npcMsg}`, choices);
+        progress.talkToNPC(nearNPC.id);
         questSystem.advanceObjective('ch2_roads', 'ch2_meet_npc', 1);
       }
     }
@@ -761,6 +828,7 @@ function startGame(config) {
       const inCorruptedZone = biome.type === BiomeType.MIRKWOOD;
       const result = relicSystem.useRelic(survivalStats.focus);
       if (result) {
+        progress.useRelic();
         // Apply corruption-modified focus cost (50% higher in corrupted zones)
         const effectiveCost = getCorruptedRelicCost(result.focusCost, inCorruptedZone);
         survivalStats.focus = Math.max(0, survivalStats.focus - effectiveCost);
@@ -806,6 +874,7 @@ function startGame(config) {
             category: disc.type === 'lore_book' ? LoreCategory.HISTORY : LoreCategory.INSCRIPTION,
           }));
         }
+        progress.discover(disc.id);
         dialogueMessage = `Discovered: ${disc.type.replace(/_/g, ' ')}!`;
         dialogueTimer = 3;
       }
@@ -967,6 +1036,7 @@ function startGame(config) {
         for (const drop of drops) inventory.add(drop.type, drop.count);
         experienceSystem.addExperience(25, 'combat');
         factionSystem.addReputation('road_wardens', 10);
+        progress.killEnemy(enemies[i].type);
         enemies.splice(i, 1);
       }
     }
@@ -976,6 +1046,12 @@ function startGame(config) {
       survivedFirstNight = true;
       questSystem.advanceObjective('ch1_embers', 'ch1_survive', 1);
       experienceSystem.addExperience(50, 'quest');
+      progress.surviveNight();
+    }
+
+    // Track night survival for progress
+    if (gameClock.getPhase() === Phase.DAWN && gameClock.day > progress.nightsSurvived + 1) {
+      progress.surviveNight();
     }
 
     // Quest progression: reach outpost (starter watch-post)
@@ -1006,6 +1082,7 @@ function startGame(config) {
             dialogueMessage = rewards.message;
             dialogueTimer = 5;
             experienceSystem.addExperience(100, 'restoration');
+            progress.restoreSite(site.id);
             // Grant +50 reputation to relevant faction
             const siteFactionMap = {
               starter_watchpost: 'road_wardens',
