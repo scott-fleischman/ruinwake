@@ -1,12 +1,12 @@
 import { BlockType } from './block.js';
 import { simplex2D } from './noise.js';
-import { getBiome } from './biome.js';
+import { getBiome, BiomeType } from './biome.js';
 
 export const SURFACE_Y = 32;
 const DIRT_DEPTH = 3;
 const TERRAIN_EXTENT = 64;
 const HEIGHT_SCALE = 0.02;
-const BIOME_SCALE = 0.008;
+const BIOME_SCALE = 0.02;
 
 function seededRandom(seed) {
   let s = seed;
@@ -88,6 +88,13 @@ function placeTree(world, x, z, surfaceY) {
   }
 }
 
+const TALL_GRASS_DENSITY = {
+  [BiomeType.FOREST]: 0.3,
+  [BiomeType.MIRKWOOD]: 0.2,
+  [BiomeType.SHIRE]: 0.1,
+  [BiomeType.PLAINS]: 0.05,
+};
+
 export function generateTerrain(world, { seed = 0 } = {}) {
   const rand = seededRandom(seed);
   for (let x = -TERRAIN_EXTENT; x < TERRAIN_EXTENT; x++) {
@@ -104,6 +111,21 @@ export function generateTerrain(world, { seed = 0 } = {}) {
       if (rand() < biome.treeDensity) {
         const h = getHeightAt(x, z, seed);
         placeTree(world, x, z, h);
+      }
+    }
+  }
+  // Place tall grass on forest/mirkwood/shire/plains surfaces without trees
+  const grassRand = seededRandom(seed + 7);
+  for (let x = -TERRAIN_EXTENT; x < TERRAIN_EXTENT; x++) {
+    for (let z = -TERRAIN_EXTENT; z < TERRAIN_EXTENT; z++) {
+      const biome = getBiomeAt(x, z, seed);
+      const density = TALL_GRASS_DENSITY[biome.type] || 0;
+      if (density > 0 && grassRand() < density) {
+        const h = getHeightAt(x, z, seed);
+        // Only place tall grass if the block above surface is air (no tree trunk)
+        if (world.getBlock(x, h + 1, z) === BlockType.AIR) {
+          world.setBlock(x, h + 1, z, BlockType.TALL_GRASS);
+        }
       }
     }
   }

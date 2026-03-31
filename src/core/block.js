@@ -47,9 +47,10 @@ export const BlockType = Object.freeze({
   MARBLE: 37,
   OBSIDIAN: 38,
   CRYSTAL: 39,
+  TALL_GRASS: 40,
 });
 
-const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH]);
+const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS]);
 
 export function isBlockSolid(blockType) {
   return !NON_SOLID.has(blockType);
@@ -78,6 +79,7 @@ const DROP_TABLE = {
   [BlockType.BIRCH_WOOD]: [{ type: ItemType.BIRCH_WOOD, count: 1 }],
   [BlockType.SLATE]: [{ type: ItemType.SLATE, count: 1 }],
   [BlockType.MARBLE]: [{ type: ItemType.MARBLE, count: 1 }],
+  [BlockType.TALL_GRASS]: [{ type: ItemType.FIBER, count: 1 }],
 };
 
 export function blockDrops(blockType) {
