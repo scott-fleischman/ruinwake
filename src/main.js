@@ -68,6 +68,9 @@ import { getBuildingBonus } from './core/buildingStyle.js';
 import { Settings } from './core/settings.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
+import { DeathSystem } from './core/deathSystem.js';
+import { CreativeMode } from './core/creativeMode.js';
+import { DialogueManager } from './core/dialogueManager.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -172,6 +175,11 @@ function startGame(config) {
   const discoverySystem = new DiscoverySystem(allDiscoverables);
   const restSystem = new RestSystem();
   const freshnessTracker = new FreshnessTracker();
+  const deathSystem = new DeathSystem();
+  const creativeMode = new CreativeMode();
+  const dialogueManager = new DialogueManager();
+  const spawnPos = { x: 0, y: getHeightAt(0, 0, config.seed) + 2, z: 0 };
+  let isDead = false;
 
   // Determine racial building style
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
@@ -396,12 +404,36 @@ function startGame(config) {
     const gameDt = dt * GAME_TIME_SCALE;
     gameClock.tick(gameDt);
 
+    // Death check
+    if (deathSystem.isDead(survivalStats) && !creativeMode.enabled) {
+      isDead = true;
+      document.getElementById('death-screen').style.display = 'flex';
+      if (input.consumeKeyPress('Enter')) {
+        deathSystem.respawn(survivalStats, player, spawnPos);
+        isDead = false;
+        document.getElementById('death-screen').style.display = 'none';
+      }
+      // Skip all gameplay when dead — still render
+      updateDayNightLighting(gameClock.getPhase());
+      renderer.render(scene, camera);
+      return;
+    }
+
+    // Creative mode toggle (F4)
+    if (input.consumeKeyPress('F4')) {
+      creativeMode.toggle();
+      dialogueMessage = creativeMode.enabled ? 'Creative Mode ON — fly with Space/Shift, invincible' : 'Creative Mode OFF';
+      dialogueTimer = 3;
+    }
+
     // Update biome temperature at player position
     const biome = getBiomeAt(player.position.x, player.position.z, config.seed);
     survivalStats.setBiomeTemperature(biome.type);
 
     weatherSystem.tick(gameDt);
-    survivalStats.tick(gameDt);
+    if (!creativeMode.noHunger()) {
+      survivalStats.tick(gameDt);
+    }
 
     // Reveal fog around player
     fogOfWar.reveal(player.position.x, player.position.z, 20);
@@ -568,22 +600,56 @@ function startGame(config) {
       }
     }
 
-    // NPC interaction (T key) — talk and accept quests
-    if (input.consumeKeyPress('KeyT')) {
+    // NPC interaction (T key) — opens dialogue with choices
+    if (input.consumeKeyPress('KeyT') && !dialogueManager.isActive()) {
       const nearNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
       if (nearNPC) {
-        // Try to accept quest from NPC
+        const npcMsg = nearNPC.getDialogue(questSystem);
+        const choices = [];
         if (canAcceptQuestFromNPC(nearNPC, questSystem)) {
-          acceptQuestFromNPC(nearNPC, questSystem);
-          dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)} [Quest accepted!]`;
-        } else {
-          dialogueMessage = `${nearNPC.name}: ${nearNPC.getDialogue(questSystem)}`;
+          choices.push({ text: 'Accept quest', response: null, action: 'accept_quest', npcId: nearNPC.id });
         }
-        // Advance ch2 "meet NPC" objective when talking to any quest NPC
+        choices.push({ text: 'Tell me about this place', response: `${nearNPC.name}: The lands grow more dangerous each season. Stay vigilant.` });
+        choices.push({ text: 'What do you need?', response: `${nearNPC.name}: Any help restoring the old sites would be welcome.` });
+        choices.push({ text: 'Farewell', response: null });
+        dialogueManager.startDialogue(`${nearNPC.name}: ${npcMsg}`, choices);
         questSystem.advanceObjective('ch2_roads', 'ch2_meet_npc', 1);
-        dialogueTimer = 5;
       }
     }
+
+    // Dialogue choice navigation
+    if (dialogueManager.isActive()) {
+      const dialoguePanel = document.getElementById('dialogue-panel');
+      dialoguePanel.style.display = 'block';
+      document.getElementById('dialogue-message').innerHTML = dialogueManager.getMessage();
+      const choices = dialogueManager.getChoices();
+      document.getElementById('dialogue-choices').innerHTML = choices.map((c, i) => {
+        const sel = i === dialogueManager.selectedIndex ? 'color:#c9a84c;' : 'color:#888;';
+        return `<div style="${sel}cursor:pointer;padding:3px 0">${i === dialogueManager.selectedIndex ? '▸ ' : '  '}${c.text}</div>`;
+      }).join('');
+
+      if (input.consumeKeyPress('ArrowDown')) dialogueManager.selectNext();
+      if (input.consumeKeyPress('ArrowUp')) dialogueManager.selectPrev();
+      if (input.consumeKeyPress('Enter')) {
+        const choices2 = dialogueManager.getChoices();
+        const selected = choices2[dialogueManager.selectedIndex];
+        if (selected && selected.action === 'accept_quest') {
+          const nearNPC2 = findNearestInteractableNPC(npcSystem, player.position, 5);
+          if (nearNPC2) acceptQuestFromNPC(nearNPC2, questSystem);
+          dialogueManager.dismiss();
+          dialogueMessage = 'Quest accepted!';
+          dialogueTimer = 3;
+        } else {
+          dialogueManager.selectChoice(dialogueManager.selectedIndex);
+        }
+      }
+      if (input.consumeKeyPress('Escape') || input.consumeKeyPress('KeyT')) {
+        dialogueManager.dismiss();
+      }
+    } else {
+      document.getElementById('dialogue-panel').style.display = 'none';
+    }
+
     if (dialogueTimer > 0) {
       dialogueTimer -= dt;
       if (dialogueTimer <= 0) dialogueMessage = '';
@@ -702,24 +768,38 @@ function startGame(config) {
     freshnessTracker.tick(gameDt);
 
     const moveInput = input.getMovementInput();
-    const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
-    if (sprinting && survivalStats.stamina > 0) {
-      const saved = player.moveSpeed;
-      player.moveSpeed *= 1.6;
-      player.applyMovementInput(moveInput, dt);
-      player.moveSpeed = saved;
-      survivalStats.applySprint(gameDt);
+
+    if (creativeMode.canFly()) {
+      // Creative mode flying
+      const flyDir = getLookDirection(player);
+      const flySpd = creativeMode.flySpeed * dt;
+      if (moveInput.forward) { player.position.x += flyDir.x * flySpd; player.position.y += flyDir.y * flySpd; player.position.z += flyDir.z * flySpd; }
+      if (moveInput.back) { player.position.x -= flyDir.x * flySpd; player.position.y -= flyDir.y * flySpd; player.position.z -= flyDir.z * flySpd; }
+      if (moveInput.left) { player.position.x += flyDir.z * flySpd; player.position.z -= flyDir.x * flySpd; }
+      if (moveInput.right) { player.position.x -= flyDir.z * flySpd; player.position.z += flyDir.x * flySpd; }
+      if (input.getJump()) player.position.y += flySpd;
+      if (input.keys['ShiftLeft']) player.position.y -= flySpd;
+      player.velocity.y = 0;
     } else {
-      player.applyMovementInput(moveInput, dt);
-    }
+      const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
+      if (sprinting && survivalStats.stamina > 0) {
+        const saved = player.moveSpeed;
+        player.moveSpeed *= 1.6;
+        player.applyMovementInput(moveInput, dt);
+        player.moveSpeed = saved;
+        survivalStats.applySprint(gameDt);
+      } else {
+        player.applyMovementInput(moveInput, dt);
+      }
 
-    if (input.getJump() && player.onGround) {
-      player.velocity.y = JUMP_VELOCITY;
-      player.onGround = false;
-    }
+      if (input.getJump() && player.onGround) {
+        player.velocity.y = JUMP_VELOCITY;
+        player.onGround = false;
+      }
 
-    applyGravity(player, dt);
-    resolveCollision(player, world, dt);
+      applyGravity(player, dt);
+      resolveCollision(player, world, dt);
+    }
     clampToWorldBounds(player.position, 300);
 
     // Shared look direction and eye position for both click handlers
@@ -774,17 +854,16 @@ function startGame(config) {
       fearSystem.addFear(gameDt * 0.5);
     }
 
-    // Enemy attacks (with armor reduction)
-    // Override processEnemyAttacks to apply armor reduction before damage
-    for (const enemy of enemies) {
-      if (enemy.isDead()) continue;
-      if (enemy.canAttack(player.position)) {
-        let damage = enemy.performAttack();
-        if (combatSystem._guarding) {
-          damage *= 0.5;
+    // Enemy attacks (with armor reduction, skipped in creative mode)
+    if (!creativeMode.isInvincible()) {
+      for (const enemy of enemies) {
+        if (enemy.isDead()) continue;
+        if (enemy.canAttack(player.position)) {
+          let damage = enemy.performAttack();
+          if (combatSystem._guarding) damage *= 0.5;
+          damage = applyArmorReduction(damage, equipment);
+          survivalStats.takeDamage(damage);
         }
-        damage = applyArmorReduction(damage, equipment);
-        survivalStats.takeDamage(damage);
       }
     }
 
@@ -954,7 +1033,7 @@ function startGame(config) {
       : '';
 
     hudElement.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
+      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}${creativeMode.enabled ? ' [CREATIVE]' : ''}</div>
       <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
       ${effectsLine}
