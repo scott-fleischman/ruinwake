@@ -24,7 +24,7 @@ import { FearSystem } from './core/fear.js';
 import { NightDangerSystem } from './core/nightDanger.js';
 import { getStarterKit } from './core/starterKit.js';
 import { computeFogDistances } from './core/fogConfig.js';
-import { clampToWorldBounds } from './core/worldBoundary.js';
+import { clampToWorldBounds, findSafeY } from './core/worldBoundary.js';
 import { CraftingSystem } from './core/crafting.js';
 import { CraftingUI } from './core/craftingUI.js';
 import { allRecipes } from './core/recipeData.js';
@@ -128,8 +128,9 @@ function startGame(config) {
   const mapScreen = new MapScreen(fogOfWar, allLandmarks);
 
   for (const npc of allNPCs) {
-    // Place NPCs at terrain height
-    npc.position.y = getHeightAt(npc.position.x, npc.position.z, config.seed) + 1;
+    // Place NPCs at safe height above terrain and vegetation
+    const npcH = getHeightAt(npc.position.x, npc.position.z, config.seed);
+    npc.position.y = findSafeY(world, Math.floor(npc.position.x), Math.floor(npc.position.z), npcH);
     npcSystem.addNPC(npc);
   }
   let dialogueMessage = '';
