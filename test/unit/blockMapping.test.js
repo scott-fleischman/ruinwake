@@ -67,56 +67,24 @@ describe('placeBlock with new building materials', () => {
 
 describe('BLOCK_COLORS completeness', () => {
   it('every BlockType except AIR and WATER has a color in BLOCK_COLORS', async () => {
-    const { default: _unused, ...geomExports } = await import('../../src/core/geometry.js');
-    // BLOCK_COLORS is not exported, so we check indirectly by verifying
-    // that buildChunkGeometry would not fall back to the default magenta color
-    // for any valid block type. We import the module to access BLOCK_COLORS.
-    // Since BLOCK_COLORS is not exported, we test via a different approach:
-    // We re-read the source to verify coverage. Instead, let's use a known
-    // exported test helper or check geometry output directly.
+    const { BLOCK_COLORS } = await import('../../src/core/geometry.js');
 
-    // We'll build a tiny chunk with each block type and verify the color
-    // is NOT the default magenta [1, 0, 1].
-    const { buildChunkGeometry } = await import('../../src/core/geometry.js');
-    const { Chunk } = await import('../../src/core/chunk.js');
-
-    const skip = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS]);
+    const skip = new Set([BlockType.AIR, BlockType.WATER]);
     const blockTypes = Object.values(BlockType).filter(v => !skip.has(v));
 
     for (const bt of blockTypes) {
-      const chunk = new Chunk();
-      chunk.setBlock(1, 1, 1, bt);
-      const world = new World();
-      // Surround with air so faces are exposed
-      const result = buildChunkGeometry(chunk, 0, 0, 0, world);
-      expect(result, `BlockType ${bt} should produce geometry`).not.toBeNull();
-      // Check that the color is not the default magenta fallback
-      const r = result.colors[0];
-      const g = result.colors[1];
-      const b = result.colors[2];
-      const isMagenta = r === 1 && g === 0 && b === 1;
-      expect(isMagenta, `BlockType ${bt} should have a defined color, not default magenta`).toBe(false);
+      expect(BLOCK_COLORS[bt], `BlockType ${bt} should have a defined color`).toBeDefined();
+      expect(Array.isArray(BLOCK_COLORS[bt]), `BlockType ${bt} color should be an array`).toBe(true);
+      expect(BLOCK_COLORS[bt].length, `BlockType ${bt} color should have 3 components`).toBe(3);
     }
   });
 
-  it('TALL_GRASS has a color in BLOCK_COLORS (not default magenta)', async () => {
-    // TALL_GRASS is non-solid so it won't render via buildChunkGeometry.
-    // We need to verify its color exists by checking the exported module.
-    // Since BLOCK_COLORS is not exported, we'll use a different approach:
-    // Import the module source and check. For now, we verify that the
-    // TALL_GRASS block type is defined and test geometry indirectly.
-    //
-    // We can test this by temporarily checking if TALL_GRASS would produce
-    // a color. Since we can't access BLOCK_COLORS directly, we import it
-    // from the module. Let's use a dynamic import workaround.
-    const geomModule = await import('../../src/core/geometry.js');
-    // If BLOCK_COLORS were exported, we'd check directly.
-    // Instead, we verify TALL_GRASS is defined as block type 40.
-    expect(BlockType.TALL_GRASS).toBe(40);
-    // The real check: BLOCK_COLORS should include TALL_GRASS.
-    // We need BLOCK_COLORS to be exported for a proper test.
-    // For now, assert it exists in the export:
-    expect(geomModule.BLOCK_COLORS).toBeDefined();
-    expect(geomModule.BLOCK_COLORS[BlockType.TALL_GRASS]).toBeDefined();
+  it('TALL_GRASS has a green color in BLOCK_COLORS', async () => {
+    const { BLOCK_COLORS } = await import('../../src/core/geometry.js');
+    const color = BLOCK_COLORS[BlockType.TALL_GRASS];
+    expect(color).toBeDefined();
+    // Green channel should be dominant for grass
+    expect(color[1]).toBeGreaterThan(color[0]);
+    expect(color[1]).toBeGreaterThan(color[2]);
   });
 });

@@ -50,7 +50,7 @@ export const BlockType = Object.freeze({
   TALL_GRASS: 40,
 });
 
-const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS]);
+const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS, BlockType.LEAVES]);
 
 export function isBlockSolid(blockType) {
   return !NON_SOLID.has(blockType);
@@ -97,4 +97,11 @@ export const ITEM_TO_BLOCK = Object.freeze({
   [ItemType.GRAVEL]: BlockType.GRAVEL,
   [ItemType.GLASS]: BlockType.GLASS,
   [ItemType.TORCH]: BlockType.TORCH,
+  [ItemType.THATCH]: BlockType.THATCH,
+  [ItemType.STONE_BRICK]: BlockType.STONE_BRICK,
+  [ItemType.DARK_STONE]: BlockType.DARK_STONE,
+  [ItemType.OAK_PLANKS]: BlockType.OAK_PLANKS,
+  [ItemType.BIRCH_WOOD]: BlockType.BIRCH_WOOD,
+  [ItemType.SLATE]: BlockType.SLATE,
+  [ItemType.MARBLE]: BlockType.MARBLE,
 });

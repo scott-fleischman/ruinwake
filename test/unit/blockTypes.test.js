@@ -14,8 +14,8 @@ describe('extended BlockType', () => {
     expect(isBlockSolid(BlockType.WOOD)).toBe(true);
   });
 
-  it('leaves are solid', () => {
-    expect(isBlockSolid(BlockType.LEAVES)).toBe(true);
+  it('leaves are non-solid (walkable)', () => {
+    expect(isBlockSolid(BlockType.LEAVES)).toBe(false);
   });
 
   it('water is not solid', () => {

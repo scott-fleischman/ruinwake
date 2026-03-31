@@ -11,7 +11,7 @@ export const FACES = [
   { dir: [0, 0, -1], verts: [[0,0,0],[0,1,0],[1,1,0],[1,0,0]] },   // back (-Z)
 ];
 
-const BLOCK_COLORS = {
+export const BLOCK_COLORS = {
   [BlockType.GRASS]: [0.29, 0.56, 0.25],
   [BlockType.DIRT]: [0.48, 0.36, 0.23],
   [BlockType.STONE]: [0.53, 0.53, 0.53],
@@ -50,6 +50,7 @@ const BLOCK_COLORS = {
   [BlockType.MARBLE]: [0.90, 0.88, 0.85],
   [BlockType.OBSIDIAN]: [0.10, 0.08, 0.15],
   [BlockType.CRYSTAL]: [0.70, 0.80, 0.95],
+  [BlockType.TALL_GRASS]: [0.25, 0.52, 0.20],
 };
 
 const DEFAULT_COLOR = [1, 0, 1];
