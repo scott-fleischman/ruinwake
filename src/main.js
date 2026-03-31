@@ -57,9 +57,13 @@ import { DiscoverySystem } from './core/discoverable.js';
 import { allDiscoverables } from './core/discoverableData.js';
 import { calculateDamageReduction } from './core/armorReduction.js';
 import { RestSystem } from './core/rest.js';
-import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, getWeaponDamage } from './core/systemWiring.js';
+import { createFactionSystem, createCombinedQuestSystem, applyArmorReduction, getWeaponDamage, detectNearbyStation, getEffectiveAggroRange, handleThrowInput, mineBlockWithTool, getToolDurabilityDisplay } from './core/systemWiring.js';
+import { StealthSystem } from './core/stealth.js';
 import { sideQuests } from './core/sideQuestData.js';
 import { getItemIcon } from './core/itemIcons.js';
+import { Settings } from './core/settings.js';
+import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
+import { EquipSlot } from './core/equipment.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -106,7 +110,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
 });
 
 function startGame(config) {
-  const MOUSE_SENSITIVITY = 0.002;
+  const BASE_MOUSE_SENSITIVITY = 0.002;
+  const settings = new Settings();
   const JUMP_VELOCITY = 8.0;
   const MAX_PITCH = Math.PI / 2 - 0.01;
   const GAME_TIME_SCALE = 4;
@@ -147,6 +152,9 @@ function startGame(config) {
   const factionSystem = createFactionSystem();
   const npcSystem = new NPCSystem();
   const mapScreen = new MapScreen(fogOfWar, allLandmarks);
+
+  // Stealth system based on race perception
+  const stealthSystem = new StealthSystem(race.statModifiers.perception || 50);
 
   // Newly wired systems
   const relicSystem = new RelicSystem();
@@ -304,6 +312,14 @@ function startGame(config) {
   function updateCraftingPanel() {
     craftingPanel.style.display = craftingUI.isOpen ? 'block' : 'none';
     if (!craftingUI.isOpen) return;
+    // Show station name in crafting panel header
+    const stationHeader = craftingPanel.querySelector('h2');
+    if (stationHeader) {
+      const stationName = craftingUI._station
+        ? `Station: ${craftingUI._station.charAt(0).toUpperCase() + craftingUI._station.slice(1)}`
+        : 'Hand Crafting';
+      stationHeader.textContent = `Crafting [E] — ${stationName}`;
+    }
     const allRecipesList = craftingUI.getAllRecipes();
     // Clamp selectedIndex to valid range
     if (craftingUI.selectedIndex >= allRecipesList.length) {
@@ -382,8 +398,9 @@ function startGame(config) {
 
     if (input.locked) {
       const mouse = input.consumeMouse();
-      player.yaw += mouse.dx * MOUSE_SENSITIVITY;
-      player.pitch -= mouse.dy * MOUSE_SENSITIVITY;
+      const mouseSens = settings.getMouseSensitivity(BASE_MOUSE_SENSITIVITY);
+      player.yaw += mouse.dx * mouseSens;
+      player.pitch -= mouse.dy * mouseSens;
       player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch));
     }
 
@@ -422,6 +439,9 @@ function startGame(config) {
     // Fear natural decay
     fearSystem.tick(gameDt);
 
+    // Status effects tick
+    statusEffects.tick(gameDt);
+
     // Map screen (M key) — update every frame while open so player dot moves
     if (input.consumeKeyPress('KeyM')) {
       mapScreen.toggle();
@@ -430,6 +450,44 @@ function startGame(config) {
       updateMapPanel(player.position);
     } else {
       mapPanel.style.display = 'none';
+    }
+
+    // Settings panel (P key)
+    if (input.consumeKeyPress('KeyP')) {
+      settings.toggleOpen();
+      const settingsPanel = document.getElementById('settings-panel');
+      if (settingsPanel) {
+        settingsPanel.style.display = settings.isOpen ? 'block' : 'none';
+        if (settings.isOpen) {
+          settingsPanel.innerHTML = `
+            <h2>Settings [P]</h2>
+            <div style="margin:8px 0">
+              <label>Camera Sensitivity: <span id="sens-val">${settings.sensitivity.toFixed(1)}x</span></label><br>
+              <input type="range" id="sens-slider" min="0.5" max="3.0" step="0.1" value="${settings.sensitivity}" style="width:200px">
+            </div>
+            <div style="margin:8px 0">
+              <label>FOV: <span id="fov-val">${settings.fov}</span></label><br>
+              <input type="range" id="fov-slider" min="60" max="110" step="1" value="${settings.fov}" style="width:200px">
+            </div>
+            <div style="margin:8px 0">
+              <label><input type="checkbox" id="tutorial-toggle" ${settings.tutorialEnabled ? 'checked' : ''}> Tutorial</label>
+            </div>
+          `;
+          document.getElementById('sens-slider').addEventListener('input', (e) => {
+            settings.setSensitivity(parseFloat(e.target.value));
+            document.getElementById('sens-val').textContent = settings.sensitivity.toFixed(1) + 'x';
+          });
+          document.getElementById('fov-slider').addEventListener('input', (e) => {
+            settings.setFov(parseInt(e.target.value));
+            document.getElementById('fov-val').textContent = settings.fov;
+            camera.fov = settings.fov;
+            camera.updateProjectionMatrix();
+          });
+          document.getElementById('tutorial-toggle').addEventListener('change', () => {
+            settings.toggleTutorial();
+          });
+        }
+      }
     }
 
     // Skill tree (Tab key)
@@ -448,6 +506,10 @@ function startGame(config) {
       }
     }
 
+    // Crafting station proximity detection — update station before showing crafting panel
+    const nearbyStation = detectNearbyStation(world, player.position);
+    craftingUI.setStation(nearbyStation);
+
     // Crafting menu (E key)
     if (input.consumeKeyPress('KeyE')) {
       craftingUI.toggle();
@@ -464,6 +526,16 @@ function startGame(config) {
         const itemsHtml = items.length === 0
           ? '<div style="color:#666">Empty</div>'
           : items.map(i => `<div>${getItemIcon(i.type)} <span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
+        // Equipment display
+        const equipData = getEquipmentDisplayData(equipment);
+        const equipHtml = equipData.map(e => {
+          const itemLabel = e.item ? `<span style="color:#aed581">${e.item.name || e.item.id}</span>` : '<span style="color:#555">empty</span>';
+          return `<div><span style="color:#c9a84c">${e.label}:</span> ${itemLabel}</div>`;
+        }).join('');
+        const equipWeapons = getEquippableWeapons(inventory);
+        const weaponBtns = equipWeapons.map(w =>
+          `<div class="equip-weapon" data-id="${w.id}" data-dmg="${w.damage}" style="cursor:pointer;color:#aed581;margin:2px 0">${getItemIcon(w.id)} ${w.name} (dmg:${w.damage}) <span style="color:#c9a84c">[Equip]</span></div>`
+        ).join('');
         // Faction reputation display
         const factionHtml = factionSystem.getAllFactions().map(f => {
           const rep = factionSystem.getReputation(f.id);
@@ -471,8 +543,23 @@ function startGame(config) {
           return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
         }).join('');
         document.getElementById('inventory-list').innerHTML = itemsHtml
+          + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Equipment</div>'
+          + equipHtml
+          + (weaponBtns ? '<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px;color:#aaa;font-size:11px">Equip Weapons</div>' + weaponBtns : '')
           + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Factions</div>'
           + factionHtml;
+        // Attach equip click handlers
+        document.querySelectorAll('.equip-weapon').forEach(el => {
+          el.addEventListener('click', () => {
+            const weaponId = el.dataset.id;
+            const weaponDmg = parseInt(el.dataset.dmg) || 2;
+            if (inventory.count(weaponId) > 0) {
+              inventory.remove(weaponId, 1);
+              const prev = equipment.equip({ id: weaponId, name: weaponId.replace(/_/g, ' '), slot: EquipSlot.MAIN_HAND, weapon: { damage: weaponDmg } });
+              if (prev) inventory.add(prev.id, 1);
+            }
+          });
+        });
       }
     }
 
@@ -559,7 +646,20 @@ function startGame(config) {
 
     // Eat food (F key)
     if (input.consumeKeyPress('KeyF')) {
-      eatBestFood(inventory, survivalStats);
+      eatBestFood(inventory, survivalStats, statusEffects);
+    }
+
+    // Throw item (H key)
+    if (input.consumeKeyPress('KeyH')) {
+      const throwForward = getLookDirection(player);
+      const throwResult = handleThrowInput(inventory, player.position, throwForward, enemies);
+      if (throwResult) {
+        dialogueMessage = 'Hit!';
+        dialogueTimer = 1.5;
+      } else if (inventory.count('stone') > 0 || inventory.count('oil_flask') > 0 || inventory.count('smoke_bomb') > 0 || inventory.count('bait') > 0) {
+        dialogueMessage = 'Missed!';
+        dialogueTimer = 1.5;
+      }
     }
 
     // Use relic ability (X key)
@@ -670,11 +770,15 @@ function startGame(config) {
       enemies.push(...newEnemies);
     }
 
-    // Enemy AI
+    // Enemy AI — apply stealth aggro reduction when crouching
     const getHeight = (x, z) => getHeightAt(x, z, config.seed);
     for (const enemy of enemies) {
       if (!enemy.isDead()) {
+        // Temporarily reduce aggro range if player is crouching
+        const originalAggro = enemy.aggroRange;
+        enemy.aggroRange = getEffectiveAggroRange(enemy, player.crouching);
         enemy.updateAI(player.position, dt, getHeight, world);
+        enemy.aggroRange = originalAggro;
       }
     }
 
@@ -704,9 +808,16 @@ function startGame(config) {
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
         const mainHand = equipment.get('main_hand');
-        const equippedToolType = (mainHand && mainHand.toolType) || null;
-        mineBlock(world, inventory, bx, by, bz, equippedToolType);
-        worldRenderer.markDirty(bx, by, bz);
+        const equippedTool = (mainHand && mainHand.tool) || null;
+        const mineResult = mineBlockWithTool(world, inventory, bx, by, bz, equippedTool);
+        if (mineResult.mined) {
+          worldRenderer.markDirty(bx, by, bz);
+          if (mineResult.broken) {
+            equipment.unequip('main_hand');
+            dialogueMessage = 'Your tool broke!';
+            dialogueTimer = 2;
+          }
+        }
       } else {
         const weaponDmg = getWeaponDamage(equipment);
         combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
@@ -807,12 +918,15 @@ function startGame(config) {
       playerYaw: player.yaw,
       fearSystem,
       experienceSystem,
+      statusEffects,
     });
     const invItems = inventory.getItems().slice(0, 8).map(i => `${i.type}:${i.count}`).join(' ');
 
     const enemyCount = enemies.length;
-    const crouchLabel = player.crouching ? ' [Crouching]' : '';
+    const sneakingLabel = player.crouching ? ' [Sneaking]' : '';
     const guardLabel = combatSystem._guarding ? ' [Guard]' : '';
+    const mainHandEquip = equipment.get('main_hand');
+    const toolDurLabel = mainHandEquip && mainHandEquip.tool ? ` | ${getToolDurabilityDisplay(mainHandEquip.tool)}` : '';
     const weather = weatherSystem.current;
     const explored = Math.round(fogOfWar.getRevealedPercentage());
     const questLabel = hudData.activeQuestName ? ` | Quest: ${hudData.activeQuestName}` : '';
@@ -846,10 +960,16 @@ function startGame(config) {
       }
     }
 
+    // Status effects HUD line
+    const effectsLine = hudData.statusEffects.length > 0
+      ? `<div style="margin-top:2px;font-size:11px;color:#aed581">${hudData.statusEffects.map(e => `${e.type.replace(/_/g, ' ')} ${Math.ceil(e.remaining)}s`).join(' | ')}</div>`
+      : '';
+
     hudElement.innerHTML = `
-      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}</div>
+      <div>${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${sneakingLabel}${guardLabel}${toolDurLabel}</div>
       <div>HP: ${hudData.health}/${hudData.maxHealth} | STA: ${hudData.stamina} | HUN: ${hudData.hunger} | FOC: ${hudData.focus} | ${hudData.tempLabel}${fearLvl > 0 ? ` | Fear: ${fearLvl}` : ''}${questLabel}</div>
       <div style="margin-top:2px;font-size:11px;color:#888">${invItems || 'empty'}${enemyCount ? ` | Enemies: ${enemyCount}` : ''} | Map: ${explored}%</div>
+      ${effectsLine}
       ${npcHint}${siteHint}${dialogueLine}
     `;
   }

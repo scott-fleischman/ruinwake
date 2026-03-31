@@ -4,6 +4,10 @@ import { Quest, QuestSystem } from './quest.js';
 import { mainQuests } from './questData.js';
 import { sideQuests } from './sideQuestData.js';
 import { calculateDamageReduction } from './armorReduction.js';
+import { BlockType } from './block.js';
+import { StationType } from './craftingStation.js';
+import { Throwable, ThrowableType, throwItem } from './throwable.js';
+import { mineBlock } from './actions.js';
 
 const DEFAULT_FIST_DAMAGE = 2;
 
@@ -60,4 +64,106 @@ export function getWeaponDamage(equipment) {
     return mainHand.weapon.damage;
   }
   return DEFAULT_FIST_DAMAGE;
+}
+
+// --- Block type to station type mapping ---
+const BLOCK_TO_STATION = {
+  [BlockType.WORKBENCH]: StationType.WORKBENCH,
+  [BlockType.FORGE]: StationType.FORGE,
+  [BlockType.CAMPFIRE]: StationType.CAMPFIRE,
+  [BlockType.KITCHEN]: StationType.KITCHEN,
+  [BlockType.LOOM]: StationType.LOOM,
+  [BlockType.RUNE_TABLE]: StationType.RUNE_TABLE,
+};
+
+/**
+ * Feature 1: Detect if a crafting station block is within 3 blocks of the player.
+ * Scans a cube of radius 3 around the player's integer position.
+ * Returns the StationType string if found, or null.
+ */
+export function detectNearbyStation(world, playerPos) {
+  const px = Math.floor(playerPos.x);
+  const py = Math.floor(playerPos.y);
+  const pz = Math.floor(playerPos.z);
+  const radius = 3;
+
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dz = -radius; dz <= radius; dz++) {
+        const block = world.getBlock(px + dx, py + dy, pz + dz);
+        const station = BLOCK_TO_STATION[block];
+        if (station) return station;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Feature 2: Get the effective aggro range for an enemy, considering player crouching.
+ * When the player is crouching, aggro range is halved (multiplied by 0.5).
+ */
+export function getEffectiveAggroRange(enemy, crouching) {
+  return crouching ? enemy.aggroRange * 0.5 : enemy.aggroRange;
+}
+
+// --- Throwable definitions used by the throw input handler ---
+const THROWABLE_DEFS = {
+  [ThrowableType.STONE]: new Throwable({ type: ThrowableType.STONE, damage: 5, range: 12, effect: null }),
+  [ThrowableType.OIL_FLASK]: new Throwable({ type: ThrowableType.OIL_FLASK, damage: 15, range: 10, effect: 'fire' }),
+  [ThrowableType.SMOKE_BOMB]: new Throwable({ type: ThrowableType.SMOKE_BOMB, damage: 0, range: 8, effect: 'smoke' }),
+  [ThrowableType.BAIT]: new Throwable({ type: ThrowableType.BAIT, damage: 0, range: 10, effect: 'lure' }),
+};
+
+const THROWABLE_PRIORITY = [ThrowableType.STONE, ThrowableType.OIL_FLASK, ThrowableType.SMOKE_BOMB, ThrowableType.BAIT];
+
+/**
+ * Feature 3: Handle throw input (H key). Finds the first available throwable
+ * in inventory, consumes 1, and calls throwItem.
+ * Returns true if an enemy was hit, false otherwise. Consumes the item either way.
+ */
+export function handleThrowInput(inventory, playerPos, lookDir, enemies) {
+  // Find first available throwable type in inventory
+  let throwableType = null;
+  for (const type of THROWABLE_PRIORITY) {
+    if (inventory.count(type) > 0) {
+      throwableType = type;
+      break;
+    }
+  }
+  if (!throwableType) return false;
+
+  // Consume 1 from inventory
+  inventory.remove(throwableType, 1);
+
+  // Throw it
+  const throwable = THROWABLE_DEFS[throwableType];
+  return throwItem(throwable, playerPos, lookDir, enemies);
+}
+
+/**
+ * Feature 4: Mine a block with a tool, decrementing tool durability.
+ * Returns { mined: boolean, broken: boolean }.
+ */
+export function mineBlockWithTool(world, inventory, x, y, z, tool) {
+  const toolType = tool ? tool.type : null;
+  const mined = mineBlock(world, inventory, x, y, z, toolType);
+
+  if (!mined) return { mined: false, broken: false };
+
+  if (tool) {
+    tool.use();
+    return { mined: true, broken: tool.isBroken() };
+  }
+
+  return { mined: true, broken: false };
+}
+
+/**
+ * Feature 4: Format tool durability for display in the hotbar.
+ * Returns e.g. "pickaxe 75/100" or empty string if no tool.
+ */
+export function getToolDurabilityDisplay(tool) {
+  if (!tool) return '';
+  return `${tool.type} ${tool.durability}/${tool.maxDurability}`;
 }

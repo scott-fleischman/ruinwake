@@ -282,7 +282,9 @@ describe('Tool durability wiring', () => {
   });
 
   it('getToolDurabilityDisplay formats tool durability for hotbar', () => {
-    const tool = new Tool({ type: ToolType.PICKAXE, damage: 5, durability: 75, miningSpeed: 1.0 });
+    const tool = new Tool({ type: ToolType.PICKAXE, damage: 5, durability: 100, miningSpeed: 1.0 });
+    // Use the tool 25 times to get to 75/100
+    for (let i = 0; i < 25; i++) tool.use();
     const display = getToolDurabilityDisplay(tool);
     expect(display).toBe('pickaxe 75/100');
   });
