@@ -22,14 +22,10 @@ export const RIVERS = [
     id: 'shire_brook',
     name: 'The Water (Shire Brook)',
     width: 3,
-    current: { x: 0.8, z: 0 }, // flows east (positive X)
+    current: { x: 0.6, z: 0 }, // gentle eastward flow
     points: [
-      { x: -40, z: 10 },
-      { x: -20, z: 8 },
-      { x: 0, z: 5 },
-      { x: 20, z: 3 },
-      { x: 40, z: 0 },
-      { x: 60, z: -2 },
+      { x: -40, z: 5 },
+      { x: 60, z: 5 },
     ],
   },
   {

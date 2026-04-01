@@ -8,22 +8,25 @@ export class WorldRenderer {
     this.world = world;
     this.meshes = new Map();
     this.dirty = new Set();
+    this._attempted = new Set(); // chunks we've tried to mesh (even if null)
   }
 
   markDirty(wx, wy, wz) {
     const cx = Math.floor(wx / CHUNK_SIZE);
     const cy = Math.floor(wy / CHUNK_SIZE);
     const cz = Math.floor(wz / CHUNK_SIZE);
-    this.dirty.add(`${cx},${cy},${cz}`);
+    const key = `${cx},${cy},${cz}`;
+    this.dirty.add(key);
+    this._attempted.delete(key); // allow rebuild
     const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
     const ly = ((wy % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
     const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-    if (lx === 0) this.dirty.add(`${cx - 1},${cy},${cz}`);
-    if (lx === CHUNK_SIZE - 1) this.dirty.add(`${cx + 1},${cy},${cz}`);
-    if (ly === 0) this.dirty.add(`${cx},${cy - 1},${cz}`);
-    if (ly === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy + 1},${cz}`);
-    if (lz === 0) this.dirty.add(`${cx},${cy},${cz - 1}`);
-    if (lz === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy},${cz + 1}`);
+    if (lx === 0) { this.dirty.add(`${cx-1},${cy},${cz}`); this._attempted.delete(`${cx-1},${cy},${cz}`); }
+    if (lx === CHUNK_SIZE-1) { this.dirty.add(`${cx+1},${cy},${cz}`); this._attempted.delete(`${cx+1},${cy},${cz}`); }
+    if (ly === 0) { this.dirty.add(`${cx},${cy-1},${cz}`); this._attempted.delete(`${cx},${cy-1},${cz}`); }
+    if (ly === CHUNK_SIZE-1) { this.dirty.add(`${cx},${cy+1},${cz}`); this._attempted.delete(`${cx},${cy+1},${cz}`); }
+    if (lz === 0) { this.dirty.add(`${cx},${cy},${cz-1}`); this._attempted.delete(`${cx},${cy},${cz-1}`); }
+    if (lz === CHUNK_SIZE-1) { this.dirty.add(`${cx},${cy},${cz+1}`); this._attempted.delete(`${cx},${cy},${cz+1}`); }
   }
 
   update(playerX, playerZ, renderDistance = 4) {
@@ -43,7 +46,7 @@ export class WorldRenderer {
     }
     this.dirty.clear();
 
-    // Build meshes for all visible chunks that need one
+    // Build meshes for visible chunks
     for (let dx = -renderDistance; dx <= renderDistance; dx++) {
       for (let dz = -renderDistance; dz <= renderDistance; dz++) {
         const cx = pcx + dx;
@@ -56,7 +59,8 @@ export class WorldRenderer {
 
           needed.add(key);
 
-          if (!this.meshes.has(key)) {
+          if (!this.meshes.has(key) && !this._attempted.has(key)) {
+            this._attempted.add(key);
             const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
             if (mesh) {
               this.scene.add(mesh);
@@ -73,6 +77,7 @@ export class WorldRenderer {
         this.scene.remove(mesh);
         mesh.geometry.dispose();
         this.meshes.delete(key);
+        this._attempted.delete(key);
       }
     }
   }
