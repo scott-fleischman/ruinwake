@@ -35,6 +35,8 @@ export class World {
   }
 
   getBlock(x, y, z) {
+    // Below bedrock: always solid stone — prevents see-through ground
+    if (y < 0) return BlockType.STONE;
     const { cx, cy, cz, lx, ly, lz } = this._worldToChunk(x, y, z);
     const chunk = this.getChunk(cx, cy, cz);
     if (!chunk) return BlockType.AIR;

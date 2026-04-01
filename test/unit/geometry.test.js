@@ -37,7 +37,7 @@ describe('FACES winding order', () => {
 describe('buildChunkGeometry', () => {
   it('single block produces 6 visible faces (24 verts, 12 tris)', () => {
     const world = new World();
-    world.setBlock(0, 0, 0, BlockType.STONE);
+    world.setBlock(5, 5, 5, BlockType.STONE); // y=5, away from bedrock at y<0
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
     expect(geo.vertexCount).toBe(24); // 6 faces × 4 verts
@@ -46,8 +46,8 @@ describe('buildChunkGeometry', () => {
 
   it('two adjacent blocks share a hidden face', () => {
     const world = new World();
-    world.setBlock(0, 0, 0, BlockType.STONE);
-    world.setBlock(1, 0, 0, BlockType.STONE);
+    world.setBlock(5, 5, 5, BlockType.STONE); // away from bedrock
+    world.setBlock(6, 5, 5, BlockType.STONE);
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
     // 2 blocks × 6 faces = 12, minus 2 shared faces = 10 visible faces
