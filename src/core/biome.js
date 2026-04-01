@@ -25,8 +25,8 @@ const BIOMES = {
     name: 'The Shire',
     surfaceBlock: BlockType.GRASS,
     treeDensity: 0.02,
-    minHeight: 22,
-    maxHeight: 36,
+    minHeight: 29,
+    maxHeight: 34,
   }),
   [BiomeType.FOREST]: new Biome({
     type: BiomeType.FOREST,
@@ -57,8 +57,8 @@ const BIOMES = {
     name: 'Plains',
     surfaceBlock: BlockType.GRASS,
     treeDensity: 0.003,
-    minHeight: 22,
-    maxHeight: 34,
+    minHeight: 29,
+    maxHeight: 33,
   }),
 };
 
