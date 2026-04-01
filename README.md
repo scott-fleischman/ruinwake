@@ -1,111 +1,104 @@
 # Middle-earth Voxel Survival RPG
 
-A single-player, first-person voxel survival RPG set in a far-future Middle-earth. Choose a race and class, survive in a harsh world, explore ruined landmarks from The Hobbit corridor, restore ancient settlements, and uncover a rising dark power.
+A single-player, first-person voxel survival RPG set in a far-future Middle-earth. Inspired by Minecraft's editable voxel world, Vintage Story's grounded survival, and Breath of the Wild's open exploration with a persistent main quest.
 
-## Quick Start
+You choose a race (Man, Elf, Dwarf, Hobbit) and class (3 per race), then journey east along The Hobbit corridor — from the gentle Shire through Bree, the Trollshaws, Rivendell, the Misty Mountains, Mirkwood, and finally to Erebor — surviving, crafting, restoring ancient ruins, and confronting a newly awakened dark power at Dol Guldur.
+
+## What's in the game
+
+- **4 races, 12 classes** with distinct stats, starter gear, and passives
+- **8-chapter main quest** following The Hobbit's travel corridor
+- **27 side quests** across 6 factions with reputation tracking
+- **600x270 block world** with 5 biomes, 41 block types, rivers, and water
+- **15 enemy types** from wolves to wraiths with block collision and terrain following
+- **84 items**, 30+ recipes, 7 crafting stations (hand, workbench, forge, campfire, kitchen, loom, rune table)
+- **6 skill trees** (54 nodes) with race/class starting unlocks
+- **5 restorable ruins** with visible structures and material requirements
+- **7 NPCs** with unique lore-rich dialogue and quest acceptance
+- **Magic system** with 7 relic abilities (Ward Light, Heal Wound, Calm Fear...)
+- **Survival**: hunger, stamina, temperature, corruption, fear, shelter quality, food freshness, injuries
+- **Day/night cycle** with weather, night danger escalation, and corruption zones
+- **Death and respawn**, creative mode (F4), save/load (F5/F9)
+- **100% completion tracker** with 13 categories and a jump-to-state debug menu
+
+## How to play
+
+See **[CHEAT_SHEET.md](CHEAT_SHEET.md)** for a full walkthrough with coordinates.
+
+### Controls
+
+| Key | Action |
+|-----|--------|
+| **WASD** | Move |
+| **Mouse** | Look |
+| **Space** | Jump |
+| **Shift** | Sprint |
+| **LClick** (hold) | Mine block / Attack |
+| **RClick** | Place selected block |
+| **Scroll / 1-8** | Select hotbar slot |
+| **E** | Crafting |
+| **I** | Inventory (click slots to move items) |
+| **Q** | Quest log |
+| **Tab** | Skill trees |
+| **M** | World map |
+| **T** | Talk to NPC |
+| **F** | Eat food |
+| **R** | Restore nearby ruin |
+| **X** | Use relic ability |
+| **G** (hold) | Guard |
+| **C** | Crouch (stealth) |
+| **V** | Camera toggle |
+| **P** | Settings |
+| **F4** | Creative mode |
+| **F5 / F9** | Save / Load |
+| **`** | Completion tracker |
+
+### Getting started
+
+1. Pick a race and class (Hobbit Forager is easiest, Man Soldier for combat)
+2. Punch grass for fiber, break dirt/wood by hand
+3. Craft sticks (E key), then a workbench (4 planks + 4 sticks)
+4. Place the workbench, stand near it, open crafting (E) to see station recipes
+5. Craft a stone pickaxe to mine stone and ore
+6. Build a shelter before night (4 walls + roof)
+7. Talk to Hal the Ranger nearby (T key) to start the main quest
+8. Head east toward Bree, then Rivendell, then the mountains...
+
+## Development
 
 ```bash
 nvm use 22.18.0
 npm install
-npm run dev
+npm run dev          # start dev server at localhost:5173
+npm test             # run all 1168+ tests
 ```
 
-Open `http://localhost:5173` in a browser.
+### Key commands
 
-## Running Tests
+| Command | What it does |
+|---------|-------------|
+| `npm test` | Run all tests (unit, integration, solvability, spatial, property, contract, rendering) |
+| `npx vitest run test/rendering/screenshots.test.js` | Generate headless screenshots for graphics review |
+| `npx vitest run --watch` | Watch mode for TDD |
+| `npx vitest run test/unit/` | Run only unit tests |
 
-```bash
-npm test                    # run all 1168+ tests
-npx vitest run              # same, explicit
-npx vitest run --watch      # watch mode
-```
-
-### Test Layers
-
-| Layer | Location | Description |
-|-------|----------|-------------|
-| Unit | `test/unit/` | Rules, calculations, state transitions |
-| Contract | `test/contract/` | Boundaries between core and adapters |
-| Integration | `test/integration/` | Full gameplay loops, headless |
-| Property | `test/property/` | Invariant/fuzz tests with random inputs |
-| Solvability | `test/solvability/` | Quest chain completability |
-| Spatial | `test/spatial/` | Spawn validity, NPC placement |
-| Rendering | `test/rendering/` | Screenshot generation |
-
-## Screenshot Generation
-
-Generate headless screenshots for graphics review:
+### Screenshot generation
 
 ```bash
 npx vitest run test/rendering/screenshots.test.js
 ```
 
-Screenshots are saved to `test/rendering/screenshots/<timestamp>/`:
-- `block_palette.ppm` — All block types in a grid
-- `block_stone.ppm`, `block_grass.ppm`, `block_wood.ppm` — Individual blocks
-- `biome_shire.ppm` — Shire terrain (green rolling hills)
-- `biome_mountain.ppm` — Misty Mountains terrain (stone peaks)
-- `biome_mirkwood.ppm` — Mirkwood terrain (dark dense forest)
+Generates PPM screenshots in `test/rendering/screenshots/<timestamp>/`:
+- Block palette, individual blocks (stone, grass, wood)
+- Biome terrain views (Shire, Mountains, Mirkwood)
 
-PPM files can be viewed with ImageMagick (`display`), macOS Preview, GIMP, or converted: `convert screenshot.ppm screenshot.png`
+View with: ImageMagick (`display`), macOS Preview, GIMP, or `convert file.ppm file.png`
 
-Each run creates a timestamped directory so historical screenshots are preserved for comparison.
+### Architecture
 
-## Game Controls
+- **`src/core/`** — 96 headless gameplay modules (no rendering deps)
+- **`src/render/`** — Three.js adapters
+- **`src/worker/`** — Web Worker for background terrain generation
+- **`test/`** — 7 test layers across 131 files
 
-| Key | Action |
-|-----|--------|
-| WASD | Move |
-| Mouse | Look |
-| Space | Jump (fly up in Creative) |
-| Shift | Sprint (fly down in Creative) |
-| C | Crouch (reduces enemy detection) |
-| LClick (hold) | Mine block / Attack |
-| RClick | Place selected block |
-| F | Eat food |
-| R | Restore nearby site |
-| T | Talk to NPC |
-| G (hold) | Guard (50% damage reduction) |
-| X | Use relic ability |
-| H | Throw item |
-| E | Crafting menu |
-| I | Inventory (grid, click to move items) |
-| Q | Quest log |
-| Tab | Skill trees |
-| M | World map |
-| P | Settings |
-| V | Camera toggle (1st/3rd person) |
-| 1-8 / Scroll | Hotbar slot |
-| F4 | Creative mode (fly, invincible) |
-| F5 | Save game |
-| F9 | Load game |
-| ` | Completion tracker |
-
-## Architecture
-
-- **Headless-first**: All gameplay logic in `src/core/` with no rendering dependencies
-- **Rendering adapters**: `src/render/` wraps Three.js, separate from game logic
-- **Strict TDD**: Red/green/refactor with separate commits
-- **Deterministic**: All randomness seeded, all time explicit
-- **Chunked streaming**: Terrain generates on-demand via Web Worker as player explores
-
-See `AGENTS.md` for development rules, `TESTING.md` for test conventions, `PLANS.md` for roadmap, and `CHEAT_SHEET.md` for a full walkthrough.
-
-## Project Structure
-
-```
-src/
-  core/           # 96 headless gameplay modules
-  render/         # Three.js rendering adapters
-  worker/         # Web Worker for background terrain generation
-  main.js         # Game loop and UI wiring
-  input.js        # Input handler
-test/
-  unit/           # ~95 unit test files
-  integration/    # Headless gameplay loop tests
-  contract/       # Data consistency tests
-  property/       # Fuzz/invariant tests
-  solvability/    # Quest chain tests
-  spatial/        # Spawn/NPC placement tests
-  rendering/      # Screenshot generation tests
-```
+See also: [AGENTS.md](AGENTS.md) (dev rules), [TESTING.md](TESTING.md) (test conventions), [PLANS.md](PLANS.md) (roadmap), [CHEAT_SHEET.md](CHEAT_SHEET.md) (walkthrough), [spec.md](spec.md) (full spec)
