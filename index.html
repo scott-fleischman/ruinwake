@@ -252,7 +252,12 @@
   </div>
   <div id="map-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(5,15,5,0.92);padding:20px;border-radius:10px;border:1px solid #444;width:500px;height:420px;display:none;z-index:100"><h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">World Map [M]</h2><div id="map-canvas" style="width:100%;height:320px;position:relative;background:#1a2a1a;border-radius:4px;overflow:hidden"></div><div style="color:#888;font-size:11px;margin-top:8px">M Close</div></div>
   <div id="skill-panel"><h2>Skills [Tab]</h2><div id="skill-tree-nav" class="tree-nav"></div><div id="skill-tree-nodes"></div><div class="hint">←→ Switch tree | ↑↓ Navigate | Enter Unlock | Tab Close</div></div>
-  <div id="inventory-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px 30px;border-radius:10px;border:1px solid #555;width:360px;max-height:70vh;overflow-y:auto;display:none;z-index:100"><h2 style="color:#c9a84c;margin-bottom:12px;font-size:18px">Inventory [I]</h2><div id="inventory-list" style="font-size:13px;line-height:1.8"></div><div style="color:#888;font-size:11px;margin-top:10px">I Close</div></div>
+  <div id="inventory-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px;border-radius:10px;border:1px solid #555;width:440px;max-height:80vh;overflow-y:auto;display:none;z-index:100">
+    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">Inventory [I]</h2>
+    <div id="inventory-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:12px"></div>
+    <div id="inventory-extra" style="font-size:12px;line-height:1.6"></div>
+    <div style="color:#666;font-size:10px;margin-top:8px">Click slot then click another to swap | I Close</div>
+  </div>
   <div id="hotbar-bar"></div>
   <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
   <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>

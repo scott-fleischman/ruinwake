@@ -1,6 +1,6 @@
 import { getRace } from './race.js';
 import { getClass } from './playerClass.js';
-import { Inventory } from './inventory.js';
+import { GridInventory as Inventory } from './gridInventory.js';
 import { SurvivalStats } from './survival.js';
 import { Player } from './player.js';
 import { SURFACE_Y } from './terrain.js';

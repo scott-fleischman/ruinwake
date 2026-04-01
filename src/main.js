@@ -262,6 +262,7 @@ function startGame(config, jumpStateId) {
   }
   let dialogueMessage = '';
   let dialogueTimer = 0;
+  let invSelectedSlot = -1;
 
   // Apply starter kit
   const starterKit = getStarterKit(config.classId);
@@ -674,26 +675,49 @@ function startGame(config, jumpStateId) {
       updateCraftingPanel();
     }
 
-    // Inventory panel (I key)
+    // Inventory panel (I key) — grid-based Minecraft-style
     if (input.consumeKeyPress('KeyI')) {
       const invPanel = document.getElementById('inventory-panel');
       const isShowing = invPanel.style.display !== 'none';
       invPanel.style.display = isShowing ? 'none' : 'block';
-      if (!isShowing) {
-        const items = formatInventoryDisplay(inventory);
-        const itemsHtml = items.length === 0
-          ? '<div style="color:#666">Empty</div>'
-          : items.map(i => `<div>${getItemIcon(i.type)} <span style="color:#aed581">${i.type.replace(/_/g, ' ')}</span> <span style="color:#888">x${i.count}</span></div>`).join('');
-        // Faction reputation display
-        const factionHtml = factionSystem.getAllFactions().map(f => {
-          const rep = factionSystem.getReputation(f.id);
-          const tier = factionSystem.getTier(f.id);
-          return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
-        }).join('');
-        document.getElementById('inventory-list').innerHTML = itemsHtml
-          + '<div style="margin-top:8px;border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px">Factions</div>'
-          + factionHtml;
+    }
+    if (document.getElementById('inventory-panel').style.display !== 'none') {
+      const grid = document.getElementById('inventory-grid');
+      let gridHtml = '';
+      const totalSlots = inventory.size || 36;
+      for (let i = 0; i < totalSlots; i++) {
+        const slot = inventory.getSlot ? inventory.getSlot(i) : null;
+        const icon = slot ? getItemIcon(slot.type) : '';
+        const label = slot ? slot.type.replace(/_/g, ' ') : '';
+        const count = slot ? slot.count : '';
+        const selBorder = (invSelectedSlot === i) ? 'border-color:#c9a84c;background:rgba(60,60,20,0.5)' : '';
+        gridHtml += `<div data-inv-slot="${i}" style="width:56px;height:56px;background:rgba(30,30,40,0.8);border:2px solid #444;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${selBorder}">
+          <div style="font-size:20px;line-height:1">${icon}</div>
+          <div style="font-size:8px;color:#aaa;overflow:hidden;max-width:52px;text-align:center;white-space:nowrap">${label}</div>
+          <div style="font-size:9px;color:#888">${count}</div>
+        </div>`;
       }
+      grid.innerHTML = gridHtml;
+      // Click handler for slot selection/swapping
+      grid.onclick = (e) => {
+        const el = e.target.closest('[data-inv-slot]');
+        if (!el) return;
+        const idx = parseInt(el.getAttribute('data-inv-slot'));
+        if (invSelectedSlot === -1) {
+          invSelectedSlot = idx;
+        } else {
+          if (inventory.moveSlot) inventory.moveSlot(invSelectedSlot, idx);
+          invSelectedSlot = -1;
+        }
+      };
+      // Faction reputation below grid
+      const factionHtml = factionSystem.getAllFactions().map(f => {
+        const rep = factionSystem.getReputation(f.id);
+        const tier = factionSystem.getTier(f.id);
+        return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
+      }).join('');
+      document.getElementById('inventory-extra').innerHTML =
+        '<div style="border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px;margin-top:4px">Factions</div>' + factionHtml;
     }
 
     // Quest log (Q key) — update every frame while open so objectives update live
