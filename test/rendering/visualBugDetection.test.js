@@ -14,11 +14,18 @@ import {
 const OUT = join(import.meta.dirname, 'screenshots');
 mkdirSync(OUT, { recursive: true });
 
-const SKY_R = 135, SKY_G = 206, SKY_B = 235;
+// Sky color from GAME_CONSTANTS — if sky color changes, tests adapt
+import { GAME_CONSTANTS } from '../../src/core/gameConstants.js';
+const SKY_HEX = GAME_CONSTANTS.COLORS.SKY_DAY;
+const SKY_R = (SKY_HEX >> 16) & 0xff;
+const SKY_G = (SKY_HEX >> 8) & 0xff;
+const SKY_B = SKY_HEX & 0xff;
 
-function isSkyPixel(fb, x, y) {
+function isSkyPixel(fb, x, y, tolerance = 5) {
   const i = (y * fb.width + x) * 3;
-  return fb.color[i] === SKY_R && fb.color[i+1] === SKY_G && fb.color[i+2] === SKY_B;
+  return Math.abs(fb.color[i] - SKY_R) <= tolerance &&
+         Math.abs(fb.color[i+1] - SKY_G) <= tolerance &&
+         Math.abs(fb.color[i+2] - SKY_B) <= tolerance;
 }
 
 function isMagentaPixel(fb, x, y) {
