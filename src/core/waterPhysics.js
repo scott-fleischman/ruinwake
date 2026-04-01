@@ -1,6 +1,5 @@
 import { BlockType } from './block.js';
-
-const WATER_SLOWDOWN = 0.5;
+import { GAME_CONSTANTS } from './gameConstants.js';
 
 export function isInWater(world, pos) {
   const bx = Math.floor(pos.x);
@@ -10,5 +9,5 @@ export function isInWater(world, pos) {
 }
 
 export function getWaterSlowdown(inWater) {
-  return inWater ? WATER_SLOWDOWN : 1;
+  return inWater ? GAME_CONSTANTS.SURVIVAL.WATER_SLOWDOWN : 1;
 }

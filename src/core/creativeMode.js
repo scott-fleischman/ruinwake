@@ -1,7 +1,9 @@
+import { GAME_CONSTANTS } from './gameConstants.js';
+
 export class CreativeMode {
   constructor() {
     this.enabled = false;
-    this.flySpeed = 15;
+    this.flySpeed = GAME_CONSTANTS.CREATIVE.FLY_SPEED;
   }
 
   toggle() {
