@@ -213,8 +213,13 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
 
           // Skip face if neighbor is solid
           if (isBlockSolid(world.getBlock(nx, ny, nz))) continue;
-          // Skip face if neighbor chunk is unloaded (treat as opaque to prevent sky leaks)
-          if (world.isChunkLoaded && !world.isChunkLoaded(nx, ny, nz)) continue;
+          // Skip face if neighbor is in a different chunk that isn't loaded
+          // (only check at chunk edges to avoid per-face overhead)
+          const lnx = nx - cx * CHUNK_SIZE;
+          const lny = ny - cy * CHUNK_SIZE;
+          const lnz = nz - cz * CHUNK_SIZE;
+          if ((lnx < 0 || lnx >= CHUNK_SIZE || lny < 0 || lny >= CHUNK_SIZE || lnz < 0 || lnz >= CHUNK_SIZE)
+              && world.isChunkLoaded && !world.isChunkLoaded(nx, ny, nz)) continue;
 
           const vertStart = positions.length / 3;
           const color = getFaceColor(block, face.dir);
@@ -230,23 +235,10 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
             const vz = wz + v[2];
             positions.push(vx, vy, vz);
 
-            // Ambient occlusion: count solid neighbors at this vertex corner
-            const cornerX = Math.floor(vx - 0.5 + face.dir[0] * 0.5);
-            const cornerY = Math.floor(vy - 0.5 + face.dir[1] * 0.5);
-            const cornerZ = Math.floor(vz - 0.5 + face.dir[2] * 0.5);
-            let occluders = 0;
-            for (let ox = 0; ox <= 1; ox++) {
-              for (let oz = 0; oz <= 1; oz++) {
-                if (isBlockSolid(world.getBlock(cornerX + ox, cornerY, cornerZ + oz))) occluders++;
-              }
-            }
-            const ao = 1.0 - occluders * 0.07; // subtle darkening
-
-            const light = dirLight * ao;
             colors.push(
-              (color[0] + vertexNoise(vx, vy, vz, 0)) * light,
-              (color[1] + vertexNoise(vx, vy, vz, 1)) * light,
-              (color[2] + vertexNoise(vx, vy, vz, 2)) * light
+              (color[0] + vertexNoise(vx, vy, vz, 0)) * dirLight,
+              (color[1] + vertexNoise(vx, vy, vz, 1)) * dirLight,
+              (color[2] + vertexNoise(vx, vy, vz, 2)) * dirLight
             );
           }
 

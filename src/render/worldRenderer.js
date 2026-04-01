@@ -2,13 +2,15 @@ import * as THREE from 'three';
 import { CHUNK_SIZE } from '../core/chunk.js';
 import { buildChunkMesh } from './chunkMesher.js';
 
+const MAX_MESH_BUILDS_PER_FRAME = 4;
+
 export class WorldRenderer {
   constructor(scene, world) {
     this.scene = scene;
     this.world = world;
     this.meshes = new Map();
     this.dirty = new Set();
-    this._meshedOnce = new Set(); // tracks chunks that have been meshed at least once
+    this._meshedOnce = new Set();
   }
 
   markDirty(wx, wy, wz) {
@@ -16,7 +18,6 @@ export class WorldRenderer {
     const cy = Math.floor(wy / CHUNK_SIZE);
     const cz = Math.floor(wz / CHUNK_SIZE);
     this.dirty.add(`${cx},${cy},${cz}`);
-    // also mark neighbors for cross-chunk face updates
     const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
     const ly = ((wy % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
     const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
@@ -33,8 +34,21 @@ export class WorldRenderer {
     const pcz = Math.floor(playerZ / CHUNK_SIZE);
 
     const needed = new Set();
+    let meshBuildsThisFrame = 0;
 
-    // Direct O(1) chunk lookup instead of scanning all chunks
+    // Process dirty chunks first (rebuilds from block edits)
+    for (const key of this.dirty) {
+      if (this.meshes.has(key)) {
+        const oldMesh = this.meshes.get(key);
+        this.scene.remove(oldMesh);
+        oldMesh.geometry.dispose();
+        this.meshes.delete(key);
+        this._meshedOnce.delete(key); // allow rebuild
+      }
+    }
+    this.dirty.clear();
+
+    // Build meshes for visible chunks (budgeted)
     for (let dx = -renderDistance; dx <= renderDistance; dx++) {
       for (let dz = -renderDistance; dz <= renderDistance; dz++) {
         const cx = pcx + dx;
@@ -46,32 +60,24 @@ export class WorldRenderer {
           if (!chunk) continue;
 
           needed.add(key);
-          if (this.dirty.has(key) && this.meshes.has(key)) {
-            const oldMesh = this.meshes.get(key);
-            this.scene.remove(oldMesh);
-            oldMesh.geometry.dispose();
-            this.meshes.delete(key);
-          }
+
           if (!this.meshes.has(key) && !this._meshedOnce.has(key)) {
+            if (meshBuildsThisFrame >= MAX_MESH_BUILDS_PER_FRAME) continue;
+
             const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
             this._meshedOnce.add(key);
+            meshBuildsThisFrame++;
+
             if (mesh) {
               this.scene.add(mesh);
               this.meshes.set(key, mesh);
-            }
-            // First time this chunk is meshed — mark neighbors dirty
-            // so they rebuild faces toward this newly visible chunk
-            for (const [dnx, dny, dnz] of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
-              const nk = `${cx+dnx},${cy+dny},${cz+dnz}`;
-              if (this.meshes.has(nk)) this.dirty.add(nk);
             }
           }
         }
       }
     }
 
-    this.dirty.clear();
-
+    // Remove meshes for chunks no longer in range
     for (const [key, mesh] of this.meshes) {
       if (!needed.has(key)) {
         this.scene.remove(mesh);
