@@ -336,9 +336,9 @@ function startGame(config, jumpStateId) {
 
   const worldRenderer = new WorldRenderer(scene, world);
 
-  // Build ALL meshes during loading screen (no per-frame budget)
+  // Build all meshes during loading screen — all neighbors present, no gaps
   if (syncLoad) {
-    worldRenderer.buildAllMeshes(0, 0, GC.CHUNKS.RENDER_DISTANCE);
+    worldRenderer.update(0, 0, GC.CHUNKS.RENDER_DISTANCE);
     loadingScreen.style.display = 'none';
   }
 
@@ -1293,9 +1293,9 @@ function startGame(config, jumpStateId) {
     // Stream chunks as player moves
     chunkMgr.update(player.position.x, player.position.z);
 
-    // Hide loading screen once initial chunks AND meshes are ready
+    // Hide loading screen once initial chunks are ready, then build all meshes
     if (loadingScreen.style.display !== 'none' && !chunkMgr.isLoading()) {
-      worldRenderer.buildAllMeshes(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
+      worldRenderer.update(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
       loadingScreen.style.display = 'none';
     }
 

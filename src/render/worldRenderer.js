@@ -2,16 +2,12 @@ import * as THREE from 'three';
 import { CHUNK_SIZE } from '../core/chunk.js';
 import { buildChunkMesh } from './chunkMesher.js';
 
-const MAX_MESH_BUILDS_PER_FRAME = 4;
-
 export class WorldRenderer {
   constructor(scene, world) {
     this.scene = scene;
     this.world = world;
     this.meshes = new Map();
     this.dirty = new Set();
-    this._meshedOnce = new Set();
-    this._initialBuildDone = false;
   }
 
   markDirty(wx, wy, wz) {
@@ -30,33 +26,24 @@ export class WorldRenderer {
     if (lz === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy},${cz + 1}`);
   }
 
-  // Build all meshes at once (used during loading screen)
-  buildAllMeshes(playerX, playerZ, renderDistance) {
-    this.update(playerX, playerZ, renderDistance, true);
-    this._initialBuildDone = true;
-  }
-
-  update(playerX, playerZ, renderDistance = 4, unlimited = false) {
+  update(playerX, playerZ, renderDistance = 4) {
     const pcx = Math.floor(playerX / CHUNK_SIZE);
     const pcz = Math.floor(playerZ / CHUNK_SIZE);
-    const budget = unlimited ? Infinity : MAX_MESH_BUILDS_PER_FRAME;
 
     const needed = new Set();
-    let meshBuildsThisFrame = 0;
 
-    // Process dirty chunks first
+    // Rebuild dirty chunks
     for (const key of this.dirty) {
       if (this.meshes.has(key)) {
         const oldMesh = this.meshes.get(key);
         this.scene.remove(oldMesh);
         oldMesh.geometry.dispose();
         this.meshes.delete(key);
-        this._meshedOnce.delete(key);
       }
     }
     this.dirty.clear();
 
-    // Build meshes for visible chunks
+    // Build meshes for all visible chunks that need one
     for (let dx = -renderDistance; dx <= renderDistance; dx++) {
       for (let dz = -renderDistance; dz <= renderDistance; dz++) {
         const cx = pcx + dx;
@@ -69,13 +56,8 @@ export class WorldRenderer {
 
           needed.add(key);
 
-          if (!this.meshes.has(key) && !this._meshedOnce.has(key)) {
-            if (meshBuildsThisFrame >= budget) continue;
-
+          if (!this.meshes.has(key)) {
             const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
-            this._meshedOnce.add(key);
-            meshBuildsThisFrame++;
-
             if (mesh) {
               this.scene.add(mesh);
               this.meshes.set(key, mesh);
@@ -91,7 +73,6 @@ export class WorldRenderer {
         this.scene.remove(mesh);
         mesh.geometry.dispose();
         this.meshes.delete(key);
-        this._meshedOnce.delete(key);
       }
     }
   }
