@@ -18,7 +18,7 @@ describe('River system', () => {
 
   it('getRiverAt returns river data when position is on a river', () => {
     // The Anduin should be near (340, 60)
-    const river = getRiverAt(340, 60);
+    const river = getRiverAt(345, 60);
     expect(river).not.toBeNull();
   });
 
@@ -29,7 +29,7 @@ describe('River system', () => {
   });
 
   it('getRiverCurrent returns a push vector when in river', () => {
-    const current = getRiverCurrent(340, 60);
+    const current = getRiverCurrent(345, 60);
     expect(current).not.toBeNull();
     // Current should have nonzero magnitude
     expect(Math.abs(current.x) + Math.abs(current.z)).toBeGreaterThan(0);

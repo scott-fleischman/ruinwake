@@ -82,6 +82,7 @@ import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 import { BlockBreaker } from './core/blockBreaker.js';
 import { isInWater, getWaterSlowdown } from './core/waterPhysics.js';
+import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 import { shouldReleaseCursor } from './core/menuState.js';
@@ -990,6 +991,15 @@ function startGame(config, jumpStateId) {
         player.moveSpeed *= raceSpeedMod * fractureMod * waterMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
+      }
+
+      // River current pushes player when in water
+      if (inWater) {
+        const current = getRiverCurrent(player.position.x, player.position.z);
+        if (current) {
+          player.position.x += current.x * dt;
+          player.position.z += current.z * dt;
+        }
       }
 
       if (input.getJump() && player.onGround) {

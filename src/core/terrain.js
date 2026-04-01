@@ -1,6 +1,7 @@
 import { BlockType } from './block.js';
 import { simplex2D } from './noise.js';
 import { getBiome, getBiomeByType, BiomeType } from './biome.js';
+import { getRiverAt as _getRiverAt } from './river.js';
 
 export const SURFACE_Y = 32;
 export const WATER_LEVEL = 26;
@@ -162,6 +163,25 @@ export function generateTerrain(world, { seed = 0 } = {}) {
       }
     }
   }
+  // Carve river channels and fill with water
+  for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
+    for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
+      const river = _getRiverAt(x, z);
+      if (river) {
+        const h = getHeightAt(x, z, seed);
+        // Carve channel: remove blocks down to water level and fill with water
+        for (let y = h; y >= WATER_LEVEL - 2; y--) {
+          if (y >= WATER_LEVEL - 1) {
+            world.setBlock(x, y, z, BlockType.WATER);
+          }
+        }
+        // Place water at water level
+        world.setBlock(x, WATER_LEVEL, z, BlockType.WATER);
+        world.setBlock(x, WATER_LEVEL - 1, z, BlockType.WATER);
+      }
+    }
+  }
+
   // Fill water at and below WATER_LEVEL where there's air
   for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
     for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
