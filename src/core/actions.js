@@ -1,9 +1,9 @@
-import { BlockType, isBlockSolid, blockDrops, ITEM_TO_BLOCK, canMine } from './block.js';
+import { BlockType, isBlockSolid, isBlockMineable, blockDrops, ITEM_TO_BLOCK, canMine } from './block.js';
 import { getFood } from './food.js';
 
 export function mineBlock(world, inventory, x, y, z, tool) {
   const block = world.getBlock(x, y, z);
-  if (!isBlockSolid(block)) return false;
+  if (!isBlockMineable(block)) return false;
   if (!canMine(block, tool || null)) return false;
   world.setBlock(x, y, z, BlockType.AIR);
   const drops = blockDrops(block);
@@ -77,7 +77,7 @@ export function raycast(world, origin, direction, maxDist) {
   let normal = { x: 0, y: 0, z: 0 };
 
   while (t < maxDist) {
-    if (isBlockSolid(world.getBlock(x, y, z))) {
+    if (isBlockMineable(world.getBlock(x, y, z))) {
       return { blockPos: { x, y, z }, normal, t };
     }
 

@@ -56,6 +56,13 @@ export function isBlockSolid(blockType) {
   return !NON_SOLID.has(blockType);
 }
 
+// Blocks that can be mined (broken). Everything except AIR and WATER.
+const NON_MINEABLE = new Set([BlockType.AIR, BlockType.WATER]);
+
+export function isBlockMineable(blockType) {
+  return !NON_MINEABLE.has(blockType);
+}
+
 const DROP_TABLE = {
   [BlockType.DIRT]: [{ type: ItemType.DIRT, count: 1 }],
   [BlockType.STONE]: [{ type: ItemType.STONE, count: 1 }],
