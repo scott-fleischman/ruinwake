@@ -81,6 +81,7 @@ import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 import { BlockBreaker } from './core/blockBreaker.js';
+import { ChunkManager } from './core/chunkManager.js';
 import { isInWater, getWaterSlowdown } from './core/waterPhysics.js';
 import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
@@ -166,9 +167,12 @@ function startGame(config, jumpStateId) {
 
   // --- Core state ---
   const world = new World();
-  generateTerrain(world, { seed: config.seed });
 
-  // Place ruin structures at restorable site positions
+  // Lazy chunk streaming — generate only nearby chunks instead of whole world
+  const chunkMgr = new ChunkManager(world, config.seed, { loadDistance: 6, maxChunksPerFrame: 8 });
+  chunkMgr.generateInitialChunks(0, 0);
+
+  // Place ruin structures at restorable site positions (within loaded area)
   const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
   for (const site of allRestorableSites) {
     const h = getHeightAt(site.position.x, site.position.z, config.seed);
@@ -1242,6 +1246,9 @@ function startGame(config, jumpStateId) {
     } else {
       camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
     }
+
+    // Stream chunks as player moves
+    chunkMgr.update(player.position.x, player.position.z);
 
     worldRenderer.update(player.position.x, player.position.z, 4);
     renderer.render(scene, camera);

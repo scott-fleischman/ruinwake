@@ -33,27 +33,29 @@ export class WorldRenderer {
 
     const needed = new Set();
 
+    // Direct O(1) chunk lookup instead of scanning all chunks
     for (let dx = -renderDistance; dx <= renderDistance; dx++) {
       for (let dz = -renderDistance; dz <= renderDistance; dz++) {
         const cx = pcx + dx;
         const cz = pcz + dz;
 
-        for (const [key, chunk] of this.world.chunks) {
-          const [kcx, kcy, kcz] = key.split(',').map(Number);
-          if (kcx === cx && kcz === cz) {
-            needed.add(key);
-            if (this.dirty.has(key) && this.meshes.has(key)) {
-              const oldMesh = this.meshes.get(key);
-              this.scene.remove(oldMesh);
-              oldMesh.geometry.dispose();
-              this.meshes.delete(key);
-            }
-            if (!this.meshes.has(key)) {
-              const mesh = buildChunkMesh(chunk, kcx, kcy, kcz, this.world);
-              if (mesh) {
-                this.scene.add(mesh);
-                this.meshes.set(key, mesh);
-              }
+        for (let cy = 0; cy < 5; cy++) {
+          const key = `${cx},${cy},${cz}`;
+          const chunk = this.world.chunks.get(key);
+          if (!chunk) continue;
+
+          needed.add(key);
+          if (this.dirty.has(key) && this.meshes.has(key)) {
+            const oldMesh = this.meshes.get(key);
+            this.scene.remove(oldMesh);
+            oldMesh.geometry.dispose();
+            this.meshes.delete(key);
+          }
+          if (!this.meshes.has(key)) {
+            const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
+            if (mesh) {
+              this.scene.add(mesh);
+              this.meshes.set(key, mesh);
             }
           }
         }
