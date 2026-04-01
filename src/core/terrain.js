@@ -163,21 +163,8 @@ export function generateTerrain(world, { seed = 0 } = {}) {
       }
     }
   }
-  // Carve river channels and fill with water
-  for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
-    for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
-      const river = _getRiverAt(x, z);
-      if (river) {
-        const h = getHeightAt(x, z, seed);
-        // Carve a channel 2 blocks deep and fill with water
-        const riverBed = h - 2;
-        for (let y = h; y > riverBed; y--) {
-          world.setBlock(x, y, z, BlockType.WATER);
-        }
-        world.setBlock(x, riverBed, z, BlockType.SAND);
-      }
-    }
-  }
+  // River carving disabled — causes rendering artifacts
+  // Water still fills naturally from below-sea-level areas
 
   // Fill water at and below WATER_LEVEL where there's air
   for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
