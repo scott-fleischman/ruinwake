@@ -211,15 +211,8 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           const ny = wy + face.dir[1];
           const nz = wz + face.dir[2];
 
-          // Skip face if neighbor is solid
+          // Skip face if neighbor is solid (includes virtual bedrock at y<0)
           if (isBlockSolid(world.getBlock(nx, ny, nz))) continue;
-          // Skip face if neighbor is in a different chunk that isn't loaded
-          // (only check at chunk edges to avoid per-face overhead)
-          const lnx = nx - cx * CHUNK_SIZE;
-          const lny = ny - cy * CHUNK_SIZE;
-          const lnz = nz - cz * CHUNK_SIZE;
-          if ((lnx < 0 || lnx >= CHUNK_SIZE || lny < 0 || lny >= CHUNK_SIZE || lnz < 0 || lnz >= CHUNK_SIZE)
-              && world.isChunkLoaded && !world.isChunkLoaded(nx, ny, nz)) continue;
 
           const vertStart = positions.length / 3;
           const color = getFaceColor(block, face.dir);

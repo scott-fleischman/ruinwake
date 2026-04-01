@@ -41,10 +41,10 @@ export const GAME_CONSTANTS = deepFreeze({
 
   // --- Chunk streaming ---
   CHUNKS: {
-    LOAD_DISTANCE: 6,
-    UNLOAD_DISTANCE: 9,
+    LOAD_DISTANCE: 7,      // 1 beyond render distance — buffer ring for neighbor data
+    UNLOAD_DISTANCE: 10,
     MAX_PER_FRAME: 8,
-    RENDER_DISTANCE: 6,
+    RENDER_DISTANCE: 6,    // only mesh/display these — buffer ring is data-only
     SIZE: 16,
   },
 
@@ -73,7 +73,7 @@ export const GAME_CONSTANTS = deepFreeze({
     WIDTH: 700,
     HEIGHT: 300,
     CELL_SIZE: 10,
-    BASE_FAR: 80,
+    BASE_FAR: 72,       // hides outermost render ring (6th ring at 80-96 blocks)
     BASE_NEAR_RATIO: 0.5,
     MIN_NEAR: 1,
     REVEAL_RADIUS: 20,
