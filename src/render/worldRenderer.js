@@ -8,6 +8,7 @@ export class WorldRenderer {
     this.world = world;
     this.meshes = new Map();
     this.dirty = new Set();
+    this._meshedOnce = new Set(); // tracks chunks that have been meshed at least once
   }
 
   markDirty(wx, wy, wz) {
@@ -51,14 +52,15 @@ export class WorldRenderer {
             oldMesh.geometry.dispose();
             this.meshes.delete(key);
           }
-          if (!this.meshes.has(key)) {
+          if (!this.meshes.has(key) && !this._meshedOnce.has(key)) {
             const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
+            this._meshedOnce.add(key);
             if (mesh) {
               this.scene.add(mesh);
               this.meshes.set(key, mesh);
             }
-            // New chunk loaded — mark neighbors dirty so they rebuild
-            // faces that were hidden because this chunk was unloaded
+            // First time this chunk is meshed — mark neighbors dirty
+            // so they rebuild faces toward this newly visible chunk
             for (const [dnx, dny, dnz] of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
               const nk = `${cx+dnx},${cy+dny},${cz+dnz}`;
               if (this.meshes.has(nk)) this.dirty.add(nk);
@@ -75,6 +77,7 @@ export class WorldRenderer {
         this.scene.remove(mesh);
         mesh.geometry.dispose();
         this.meshes.delete(key);
+        this._meshedOnce.delete(key);
       }
     }
   }
