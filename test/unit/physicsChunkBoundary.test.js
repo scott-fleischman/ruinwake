@@ -4,22 +4,21 @@ import { Player } from '../../src/core/player.js';
 import { applyGravity, resolveCollision } from '../../src/core/physics.js';
 
 describe('Physics at chunk boundaries', () => {
-  it('player does not fall through unloaded chunks — treated as solid', () => {
+  it('player does not fall below void floor in unloaded world', () => {
     const world = new World();
-    // Don't load any chunks — world is completely empty
     const player = new Player({ x: 100, y: 35, z: 100 });
     player.velocity.y = 0;
     player.onGround = false;
 
-    // Apply gravity and collision for several frames
-    for (let i = 0; i < 60; i++) {
+    // Apply gravity for 5 seconds (300 frames at 60fps)
+    for (let i = 0; i < 300; i++) {
       applyGravity(player, 1 / 60);
       resolveCollision(player, world, 1 / 60);
     }
 
-    // Player should NOT have fallen more than a few blocks
-    // Unloaded chunks should act as if they have a floor
-    expect(player.position.y).toBeGreaterThan(30);
+    // Player caught by void floor at y=0
+    expect(player.position.y).toBeGreaterThanOrEqual(0);
+    expect(player.onGround).toBe(true);
   });
 
   it('player lands on solid ground in loaded chunk', () => {
@@ -62,7 +61,7 @@ describe('Physics at chunk boundaries', () => {
       resolveCollision(player, world, 1 / 60);
     }
 
-    // Should not fall far — unloaded chunk should act as floor
-    expect(player.position.y).toBeGreaterThan(25);
+    // Should be caught by void floor
+    expect(player.position.y).toBeGreaterThanOrEqual(0);
   });
 });

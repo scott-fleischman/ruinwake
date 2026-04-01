@@ -6,6 +6,9 @@ const PLAYER_WIDTH = 0.6;
 const PLAYER_HEIGHT = 1.8;
 const HALF_W = PLAYER_WIDTH / 2;
 
+// Minimum Y before emergency floor kicks in (below any terrain)
+const VOID_FLOOR_Y = 0;
+
 export function applyGravity(player, dt) {
   player.velocity.y += GRAVITY * dt;
 }
@@ -37,21 +40,19 @@ export function resolveCollision(player, world, dt) {
   // --- Horizontal collision ---
   const overlaps = getOverlappingBlocks(world, pos.x, pos.y, pos.z);
   for (const { bx, bz } of overlaps) {
-    // Compute overlap on each axis between player AABB and block AABB
     const playerMinX = pos.x - HALF_W;
     const playerMaxX = pos.x + HALF_W;
     const playerMinZ = pos.z - HALF_W;
     const playerMaxZ = pos.z + HALF_W;
 
-    const overlapLeft = playerMaxX - bx;   // overlap into block from left
-    const overlapRight = (bx + 1) - playerMinX; // overlap into block from right
+    const overlapLeft = playerMaxX - bx;
+    const overlapRight = (bx + 1) - playerMinX;
     const overlapFront = playerMaxZ - bz;
     const overlapBack = (bz + 1) - playerMinZ;
 
     const minOverlapX = Math.min(overlapLeft, overlapRight);
     const minOverlapZ = Math.min(overlapFront, overlapBack);
 
-    // Push out along the axis of least overlap
     if (minOverlapX < minOverlapZ) {
       if (overlapLeft < overlapRight) {
         pos.x = bx - HALF_W - 0.001;
@@ -108,4 +109,14 @@ export function resolveCollision(player, world, dt) {
 
   pos.y = newY;
   player.onGround = false;
+
+  // --- Emergency void floor ---
+  // If player has fallen below the void floor (below all terrain),
+  // stop them and place on the floor. This prevents falling forever
+  // through unloaded chunks.
+  if (pos.y < VOID_FLOOR_Y) {
+    pos.y = VOID_FLOOR_Y;
+    player.velocity.y = 0;
+    player.onGround = true;
+  }
 }

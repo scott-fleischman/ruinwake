@@ -41,6 +41,11 @@ export class World {
     return chunk.getBlock(lx, ly, lz);
   }
 
+  isChunkLoaded(x, y, z) {
+    const { cx, cy, cz } = this._worldToChunk(x, y, z);
+    return this.chunks.has(this._chunkKey(cx, cy, cz));
+  }
+
   setBlock(x, y, z, blockType) {
     const { cx, cy, cz, lx, ly, lz } = this._worldToChunk(x, y, z);
     const chunk = this._getOrCreateChunk(cx, cy, cz);
