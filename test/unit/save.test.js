@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { serializeGameState, deserializeGameState } from '../../src/core/save.js';
 import { World } from '../../src/core/world.js';
 import { Player } from '../../src/core/player.js';
-import { Inventory } from '../../src/core/inventory.js';
+import { GridInventory as Inventory } from '../../src/core/gridInventory.js';
 import { BlockType } from '../../src/core/block.js';
 import { Quest, QuestSystem } from '../../src/core/quest.js';
 import { Faction, FactionSystem } from '../../src/core/faction.js';

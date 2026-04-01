@@ -1,23 +1,40 @@
 import { World } from './world.js';
 import { Player } from './player.js';
-import { Inventory } from './inventory.js';
+import { GridInventory } from './gridInventory.js';
 import { SurvivalStats } from './survival.js';
 
 export function serializeGameState(world, player, inventory, extra = {}) {
+  // Only save chunks that have data (skip empty)
   const chunks = {};
   for (const [key, chunk] of world.chunks) {
-    chunks[key] = Array.from(chunk.blocks);
+    let hasData = false;
+    for (let i = 0; i < chunk.blocks.length; i++) {
+      if (chunk.blocks[i] !== 0) { hasData = true; break; }
+    }
+    if (hasData) {
+      chunks[key] = Array.from(chunk.blocks);
+    }
+  }
+
+  // Save inventory as slot array to preserve grid positions
+  const invSlots = [];
+  const invSize = inventory.size || 36;
+  for (let i = 0; i < invSize; i++) {
+    invSlots.push(inventory.getSlot ? inventory.getSlot(i) : null);
   }
 
   const state = {
+    version: 2,
+    seed: extra.seed || 0,
     player: {
-      position: player.position,
-      velocity: player.velocity,
+      position: { ...player.position },
+      velocity: { ...player.velocity },
       yaw: player.yaw,
       pitch: player.pitch,
       onGround: player.onGround,
     },
-    inventory: inventory.getItems(),
+    inventory: invSlots,
+    inventorySize: invSize,
     chunks,
   };
 
@@ -62,9 +79,14 @@ export function deserializeGameState(json) {
   player.pitch = data.player.pitch;
   player.onGround = data.player.onGround;
 
-  const inventory = new Inventory(36);
-  for (const item of data.inventory) {
-    inventory.add(item.type, item.count);
+  const invSize = data.inventorySize || 36;
+  const inventory = new GridInventory(invSize);
+  if (Array.isArray(data.inventory)) {
+    for (const item of data.inventory) {
+      if (item && item.type && item.count > 0) {
+        inventory.addItem(item.type, item.count);
+      }
+    }
   }
 
   const result = { world, player, inventory };
