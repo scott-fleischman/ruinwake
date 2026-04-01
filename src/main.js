@@ -80,6 +80,7 @@ import { getStartingSkillUnlocks } from './core/startingSkills.js';
 import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
+import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 
 // --- New game UI ---
@@ -722,9 +723,7 @@ function startGame(config, jumpStateId) {
         if (canAcceptQuestFromNPC(nearNPC, questSystem)) {
           choices.push({ text: 'Accept quest', response: null, action: 'accept_quest', npcId: nearNPC.id });
         }
-        choices.push({ text: 'Tell me about this place', response: `${nearNPC.name}: The lands grow more dangerous each season. Stay vigilant.` });
-        choices.push({ text: 'What do you need?', response: `${nearNPC.name}: Any help restoring the old sites would be welcome.` });
-        choices.push({ text: 'Farewell', response: null });
+        choices.push(...getNPCDialogueChoices(nearNPC.id, nearNPC.name));
         dialogueManager.startDialogue(`${nearNPC.name}: ${npcMsg}`, choices);
         progress.talkToNPC(nearNPC.id);
         questSystem.advanceObjective('ch2_roads', 'ch2_meet_npc', 1);

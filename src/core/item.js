@@ -58,6 +58,13 @@ export const ItemType = Object.freeze({
   LORE_FRAGMENT: 'lore_fragment',
   RELIC_SHARD: 'relic_shard',
 
+  // Crafting station blocks
+  WORKBENCH: 'workbench',
+  CAMPFIRE: 'campfire',
+  FORGE: 'forge',
+  KITCHEN: 'kitchen',
+  LOOM: 'loom',
+
   // Building materials
   THATCH: 'thatch',
   STONE_BRICK: 'stone_brick',

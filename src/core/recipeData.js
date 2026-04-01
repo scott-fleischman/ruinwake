@@ -7,6 +7,8 @@ export const allRecipes = [
   new Recipe('Rope from Fiber', [{ type: ItemType.FIBER, count: 3 }], [{ type: ItemType.ROPE, count: 1 }]),
   new Recipe('Torch', [{ type: ItemType.STICK, count: 1 }, { type: ItemType.COAL, count: 1 }], [{ type: ItemType.TORCH, count: 2 }]),
   new Recipe('Planks', [{ type: ItemType.WOOD, count: 2 }], [{ type: ItemType.PLANKS, count: 4 }]),
+  new Recipe('Workbench', [{ type: ItemType.PLANKS, count: 4 }, { type: ItemType.STICK, count: 4 }], [{ type: ItemType.WORKBENCH, count: 1 }]),
+  new Recipe('Campfire', [{ type: ItemType.STONE, count: 5 }, { type: ItemType.STICK, count: 3 }], [{ type: ItemType.CAMPFIRE, count: 1 }]),
 
   // Workbench
   new Recipe('Stone Pickaxe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.STONE, count: 3 }], [{ type: ItemType.STONE_PICKAXE, count: 1 }], 'workbench'),
@@ -16,6 +18,9 @@ export const allRecipes = [
   new Recipe('Glass from Sand', [{ type: ItemType.SAND, count: 4 }], [{ type: ItemType.GLASS, count: 2 }], 'workbench'),
   new Recipe('Iron Pickaxe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.IRON_INGOT, count: 3 }], [{ type: ItemType.IRON_PICKAXE, count: 1 }], 'workbench'),
   new Recipe('Iron Axe', [{ type: ItemType.STICK, count: 2 }, { type: ItemType.IRON_INGOT, count: 2 }], [{ type: ItemType.IRON_AXE, count: 1 }], 'workbench'),
+  new Recipe('Forge', [{ type: ItemType.STONE, count: 8 }, { type: ItemType.IRON_ORE, count: 3 }], [{ type: ItemType.FORGE, count: 1 }], 'workbench'),
+  new Recipe('Kitchen', [{ type: ItemType.PLANKS, count: 6 }, { type: ItemType.STONE, count: 4 }], [{ type: ItemType.KITCHEN, count: 1 }], 'workbench'),
+  new Recipe('Loom', [{ type: ItemType.PLANKS, count: 4 }, { type: ItemType.FIBER, count: 6 }], [{ type: ItemType.LOOM, count: 1 }], 'workbench'),
 
   // Forge
   new Recipe('Smelt Iron Ore', [{ type: ItemType.IRON_ORE, count: 2 }, { type: ItemType.COAL, count: 1 }], [{ type: ItemType.IRON_INGOT, count: 1 }], 'forge'),
