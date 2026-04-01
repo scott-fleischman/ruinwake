@@ -11,6 +11,7 @@ export class WorldRenderer {
     this.meshes = new Map();
     this.dirty = new Set();
     this._meshedOnce = new Set();
+    this._initialBuildDone = false;
   }
 
   markDirty(wx, wy, wz) {
@@ -29,26 +30,33 @@ export class WorldRenderer {
     if (lz === CHUNK_SIZE - 1) this.dirty.add(`${cx},${cy},${cz + 1}`);
   }
 
-  update(playerX, playerZ, renderDistance = 4) {
+  // Build all meshes at once (used during loading screen)
+  buildAllMeshes(playerX, playerZ, renderDistance) {
+    this.update(playerX, playerZ, renderDistance, true);
+    this._initialBuildDone = true;
+  }
+
+  update(playerX, playerZ, renderDistance = 4, unlimited = false) {
     const pcx = Math.floor(playerX / CHUNK_SIZE);
     const pcz = Math.floor(playerZ / CHUNK_SIZE);
+    const budget = unlimited ? Infinity : MAX_MESH_BUILDS_PER_FRAME;
 
     const needed = new Set();
     let meshBuildsThisFrame = 0;
 
-    // Process dirty chunks first (rebuilds from block edits)
+    // Process dirty chunks first
     for (const key of this.dirty) {
       if (this.meshes.has(key)) {
         const oldMesh = this.meshes.get(key);
         this.scene.remove(oldMesh);
         oldMesh.geometry.dispose();
         this.meshes.delete(key);
-        this._meshedOnce.delete(key); // allow rebuild
+        this._meshedOnce.delete(key);
       }
     }
     this.dirty.clear();
 
-    // Build meshes for visible chunks (budgeted)
+    // Build meshes for visible chunks
     for (let dx = -renderDistance; dx <= renderDistance; dx++) {
       for (let dz = -renderDistance; dz <= renderDistance; dz++) {
         const cx = pcx + dx;
@@ -62,7 +70,7 @@ export class WorldRenderer {
           needed.add(key);
 
           if (!this.meshes.has(key) && !this._meshedOnce.has(key)) {
-            if (meshBuildsThisFrame >= MAX_MESH_BUILDS_PER_FRAME) continue;
+            if (meshBuildsThisFrame >= budget) continue;
 
             const mesh = buildChunkMesh(chunk, cx, cy, cz, this.world);
             this._meshedOnce.add(key);
@@ -77,7 +85,7 @@ export class WorldRenderer {
       }
     }
 
-    // Remove meshes for chunks no longer in range
+    // Remove meshes outside range
     for (const [key, mesh] of this.meshes) {
       if (!needed.has(key)) {
         this.scene.remove(mesh);

@@ -203,10 +203,8 @@ function startGame(config, jumpStateId) {
   });
   chunkMgr.generateInitialChunks(0, 0);
 
-  // If synchronous (no worker), hide loading screen immediately
-  if (!chunkMgr.isLoading()) {
-    loadingScreen.style.display = 'none';
-  }
+  // If synchronous (no worker), hide loading screen after meshes are built (below)
+  const syncLoad = !chunkMgr.isLoading();
 
   // Place ruin structures at restorable site positions (within loaded area)
   const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
@@ -337,6 +335,13 @@ function startGame(config, jumpStateId) {
   scene.add(dirLight);
 
   const worldRenderer = new WorldRenderer(scene, world);
+
+  // Build ALL meshes during loading screen (no per-frame budget)
+  if (syncLoad) {
+    worldRenderer.buildAllMeshes(0, 0, GC.CHUNKS.RENDER_DISTANCE);
+    loadingScreen.style.display = 'none';
+  }
+
   const enemyRenderer = new EnemyRenderer(scene);
   const npcRenderer = new NPCRenderer(scene);
 
@@ -1288,8 +1293,9 @@ function startGame(config, jumpStateId) {
     // Stream chunks as player moves
     chunkMgr.update(player.position.x, player.position.z);
 
-    // Hide loading screen once initial chunks are ready
+    // Hide loading screen once initial chunks AND meshes are ready
     if (loadingScreen.style.display !== 'none' && !chunkMgr.isLoading()) {
+      worldRenderer.buildAllMeshes(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
       loadingScreen.style.display = 'none';
     }
 
