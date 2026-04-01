@@ -83,6 +83,7 @@ import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisu
 import { BlockBreaker } from './core/blockBreaker.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
+import { shouldReleaseCursor } from './core/menuState.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -541,6 +542,20 @@ function startGame(config, jumpStateId) {
     // Reveal fog around player
     fogOfWar.reveal(player.position.x, player.position.z, 20);
 
+    // Menu cursor management — release pointer lock when any menu is open
+    const anyMenuOpen = shouldReleaseCursor({
+      inventory: document.getElementById('inventory-panel').style.display !== 'none',
+      crafting: craftingUI.isOpen,
+      questLog: document.getElementById('quest-log').style.display === 'block',
+      skillTree: skillTreeUI.isOpen,
+      map: mapScreen.isOpen,
+      settings: settings.isOpen,
+    });
+    input.menuOpen = anyMenuOpen;
+    if (anyMenuOpen && document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+
     // Track landmark visits for progress
     for (const lm of allLandmarks) {
       if (checkProximityTrigger(player.position, lm.position, lm.radius)) {
@@ -604,6 +619,7 @@ function startGame(config, jumpStateId) {
     // Map screen (M key) — update every frame while open so player dot moves
     if (input.consumeKeyPress('KeyM')) {
       mapScreen.toggle();
+      if (!mapScreen.isOpen) renderer.domElement.requestPointerLock();
     }
     if (mapScreen.isOpen) {
       updateMapPanel(player.position);
@@ -653,6 +669,7 @@ function startGame(config, jumpStateId) {
     if (input.consumeKeyPress('Tab')) {
       skillTreeUI.toggle();
       updateSkillPanel();
+      if (!skillTreeUI.isOpen) renderer.domElement.requestPointerLock();
     }
     if (skillTreeUI.isOpen) {
       if (input.consumeKeyPress('ArrowRight')) { skillTreeUI.nextTree(); updateSkillPanel(); }
@@ -673,6 +690,7 @@ function startGame(config, jumpStateId) {
     if (input.consumeKeyPress('KeyE')) {
       craftingUI.toggle();
       updateCraftingPanel();
+      if (!craftingUI.isOpen) renderer.domElement.requestPointerLock();
     }
 
     // Inventory panel (I key) — grid-based Minecraft-style
@@ -680,6 +698,7 @@ function startGame(config, jumpStateId) {
       const invPanel = document.getElementById('inventory-panel');
       const isShowing = invPanel.style.display !== 'none';
       invPanel.style.display = isShowing ? 'none' : 'block';
+      if (isShowing) renderer.domElement.requestPointerLock();
     }
     if (document.getElementById('inventory-panel').style.display !== 'none') {
       const grid = document.getElementById('inventory-grid');
@@ -723,7 +742,9 @@ function startGame(config, jumpStateId) {
     // Quest log (Q key) — update every frame while open so objectives update live
     if (input.consumeKeyPress('KeyQ')) {
       const questPanel = document.getElementById('quest-log');
-      questPanel.style.display = questPanel.style.display === 'none' ? 'block' : 'none';
+      const wasOpen = questPanel.style.display === 'block';
+      questPanel.style.display = wasOpen ? 'none' : 'block';
+      if (wasOpen) renderer.domElement.requestPointerLock();
     }
     if (document.getElementById('quest-log').style.display === 'block') {
       updateQuestPanel();

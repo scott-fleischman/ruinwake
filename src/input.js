@@ -8,6 +8,7 @@ export class InputHandler {
     this.leftClick = false;
     this.rightClick = false;
     this.scrollDelta = 0;
+    this.menuOpen = false; // when true, suppress instructions on pointer unlock
 
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') e.preventDefault();
@@ -36,7 +37,12 @@ export class InputHandler {
 
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
-      document.getElementById('instructions').style.display = this.locked ? 'none' : 'block';
+      // Don't show instructions when a menu caused the unlock
+      if (!this.locked && !this.menuOpen) {
+        document.getElementById('instructions').style.display = 'block';
+      } else if (this.locked) {
+        document.getElementById('instructions').style.display = 'none';
+      }
     });
 
     document.addEventListener('mousemove', (e) => {
