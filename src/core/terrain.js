@@ -1,10 +1,15 @@
 import { BlockType } from './block.js';
 import { simplex2D } from './noise.js';
-import { getBiome, BiomeType } from './biome.js';
+import { getBiome, getBiomeByType, BiomeType } from './biome.js';
 
 export const SURFACE_Y = 32;
 const DIRT_DEPTH = 3;
 export const TERRAIN_EXTENT = 300;
+// Asymmetric world bounds for the Hobbit east-west corridor
+export const WORLD_MIN_X = -100;
+export const WORLD_MAX_X = 560;
+export const WORLD_MIN_Z = -120;
+export const WORLD_MAX_Z = 150;
 const HEIGHT_SCALE = 0.02;
 const BIOME_SCALE = 0.02;
 
@@ -16,14 +21,41 @@ function seededRandom(seed) {
   };
 }
 
+// Geographic region centers matching the Hobbit corridor (spec 7.2)
+const REGION_BIOMES = [
+  { x: 0, z: 0, biome: BiomeType.SHIRE, radius: 70 },
+  { x: 80, z: 20, biome: BiomeType.PLAINS, radius: 40 },      // Bree-lands
+  { x: 140, z: 40, biome: BiomeType.FOREST, radius: 40 },      // Trollshaws
+  { x: 200, z: 30, biome: BiomeType.FOREST, radius: 40 },      // Rivendell
+  { x: 270, z: 50, biome: BiomeType.MOUNTAIN, radius: 60 },    // Misty Mountains
+  { x: 340, z: 60, biome: BiomeType.PLAINS, radius: 45 },      // Anduin Vale
+  { x: 400, z: 40, biome: BiomeType.MIRKWOOD, radius: 60 },    // Mirkwood
+  { x: 420, z: 90, biome: BiomeType.MIRKWOOD, radius: 35 },    // Dol Guldur
+  { x: 470, z: 30, biome: BiomeType.PLAINS, radius: 30 },      // Long Lake
+  { x: 520, z: 20, biome: BiomeType.MOUNTAIN, radius: 40 },    // Erebor
+];
+
 /**
  * Get biome at world (x, z) for a given seed.
- * Uses noise for temperature and moisture at biome scale.
+ * Uses nearest geographic region center for the Hobbit corridor,
+ * weighted by region radius so larger regions dominate.
  */
 export function getBiomeAt(x, z, seed) {
-  const temp = (simplex2D(x * BIOME_SCALE + seed * 0.1, z * BIOME_SCALE) + 1) / 2;
-  const moisture = (simplex2D(x * BIOME_SCALE + 500 + seed * 0.1, z * BIOME_SCALE + 500) + 1) / 2;
-  return getBiome(temp, moisture);
+  let bestBiome = BiomeType.PLAINS;
+  let bestDist = Infinity;
+
+  for (const region of REGION_BIOMES) {
+    const dx = x - region.x;
+    const dz = z - region.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    const weighted = dist / region.radius;
+    if (weighted < bestDist) {
+      bestDist = weighted;
+      bestBiome = region.biome;
+    }
+  }
+
+  return getBiomeByType(bestBiome);
 }
 
 /**
@@ -97,16 +129,16 @@ const TALL_GRASS_DENSITY = {
 
 export function generateTerrain(world, { seed = 0 } = {}) {
   const rand = seededRandom(seed);
-  for (let x = -TERRAIN_EXTENT; x < TERRAIN_EXTENT; x++) {
-    for (let z = -TERRAIN_EXTENT; z < TERRAIN_EXTENT; z++) {
+  for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
+    for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
       const biome = getBiomeAt(x, z, seed);
       const h = getHeightAt(x, z, seed);
       fillColumn(world, x, z, h, biome.surfaceBlock, seed);
     }
   }
   // Place trees based on biome density
-  for (let x = -TERRAIN_EXTENT + 3; x < TERRAIN_EXTENT - 3; x++) {
-    for (let z = -TERRAIN_EXTENT + 3; z < TERRAIN_EXTENT - 3; z++) {
+  for (let x = WORLD_MIN_X + 3; x < WORLD_MAX_X - 3; x++) {
+    for (let z = WORLD_MIN_Z + 3; z < WORLD_MAX_Z - 3; z++) {
       const biome = getBiomeAt(x, z, seed);
       if (rand() < biome.treeDensity) {
         const h = getHeightAt(x, z, seed);
@@ -116,8 +148,8 @@ export function generateTerrain(world, { seed = 0 } = {}) {
   }
   // Place tall grass on forest/mirkwood/shire/plains surfaces without trees
   const grassRand = seededRandom(seed + 7);
-  for (let x = -TERRAIN_EXTENT; x < TERRAIN_EXTENT; x++) {
-    for (let z = -TERRAIN_EXTENT; z < TERRAIN_EXTENT; z++) {
+  for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
+    for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
       const biome = getBiomeAt(x, z, seed);
       const density = TALL_GRASS_DENSITY[biome.type] || 0;
       if (density > 0 && grassRand() < density) {

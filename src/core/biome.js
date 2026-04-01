@@ -47,8 +47,8 @@ const BIOMES = {
   [BiomeType.MIRKWOOD]: new Biome({
     type: BiomeType.MIRKWOOD,
     name: 'Mirkwood',
-    surfaceBlock: BlockType.GRASS,
-    treeDensity: 0.12,
+    surfaceBlock: BlockType.MUD,
+    treeDensity: 0.20,
     minHeight: 28,
     maxHeight: 38,
   }),
@@ -67,6 +67,10 @@ const BIOMES = {
  * temp < 0.3 = cold, > 0.6 = warm
  * moisture < 0.4 = dry, > 0.6 = wet
  */
+export function getBiomeByType(biomeType) {
+  return BIOMES[biomeType] || BIOMES[BiomeType.PLAINS];
+}
+
 export function getBiome(temperature, moisture) {
   if (temperature < 0.3 && moisture < 0.4) return BIOMES[BiomeType.MOUNTAIN];
   if (temperature < 0.3 && moisture >= 0.6) return BIOMES[BiomeType.MIRKWOOD];

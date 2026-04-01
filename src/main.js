@@ -185,7 +185,7 @@ function startGame(config, jumpStateId) {
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
   const weatherSystem = new WeatherSystem(config.seed);
-  const fogOfWar = new FogOfWar({ width: 600, height: 600, cellSize: 10 });
+  const fogOfWar = new FogOfWar({ width: 700, height: 300, cellSize: 10 });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
   const skillTreeSystem = new SkillTreeSystem(skillTrees);
@@ -1003,7 +1003,7 @@ function startGame(config, jumpStateId) {
         survivalStats.checkFallFracture(preLandVelocityY);
       }
     }
-    clampToWorldBounds(player.position, 300);
+    clampToWorldBounds(player.position, 560);
 
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
