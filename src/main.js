@@ -347,6 +347,8 @@ function startGame(config, jumpStateId) {
   const hudElement = document.getElementById('hud');
   const crosshair = document.getElementById('crosshair');
   crosshair.style.display = 'block';
+  document.getElementById('health-bar-wrap').style.display = 'block';
+  document.getElementById('hotbar-bar').style.display = 'flex';
 
   function getLookDirection(p) {
     const cosPitch = Math.cos(p.pitch);

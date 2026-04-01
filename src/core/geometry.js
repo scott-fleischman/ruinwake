@@ -211,7 +211,10 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           const ny = wy + face.dir[1];
           const nz = wz + face.dir[2];
 
+          // Skip face if neighbor is solid
           if (isBlockSolid(world.getBlock(nx, ny, nz))) continue;
+          // Skip face if neighbor chunk is unloaded (treat as opaque to prevent sky leaks)
+          if (world.isChunkLoaded && !world.isChunkLoaded(nx, ny, nz)) continue;
 
           const vertStart = positions.length / 3;
           const color = getFaceColor(block, face.dir);
