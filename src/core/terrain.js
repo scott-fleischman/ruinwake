@@ -169,15 +169,12 @@ export function generateTerrain(world, { seed = 0 } = {}) {
       const river = _getRiverAt(x, z);
       if (river) {
         const h = getHeightAt(x, z, seed);
-        // Carve channel: remove blocks down to water level and fill with water
-        for (let y = h; y >= WATER_LEVEL - 2; y--) {
-          if (y >= WATER_LEVEL - 1) {
-            world.setBlock(x, y, z, BlockType.WATER);
-          }
+        // Carve a channel 2 blocks deep and fill with water
+        const riverBed = h - 2;
+        for (let y = h; y > riverBed; y--) {
+          world.setBlock(x, y, z, BlockType.WATER);
         }
-        // Place water at water level
-        world.setBlock(x, WATER_LEVEL, z, BlockType.WATER);
-        world.setBlock(x, WATER_LEVEL - 1, z, BlockType.WATER);
+        world.setBlock(x, riverBed, z, BlockType.SAND);
       }
     }
   }

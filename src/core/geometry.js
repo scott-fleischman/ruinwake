@@ -171,6 +171,30 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           continue;
         }
 
+        // Water: only render top face where air is above (surface only)
+        if (block === BlockType.WATER) {
+          const above = world.getBlock(wx, wy + 1, wz);
+          if (above !== BlockType.WATER && above !== BlockType.AIR) continue;
+          if (above === BlockType.WATER) continue; // skip submerged water
+          // Only render the top face
+          const topFace = FACES[0]; // top face is index 0
+          const vertStart = positions.length / 3;
+          const color = BLOCK_COLORS[BlockType.WATER] || DEFAULT_COLOR;
+          for (const v of topFace.verts) {
+            const vx = wx + v[0];
+            const vy = wy + v[1] - 0.2; // slightly below block top for surface effect
+            const vz = wz + v[2];
+            positions.push(vx, vy, vz);
+            colors.push(
+              color[0] + vertexNoise(vx, vy, vz, 0) * 0.5,
+              color[1] + vertexNoise(vx, vy, vz, 1) * 0.5,
+              color[2] + vertexNoise(vx, vy, vz, 2) * 0.5
+            );
+          }
+          indices.push(vertStart, vertStart + 1, vertStart + 2, vertStart, vertStart + 2, vertStart + 3);
+          continue;
+        }
+
         for (const face of FACES) {
           const nx = wx + face.dir[0];
           const ny = wy + face.dir[1];

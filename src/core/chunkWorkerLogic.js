@@ -92,11 +92,16 @@ export function generateColumnData(cx, cz, seed) {
         setBlock(chunks, wx, y, wz, ore || BlockType.STONE);
       }
 
-      // River carving
+      // River carving — carve a channel DOWN into terrain, fill with water
       if (river) {
-        for (let y = Math.max(h, WATER_LEVEL); y >= WATER_LEVEL - 1; y--) {
+        // River bed is 2 blocks below the surface, filled with water
+        const riverBed = h - 2;
+        // Remove terrain above river bed to create the channel
+        for (let y = h; y > riverBed; y--) {
           setBlock(chunks, wx, y, wz, BlockType.WATER);
         }
+        // Ensure river bed is solid (sand/gravel bottom)
+        setBlock(chunks, wx, riverBed, wz, BlockType.SAND);
       }
 
       // Water fill below water level
