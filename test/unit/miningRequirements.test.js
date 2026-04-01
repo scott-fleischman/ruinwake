@@ -25,8 +25,8 @@ describe('HARDNESS map', () => {
     expect(HARDNESS[BlockType.COAL_ORE]).toBe('pickaxe');
   });
 
-  it('maps wood blocks to axe', () => {
-    expect(HARDNESS[BlockType.WOOD]).toBe('axe');
+  it('maps wood blocks to hand (breakable by hand for early game)', () => {
+    expect(HARDNESS[BlockType.WOOD]).toBe('hand');
   });
 });
 
@@ -47,8 +47,8 @@ describe('canMine', () => {
     expect(canMine(BlockType.COAL_ORE, null)).toBe(false);
   });
 
-  it('returns false for axe blocks with no tool', () => {
-    expect(canMine(BlockType.WOOD, null)).toBe(false);
+  it('wood is hand-breakable (no tool required)', () => {
+    expect(canMine(BlockType.WOOD, null)).toBe(true);
   });
 
   it('returns true for pickaxe blocks with a pickaxe', () => {
@@ -66,8 +66,8 @@ describe('canMine', () => {
     expect(canMine(BlockType.STONE, ToolType.AXE)).toBe(false);
   });
 
-  it('returns false for axe blocks with a pickaxe', () => {
-    expect(canMine(BlockType.WOOD, ToolType.PICKAXE)).toBe(false);
+  it('wood is also breakable with a pickaxe (hand-breakable blocks work with any tool)', () => {
+    expect(canMine(BlockType.WOOD, ToolType.PICKAXE)).toBe(true);
   });
 
   it('pickaxe and axe can still break hand-breakable blocks', () => {
@@ -130,11 +130,11 @@ describe('mineBlock with tool requirements', () => {
     expect(world.getBlock(5, 10, 5)).toBe(BlockType.COAL_ORE);
   });
 
-  it('bare hands CANNOT break WOOD', () => {
+  it('bare hands CAN break WOOD (hand-breakable)', () => {
     const { world, inv } = setup(BlockType.WOOD);
     const result = mineBlock(world, inv, 5, 10, 5);
-    expect(result).toBe(false);
-    expect(world.getBlock(5, 10, 5)).toBe(BlockType.WOOD);
+    expect(result).toBe(true);
+    expect(world.getBlock(5, 10, 5)).toBe(BlockType.AIR);
   });
 
   it('pickaxe can break STONE', () => {
@@ -183,10 +183,10 @@ describe('mineBlock with tool requirements', () => {
     expect(world.getBlock(5, 10, 5)).toBe(BlockType.STONE);
   });
 
-  it('pickaxe CANNOT break WOOD', () => {
+  it('pickaxe CAN break WOOD (hand-breakable works with any tool)', () => {
     const { world, inv } = setup(BlockType.WOOD);
     const result = mineBlock(world, inv, 5, 10, 5, ToolType.PICKAXE);
-    expect(result).toBe(false);
-    expect(world.getBlock(5, 10, 5)).toBe(BlockType.WOOD);
+    expect(result).toBe(true);
+    expect(world.getBlock(5, 10, 5)).toBe(BlockType.AIR);
   });
 });

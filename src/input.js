@@ -24,8 +24,12 @@ export class InputHandler {
 
     document.addEventListener('mousedown', (e) => {
       if (!this.locked) return;
-      if (e.button === 0) this.leftClick = true;
+      if (e.button === 0) { this.leftClick = true; this.keys['mouseLeft'] = true; }
       if (e.button === 2) this.rightClick = true;
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (e.button === 0) this.keys['mouseLeft'] = false;
     });
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());

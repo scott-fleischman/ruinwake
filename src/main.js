@@ -80,6 +80,7 @@ import { getStartingSkillUnlocks } from './core/startingSkills.js';
 import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
+import { BlockBreaker } from './core/blockBreaker.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 
@@ -233,6 +234,7 @@ function startGame(config, jumpStateId) {
   const discoverySystem = new DiscoverySystem(allDiscoverables);
   const restSystem = new RestSystem();
   const freshnessTracker = new FreshnessTracker();
+  const blockBreaker = new BlockBreaker();
   const deathSystem = new DeathSystem();
   const creativeMode = new CreativeMode();
   const dialogueManager = new DialogueManager();
@@ -1025,19 +1027,32 @@ function startGame(config, jumpStateId) {
       }
     }
 
-    // Player melee attack (left click when no block hit)
-    if (input.locked && input.consumeLeftClick()) {
+    // Block breaking with hold-to-mine and combat on no block
+    if (input.locked && input.keys['mouseLeft']) {
       const blockHit = raycast(world, eyePos, forward, 6);
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
-        const mainHand = equipment.get('main_hand');
-        const equippedToolType = (mainHand && mainHand.toolType) || null;
-        mineBlock(world, inventory, bx, by, bz, equippedToolType);
-        worldRenderer.markDirty(bx, by, bz);
+        const block = world.getBlock(bx, by, bz);
+        blockBreaker.startBreak(bx, by, bz, block);
+        if (blockBreaker.tick(dt)) {
+          const mainHand = equipment.get('main_hand');
+          const equippedToolType = (mainHand && mainHand.toolType) || null;
+          if (mineBlock(world, inventory, bx, by, bz, equippedToolType)) {
+            worldRenderer.markDirty(bx, by, bz);
+          }
+        }
       } else {
-        const weaponDmg = getWeaponDamage(equipment);
-        combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
+        blockBreaker.cancel();
+        // Melee attack on click (not hold)
+        if (input.consumeLeftClick()) {
+          const weaponDmg = getWeaponDamage(equipment);
+          combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
+        }
       }
+    } else {
+      blockBreaker.cancel();
+      // Also consume any stale left click
+      input.consumeLeftClick();
     }
 
     // Collect loot from dead enemies, grant XP, and remove them
@@ -1233,6 +1248,19 @@ function startGame(config, jumpStateId) {
       ${effectsLine}
       ${npcHint}${siteHint}${dialogueLine}
     `;
+
+    // Update visual health/stamina/hunger bars
+    document.getElementById('health-bar-fill').style.width = `${(hudData.health / hudData.maxHealth) * 100}%`;
+    document.getElementById('stamina-bar-fill').style.width = `${hudData.stamina}%`;
+    document.getElementById('hunger-bar-fill').style.width = `${hudData.hunger}%`;
+
+    // Update block break progress bar
+    if (blockBreaker.isBreaking()) {
+      document.getElementById('break-bar').style.display = 'block';
+      document.getElementById('break-fill').style.width = `${Math.round(blockBreaker.getProgress() * 100)}%`;
+    } else {
+      document.getElementById('break-bar').style.display = 'none';
+    }
   }
 
   window.addEventListener('resize', () => {
