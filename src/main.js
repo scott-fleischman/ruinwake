@@ -81,6 +81,7 @@ import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 import { BlockBreaker } from './core/blockBreaker.js';
+import { isInWater, getWaterSlowdown } from './core/waterPhysics.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 import { shouldReleaseCursor } from './core/menuState.js';
@@ -972,18 +973,21 @@ function startGame(config, jumpStateId) {
       const raceSpeedMod = getRaceSpeedModifier(config.raceId, biome.type);
       // Fracture injury reduces speed by 40%
       const fractureMod = survivalStats.getFractureSpeedMultiplier();
+      // Water slows movement
+      const inWater = isInWater(world, player.position);
+      const waterMod = getWaterSlowdown(inWater);
 
       const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
       if (sprinting && survivalStats.stamina > 0) {
         const saved = player.moveSpeed;
         const sprintMod = getRaceSprintMultiplier(config.raceId);
-        player.moveSpeed *= 1.6 * sprintMod * raceSpeedMod * fractureMod;
+        player.moveSpeed *= 1.6 * sprintMod * raceSpeedMod * fractureMod * waterMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
         survivalStats.applySprint(gameDt);
       } else {
         const saved = player.moveSpeed;
-        player.moveSpeed *= raceSpeedMod * fractureMod;
+        player.moveSpeed *= raceSpeedMod * fractureMod * waterMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
       }

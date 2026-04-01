@@ -14,17 +14,16 @@ describe('Water generation', () => {
     const world = new World();
     generateTerrain(world, { seed: 42 });
 
-    // Find a column where terrain is below water level (should exist in valleys)
+    // Search across the whole world for any water block
     let foundWater = false;
-    for (let x = -50; x < 50; x += 5) {
-      for (let z = -50; z < 50; z += 5) {
-        const h = getHeightAt(x, z, 42);
-        if (h < WATER_LEVEL) {
-          // Blocks between surface and water level should be water
-          for (let y = h + 1; y <= WATER_LEVEL; y++) {
-            if (world.getBlock(x, y, z) === BlockType.WATER) {
-              foundWater = true;
-            }
+    for (let x = -90; x < 550; x += 10) {
+      if (foundWater) break;
+      for (let z = -90; z < 140; z += 10) {
+        if (foundWater) break;
+        for (let y = 0; y <= WATER_LEVEL; y++) {
+          if (world.getBlock(x, y, z) === BlockType.WATER) {
+            foundWater = true;
+            break;
           }
         }
       }

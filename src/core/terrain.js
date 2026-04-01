@@ -3,6 +3,7 @@ import { simplex2D } from './noise.js';
 import { getBiome, getBiomeByType, BiomeType } from './biome.js';
 
 export const SURFACE_Y = 32;
+export const WATER_LEVEL = 26;
 const DIRT_DEPTH = 3;
 export const TERRAIN_EXTENT = 300;
 // Asymmetric world bounds for the Hobbit east-west corridor
@@ -157,6 +158,19 @@ export function generateTerrain(world, { seed = 0 } = {}) {
         // Only place tall grass if the block above surface is air (no tree trunk)
         if (world.getBlock(x, h + 1, z) === BlockType.AIR) {
           world.setBlock(x, h + 1, z, BlockType.TALL_GRASS);
+        }
+      }
+    }
+  }
+  // Fill water at and below WATER_LEVEL where there's air
+  for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
+    for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
+      for (let y = WATER_LEVEL; y >= 0; y--) {
+        const block = world.getBlock(x, y, z);
+        if (block === BlockType.AIR || block === BlockType.TALL_GRASS) {
+          world.setBlock(x, y, z, BlockType.WATER);
+        } else {
+          break; // hit solid ground, stop filling down
         }
       }
     }
