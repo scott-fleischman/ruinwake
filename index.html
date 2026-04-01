@@ -225,6 +225,14 @@
       </div>
     </div>
   </div>
+  <div id="loading-screen" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#0a0a1a;display:none;z-index:300;flex-direction:column;justify-content:center;align-items:center">
+    <div style="color:#c9a84c;font-size:28px;font-weight:bold;margin-bottom:20px">Building Middle-earth...</div>
+    <div id="loading-flavor" style="color:#888;font-size:14px;margin-bottom:24px;font-style:italic;text-align:center;max-width:400px"></div>
+    <div style="width:300px;height:16px;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden">
+      <div id="loading-fill" style="height:100%;background:linear-gradient(90deg,#2a5a1a,#4a8a2f);border-radius:8px;width:0%;transition:width 0.15s"></div>
+    </div>
+    <div id="loading-pct" style="color:#aaa;font-size:13px;margin-top:10px">0%</div>
+  </div>
   <div id="hud"></div>
   <div id="progress-panel" style="position:absolute;top:50%;right:20px;transform:translateY(-50%);background:rgba(10,10,20,0.92);padding:16px 20px;border-radius:8px;border:1px solid #444;width:280px;max-height:70vh;overflow-y:auto;display:none;z-index:100">
     <h2 style="color:#c9a84c;margin-bottom:10px;font-size:16px">Completion [` key]</h2>

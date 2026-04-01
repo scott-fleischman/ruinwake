@@ -168,9 +168,47 @@ function startGame(config, jumpStateId) {
   // --- Core state ---
   const world = new World();
 
-  // Lazy chunk streaming — generate only nearby chunks instead of whole world
-  const chunkMgr = new ChunkManager(world, config.seed, { loadDistance: 6, maxChunksPerFrame: 8 });
+  // Loading screen with flavor text
+  const loadingScreen = document.getElementById('loading-screen');
+  const loadingFill = document.getElementById('loading-fill');
+  const loadingPct = document.getElementById('loading-pct');
+  const loadingFlavor = document.getElementById('loading-flavor');
+  const FLAVOR_TEXTS = [
+    'The old roads remember those who walked them...',
+    'Ancient ward-stones hum with forgotten power...',
+    'Mirkwood\'s shadows deepen with each passing age...',
+    'The Lonely Mountain watches over the eastern lands...',
+    'In the Shire, the hedgerows grow thick and green...',
+    'Rivendell endures, though diminished and quiet...',
+    'The Great River Anduin flows ever southward...',
+    'Old ruins hold secrets that time cannot erase...',
+  ];
+  loadingScreen.style.display = 'flex';
+  loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(Math.random() * FLAVOR_TEXTS.length)];
+
+  const onLoadProgress = (completed, total) => {
+    const pct = Math.round((completed / total) * 100);
+    loadingFill.style.width = `${pct}%`;
+    loadingPct.textContent = `${pct}% — ${completed}/${total} chunks`;
+    // Cycle flavor text every ~25%
+    if (completed % Math.max(1, Math.floor(total / 4)) === 0) {
+      loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(Math.random() * FLAVOR_TEXTS.length)];
+    }
+  };
+
+  // Lazy chunk streaming with optional Web Worker
+  const chunkMgr = new ChunkManager(world, config.seed, {
+    loadDistance: 6,
+    maxChunksPerFrame: 8,
+    useWorker: true,
+    onProgress: onLoadProgress,
+  });
   chunkMgr.generateInitialChunks(0, 0);
+
+  // If synchronous (no worker), hide loading screen immediately
+  if (!chunkMgr.isLoading()) {
+    loadingScreen.style.display = 'none';
+  }
 
   // Place ruin structures at restorable site positions (within loaded area)
   const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
@@ -1249,6 +1287,11 @@ function startGame(config, jumpStateId) {
 
     // Stream chunks as player moves
     chunkMgr.update(player.position.x, player.position.z);
+
+    // Hide loading screen once initial chunks are ready
+    if (loadingScreen.style.display !== 'none' && !chunkMgr.isLoading()) {
+      loadingScreen.style.display = 'none';
+    }
 
     worldRenderer.update(player.position.x, player.position.z, 4);
     renderer.render(scene, camera);
