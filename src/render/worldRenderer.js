@@ -57,6 +57,12 @@ export class WorldRenderer {
               this.scene.add(mesh);
               this.meshes.set(key, mesh);
             }
+            // New chunk loaded — mark neighbors dirty so they rebuild
+            // faces that were hidden because this chunk was unloaded
+            for (const [dnx, dny, dnz] of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
+              const nk = `${cx+dnx},${cy+dny},${cz+dnz}`;
+              if (this.meshes.has(nk)) this.dirty.add(nk);
+            }
           }
         }
       }

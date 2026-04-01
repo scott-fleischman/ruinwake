@@ -44,7 +44,7 @@ export const GAME_CONSTANTS = deepFreeze({
     LOAD_DISTANCE: 6,
     UNLOAD_DISTANCE: 9,
     MAX_PER_FRAME: 8,
-    RENDER_DISTANCE: 4,
+    RENDER_DISTANCE: 6,
     SIZE: 16,
   },
 
