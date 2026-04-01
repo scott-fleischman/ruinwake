@@ -72,6 +72,20 @@ For browser targets:
 - treat unexpected production console.log / console.warn as failure
 
 ## Refactoring goals
+## Graphics review via screenshots
+When making graphics-related changes (biome visuals, block colors, entity models,
+terrain generation, lighting), generate and review screenshots:
+
+1. Run `npx vitest run test/rendering/screenshots.test.js` to regenerate all screenshots
+2. Screenshots are saved to `test/rendering/screenshots/*.ppm`
+3. Read the PPM files using the Read tool to visually inspect them
+4. Check that:
+   - Block colors match their intended materials (stone=gray, grass=green top/brown sides, etc.)
+   - Biome terrain looks distinct (mountains tall+rocky, mirkwood dark+dense, shire gentle+green)
+   - The block palette shows all block types are visually distinguishable
+5. Only do this review when graphics changes warrant it — not on every commit
+6. The screenshots are always generated as test output (gitignored) for any future review
+
 After every green step, look for:
 - duplicated logic
 - oversized modules

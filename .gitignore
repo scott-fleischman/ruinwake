@@ -21,4 +21,4 @@ coverage/
 # OS/editor files
 .DS_Store
 .vscode/
-.idea/
+.idea/test/rendering/screenshots/*.ppm
