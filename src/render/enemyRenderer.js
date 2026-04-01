@@ -1,22 +1,23 @@
 import * as THREE from 'three';
 import { EnemyType } from '../core/enemy.js';
 
+// Richer, more distinct enemy colors
 const ENEMY_COLORS = {
-  [EnemyType.WOLF]: 0x555555,
-  [EnemyType.GOBLIN]: 0x446633,
-  [EnemyType.SPIDER]: 0x332211,
-  [EnemyType.TROLL]: 0x665544,
-  [EnemyType.WIGHT]: 0x553366,
-  [EnemyType.GUARDIAN]: 0x997744,
-  [EnemyType.CONSTRUCT]: 0x444466,
-  [EnemyType.ORC]: 0x556644,
-  [EnemyType.GIANT_SPIDER]: 0x221100,
-  [EnemyType.SHADOW]: 0x111122,
-  [EnemyType.BARROW_WIGHT]: 0x443355,
-  [EnemyType.GOBLIN_ARCHER]: 0x335522,
-  [EnemyType.CORRUPTED_BEAR]: 0x664422,
-  [EnemyType.DARK_CONSTRUCT]: 0x222244,
-  [EnemyType.WRAITH]: 0x110033,
+  [EnemyType.WOLF]: 0x6a6a6a,       // silver-gray fur
+  [EnemyType.GOBLIN]: 0x4a7a3a,     // sickly green skin
+  [EnemyType.SPIDER]: 0x2a1a0a,     // dark brown-black chitin
+  [EnemyType.TROLL]: 0x7a6a5a,      // gray-brown stone-like hide
+  [EnemyType.WIGHT]: 0x6644aa,      // spectral purple glow
+  [EnemyType.GUARDIAN]: 0xbb8844,    // golden ancient metal
+  [EnemyType.CONSTRUCT]: 0x5555aa,   // blue-gray dwarven steel
+  [EnemyType.ORC]: 0x5a6a3a,        // dark olive skin
+  [EnemyType.GIANT_SPIDER]: 0x1a0a00, // near-black with red eyes
+  [EnemyType.SHADOW]: 0x0a0a1a,     // almost invisible dark
+  [EnemyType.BARROW_WIGHT]: 0x5533aa, // deeper spectral purple
+  [EnemyType.GOBLIN_ARCHER]: 0x3a5a2a, // forest green camouflage
+  [EnemyType.CORRUPTED_BEAR]: 0x8a5522, // dark reddish-brown
+  [EnemyType.DARK_CONSTRUCT]: 0x2a2a55, // shadow-infused blue steel
+  [EnemyType.WRAITH]: 0x1a0044,      // deep void purple-black
 };
 
 const ENEMY_SCALES = {

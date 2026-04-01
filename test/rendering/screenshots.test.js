@@ -7,10 +7,14 @@ import { BlockType } from '../../src/core/block.js';
 import { generateColumnData } from '../../src/core/chunkWorkerLogic.js';
 import { Chunk } from '../../src/core/chunk.js';
 
+// Timestamped screenshot directory
+const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const SCREENSHOT_DIR = join(import.meta.dirname, 'screenshots');
+const PASS_DIR = join(SCREENSHOT_DIR, TIMESTAMP);
 
-// Ensure output directory exists
+// Ensure output directories exist
 mkdirSync(SCREENSHOT_DIR, { recursive: true });
+mkdirSync(PASS_DIR, { recursive: true });
 
 // Helper: generate a small world area
 function makeWorldAt(cx, cz, seed = 42) {
@@ -43,33 +47,33 @@ function makeWorldAt(cx, cz, seed = 42) {
 
 describe('Screenshot generation', () => {
   it('generates block palette screenshot', () => {
-    const path = join(SCREENSHOT_DIR, 'block_palette.ppm');
+    const path = join(PASS_DIR, 'block_palette.ppm');
     const result = captureBlockPalette(path);
     expect(existsSync(path)).toBe(true);
     expect(result.blockCount).toBeGreaterThan(20);
   });
 
   it('generates single stone block screenshot', () => {
-    const path = join(SCREENSHOT_DIR, 'block_stone.ppm');
+    const path = join(PASS_DIR, 'block_stone.ppm');
     captureBlockScreenshot(BlockType.STONE, path);
     expect(existsSync(path)).toBe(true);
   });
 
   it('generates single grass block screenshot', () => {
-    const path = join(SCREENSHOT_DIR, 'block_grass.ppm');
+    const path = join(PASS_DIR, 'block_grass.ppm');
     captureBlockScreenshot(BlockType.GRASS, path);
     expect(existsSync(path)).toBe(true);
   });
 
   it('generates single wood block screenshot', () => {
-    const path = join(SCREENSHOT_DIR, 'block_wood.ppm');
+    const path = join(PASS_DIR, 'block_wood.ppm');
     captureBlockScreenshot(BlockType.WOOD, path);
     expect(existsSync(path)).toBe(true);
   });
 
   it('generates Shire biome terrain screenshot', () => {
     const world = makeWorldAt(0, 0, 42);
-    const path = join(SCREENSHOT_DIR, 'biome_shire.ppm');
+    const path = join(PASS_DIR, 'biome_shire.ppm');
     captureWorldScreenshot(world, [8, 45, 8], [8, 30, -5], path);
     expect(existsSync(path)).toBe(true);
   });
@@ -77,7 +81,7 @@ describe('Screenshot generation', () => {
   it('generates Mountain biome terrain screenshot', () => {
     // Chunk at Misty Mountains (~270, 50) = chunk (16, 3)
     const world = makeWorldAt(16, 3, 42);
-    const path = join(SCREENSHOT_DIR, 'biome_mountain.ppm');
+    const path = join(PASS_DIR, 'biome_mountain.ppm');
     captureWorldScreenshot(world, [260, 65, 55], [270, 45, 50], path);
     expect(existsSync(path)).toBe(true);
   });
@@ -85,7 +89,7 @@ describe('Screenshot generation', () => {
   it('generates Mirkwood biome terrain screenshot', () => {
     // Chunk at Mirkwood (~400, 40) = chunk (25, 2)
     const world = makeWorldAt(25, 2, 42);
-    const path = join(SCREENSHOT_DIR, 'biome_mirkwood.ppm');
+    const path = join(PASS_DIR, 'biome_mirkwood.ppm');
     captureWorldScreenshot(world, [405, 45, 45], [400, 30, 35], path);
     expect(existsSync(path)).toBe(true);
   });
