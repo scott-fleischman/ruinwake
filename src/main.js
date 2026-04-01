@@ -86,6 +86,7 @@ import { isInWater, getWaterSlowdown } from './core/waterPhysics.js';
 import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
+import { GAME_CONSTANTS } from './core/gameConstants.js';
 import { shouldReleaseCursor } from './core/menuState.js';
 
 // --- New game UI ---
@@ -159,11 +160,8 @@ document.getElementById('jump-btn').addEventListener('click', () => {
 });
 
 function startGame(config, jumpStateId) {
-  const BASE_MOUSE_SENSITIVITY = 0.002;
+  const GC = GAME_CONSTANTS;
   const settings = new Settings();
-  const JUMP_VELOCITY = 8.0;
-  const MAX_PITCH = Math.PI / 2 - 0.01;
-  const GAME_TIME_SCALE = 4;
 
   // --- Core state ---
   const world = new World();
@@ -199,7 +197,7 @@ function startGame(config, jumpStateId) {
   // Lazy chunk streaming with optional Web Worker
   const chunkMgr = new ChunkManager(world, config.seed, {
     loadDistance: 6,
-    maxChunksPerFrame: 8,
+    maxChunksPerFrame: GC.CHUNKS.MAX_PER_FRAME,
     useWorker: true,
     onProgress: onLoadProgress,
   });
@@ -229,7 +227,7 @@ function startGame(config, jumpStateId) {
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
   const weatherSystem = new WeatherSystem(config.seed);
-  const fogOfWar = new FogOfWar({ width: 700, height: 300, cellSize: 10 });
+  const fogOfWar = new FogOfWar({ width: GC.FOG.WIDTH, height: GC.FOG.HEIGHT, cellSize: GC.FOG.CELL_SIZE });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
   const skillTreeSystem = new SkillTreeSystem(skillTrees);
@@ -322,19 +320,19 @@ function startGame(config, jumpStateId) {
   // --- Renderer ---
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x87ceeb);
+  renderer.setClearColor(GC.COLORS.SKY_DAY);
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const initFog = computeFogDistances(1.0);
-  scene.fog = new THREE.Fog(0x87ceeb, initFog.near, initFog.far);
+  scene.fog = new THREE.Fog(GC.COLORS.SKY_DAY, initFog.near, initFog.far);
 
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+  const camera = new THREE.PerspectiveCamera(GC.CAMERA.FOV, window.innerWidth / window.innerHeight, GC.CAMERA.NEAR, GC.CAMERA.FAR);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  const ambientLight = new THREE.AmbientLight(GC.COLORS.AMBIENT_LIGHT, GC.LIGHTING.AMBIENT.day);
   scene.add(ambientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xfff4e0, 0.8);
+  const dirLight = new THREE.DirectionalLight(GC.COLORS.DIR_LIGHT, GC.LIGHTING.DIRECTIONAL.day);
   dirLight.position.set(50, 100, 30);
   scene.add(dirLight);
 
@@ -361,14 +359,14 @@ function startGame(config, jumpStateId) {
 
   function updateDayNightLighting(phase) {
     const skyColors = {
-      [Phase.DAWN]: 0xffb366,
-      [Phase.DAY]: 0x87ceeb,
-      [Phase.DUSK]: 0xff7744,
-      [Phase.NIGHT]: 0x0a0a2a,
+      [Phase.DAWN]: GC.COLORS.SKY_DAWN,
+      [Phase.DAY]: GC.COLORS.SKY_DAY,
+      [Phase.DUSK]: GC.COLORS.SKY_DUSK,
+      [Phase.NIGHT]: GC.COLORS.SKY_NIGHT,
     };
     const ambientLevels = { [Phase.DAWN]: 0.5, [Phase.DAY]: 0.6, [Phase.DUSK]: 0.35, [Phase.NIGHT]: 0.1 };
     const dirLevels = { [Phase.DAWN]: 0.6, [Phase.DAY]: 0.8, [Phase.DUSK]: 0.4, [Phase.NIGHT]: 0.05 };
-    const skyColor = skyColors[phase] || 0x87ceeb;
+    const skyColor = skyColors[phase] || GC.COLORS.SKY_DAY;
     renderer.setClearColor(skyColor);
     scene.fog.color.set(skyColor);
     ambientLight.intensity = ambientLevels[phase] || 0.6;
@@ -503,7 +501,7 @@ function startGame(config, jumpStateId) {
   questSystem.activate('ch1_embers');
 
   // Auto-activate first 3 side quests that have no prerequisites
-  const autoActivateCount = 3;
+  const autoActivateCount = GC.QUESTS.AUTO_ACTIVATE_SIDE_COUNT;
   let activated = 0;
   for (const sq of sideQuests) {
     if (activated >= autoActivateCount) break;
@@ -548,7 +546,7 @@ function startGame(config, jumpStateId) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    const gameDt = dt * GAME_TIME_SCALE;
+    const gameDt = dt * GC.SURVIVAL.GAME_TIME_SCALE;
     gameClock.tick(gameDt);
 
     // Death check
@@ -570,7 +568,7 @@ function startGame(config, jumpStateId) {
     if (input.consumeKeyPress('F4')) {
       creativeMode.toggle();
       dialogueMessage = creativeMode.enabled ? 'Creative Mode ON — fly with Space/Shift, invincible' : 'Creative Mode OFF';
-      dialogueTimer = 3;
+      dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
     }
 
     // Update biome temperature at player position
@@ -584,7 +582,7 @@ function startGame(config, jumpStateId) {
     }
 
     // Reveal fog around player
-    fogOfWar.reveal(player.position.x, player.position.z, 20);
+    fogOfWar.reveal(player.position.x, player.position.z, GC.FOG.REVEAL_RADIUS);
 
     // Menu cursor management — release pointer lock when any menu is open
     const anyMenuOpen = shouldReleaseCursor({
@@ -609,10 +607,10 @@ function startGame(config, jumpStateId) {
 
     if (input.locked) {
       const mouse = input.consumeMouse();
-      const mouseSens = settings.getMouseSensitivity(BASE_MOUSE_SENSITIVITY);
+      const mouseSens = settings.getMouseSensitivity(GC.CAMERA.MOUSE_SENSITIVITY);
       player.yaw += mouse.dx * mouseSens;
       player.pitch -= mouse.dy * mouseSens;
-      player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch));
+      player.pitch = Math.max(-GC.CAMERA.MAX_PITCH, Math.min(GC.CAMERA.MAX_PITCH, player.pitch));
     }
 
     // Camera toggle on V
@@ -807,7 +805,7 @@ function startGame(config, jumpStateId) {
 
     // NPC interaction (T key) — opens dialogue with choices
     if (input.consumeKeyPress('KeyT') && !dialogueManager.isActive()) {
-      const nearNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
+      const nearNPC = findNearestInteractableNPC(npcSystem, player.position, GC.NPC.INTERACT_RANGE);
       if (nearNPC) {
         const npcMsg = nearNPC.getDialogue(questSystem);
         const choices = [];
@@ -841,11 +839,11 @@ function startGame(config, jumpStateId) {
         if (input.consumeKeyPress('Enter')) {
           const selected = choices[dialogueManager.selectedIndex];
           if (selected && selected.action === 'accept_quest') {
-            const nearNPC2 = findNearestInteractableNPC(npcSystem, player.position, 5);
+            const nearNPC2 = findNearestInteractableNPC(npcSystem, player.position, GC.NPC.INTERACT_RANGE);
             if (nearNPC2) acceptQuestFromNPC(nearNPC2, questSystem);
             dialogueManager.dismiss();
             dialogueMessage = 'Quest accepted!';
-            dialogueTimer = 3;
+            dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
           } else {
             dialogueManager.selectChoice(dialogueManager.selectedIndex);
           }
@@ -880,10 +878,10 @@ function startGame(config, jumpStateId) {
         });
         localStorage.setItem('lotry_save', saveData);
         dialogueMessage = 'Game saved!';
-        dialogueTimer = 2;
+        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
       } catch (e) {
         dialogueMessage = 'Save failed!';
-        dialogueTimer = 2;
+        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
       }
     }
 
@@ -908,14 +906,14 @@ function startGame(config, jumpStateId) {
             worldRenderer.dirty.add(key);
           }
           dialogueMessage = 'Game loaded!';
-          dialogueTimer = 2;
+          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
         } else {
           dialogueMessage = 'No save found';
-          dialogueTimer = 2;
+          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
         }
       } catch (e) {
         dialogueMessage = 'Load failed!';
-        dialogueTimer = 2;
+        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
       }
     }
 
@@ -955,10 +953,10 @@ function startGame(config, jumpStateId) {
             if (corruptEnemy) enemies.push(corruptEnemy);
           }
         }
-        dialogueTimer = 3;
+        dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
       } else if (relicSystem.getEquippedRelic()) {
         dialogueMessage = relicSystem.getEquippedRelic().cooldown > 0 ? 'Relic on cooldown' : 'Not enough focus';
-        dialogueTimer = 2;
+        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
       }
     }
     relicSystem.tick(gameDt);
@@ -968,7 +966,7 @@ function startGame(config, jumpStateId) {
     for (const disc of nearbyDisc) {
       if (disc.discover()) {
         for (const r of disc.reward) inventory.add(r.type, r.count);
-        experienceSystem.addExperience(20, 'exploration');
+        experienceSystem.addExperience(GC.QUESTS.XP_DISCOVERY, 'exploration');
         if (disc.type === 'lore_book' || disc.type === 'inscription') {
           loreJournal.addEntry(new LoreEntry({
             id: disc.id, title: disc.id.replace(/_/g, ' '),
@@ -978,7 +976,7 @@ function startGame(config, jumpStateId) {
         }
         progress.discover(disc.id);
         dialogueMessage = `Discovered: ${disc.type.replace(/_/g, ' ')}!`;
-        dialogueTimer = 3;
+        dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
       }
     }
 
@@ -1024,7 +1022,7 @@ function startGame(config, jumpStateId) {
       if (sprinting && survivalStats.stamina > 0) {
         const saved = player.moveSpeed;
         const sprintMod = getRaceSprintMultiplier(config.raceId);
-        player.moveSpeed *= 1.6 * sprintMod * raceSpeedMod * fractureMod * waterMod;
+        player.moveSpeed *= GC.SURVIVAL.SPRINT_MULTIPLIER * sprintMod * raceSpeedMod * fractureMod * waterMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
         survivalStats.applySprint(gameDt);
@@ -1045,7 +1043,7 @@ function startGame(config, jumpStateId) {
       }
 
       if (input.getJump() && player.onGround) {
-        player.velocity.y = JUMP_VELOCITY;
+        player.velocity.y = GC.PHYSICS.JUMP_VELOCITY;
         player.onGround = false;
       }
 
@@ -1059,11 +1057,11 @@ function startGame(config, jumpStateId) {
         survivalStats.checkFallFracture(preLandVelocityY);
       }
     }
-    clampToWorldBounds(player.position, 560);
+    clampToWorldBounds(player.position, GC.WORLD.BOUNDARY_EXTENT);
 
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
-    const eyePos = { x: player.position.x, y: player.position.y + 1.6, z: player.position.z };
+    const eyePos = { x: player.position.x, y: player.position.y + GC.CAMERA.FIRST_PERSON_EYE_HEIGHT, z: player.position.z };
 
     if (input.locked && input.consumeRightClick()) {
       const hit = raycast(world, eyePos, forward, 6);
@@ -1161,8 +1159,8 @@ function startGame(config, jumpStateId) {
       if (enemies[i].isDead()) {
         const drops = getEnemyDrops(enemies[i].type);
         for (const drop of drops) inventory.add(drop.type, drop.count);
-        experienceSystem.addExperience(25, 'combat');
-        factionSystem.addReputation('road_wardens', 10);
+        experienceSystem.addExperience(GC.COMBAT.XP_PER_KILL, 'combat');
+        factionSystem.addReputation('road_wardens', GC.COMBAT.FACTION_REP_PER_KILL);
         progress.killEnemy(enemies[i].type);
         enemies.splice(i, 1);
       }
@@ -1172,7 +1170,7 @@ function startGame(config, jumpStateId) {
     if (!survivedFirstNight && gameClock.day >= 2) {
       survivedFirstNight = true;
       questSystem.advanceObjective('ch1_embers', 'ch1_survive', 1);
-      experienceSystem.addExperience(50, 'quest');
+      experienceSystem.addExperience(GC.QUESTS.XP_FIRST_NIGHT, 'quest');
       progress.surviveNight();
     }
 
@@ -1183,7 +1181,7 @@ function startGame(config, jumpStateId) {
 
     // Quest progression: reach outpost (starter watch-post)
     const outpost = allRestorableSites.find(s => s.id === 'starter_watchpost');
-    if (outpost && checkProximityTrigger(player.position, outpost.position, 10)) {
+    if (outpost && checkProximityTrigger(player.position, outpost.position, GC.RESTORATION.HINT_RANGE)) {
       questSystem.advanceObjective('ch1_embers', 'ch1_reach_outpost', 1);
     }
 
@@ -1194,7 +1192,7 @@ function startGame(config, jumpStateId) {
       questSystem.activate(trigger.questId);
       if (trigger.type === 'reach_location' || trigger.type === 'explore_area') {
         questSystem.advanceObjective(trigger.questId, trigger.objectiveId, 1);
-        experienceSystem.addExperience(30, 'exploration');
+        experienceSystem.addExperience(GC.QUESTS.XP_EXPLORATION, 'exploration');
       }
     }
 
@@ -1202,13 +1200,13 @@ function startGame(config, jumpStateId) {
     if (input.consumeKeyPress('KeyR')) {
       for (const site of allRestorableSites) {
         if (site.restored) continue;
-        if (checkProximityTrigger(player.position, site.position, 8)) {
+        if (checkProximityTrigger(player.position, site.position, GC.RESTORATION.INTERACT_RANGE)) {
           if (site.restore(inventory)) {
             // Get structured restoration rewards
             const rewards = getRestorationRewards(site.id);
             dialogueMessage = rewards.message;
-            dialogueTimer = 5;
-            experienceSystem.addExperience(100, 'restoration');
+            dialogueTimer = GC.DIALOGUE.DISPLAY_DURATION;
+            experienceSystem.addExperience(GC.QUESTS.XP_RESTORATION, 'restoration');
             progress.restoreSite(site.id);
             // Grant +50 reputation to relevant faction
             const siteFactionMap = {
@@ -1243,7 +1241,7 @@ function startGame(config, jumpStateId) {
             }
           } else {
             dialogueMessage = `Need materials to restore ${site.name}`;
-            dialogueTimer = 3;
+            dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
           }
           break;
         }
@@ -1261,9 +1259,9 @@ function startGame(config, jumpStateId) {
     scene.fog.far = fogDist.far;
 
     // Corruption tints fog near Dol Guldur (Sec 22.2)
-    const corruptDist = Math.sqrt((player.position.x - 420) ** 2 + (player.position.z - 90) ** 2);
-    const corruptT = Math.max(0, 1 - corruptDist / 100);
-    if (corruptT > 0.1) {
+    const corruptDist = Math.sqrt((player.position.x - GC.CORRUPTION.CENTER_X) ** 2 + (player.position.z - GC.CORRUPTION.CENTER_Z) ** 2);
+    const corruptT = Math.max(0, 1 - corruptDist / GC.CORRUPTION.RADIUS);
+    if (corruptT > GC.CORRUPTION.FOG_THRESHOLD) {
       const cc = getCorruptionFogColor(corruptT);
       scene.fog.color.setRGB(cc.r, cc.g, cc.b);
     }
@@ -1273,8 +1271,8 @@ function startGame(config, jumpStateId) {
     camera.rotation.x = player.pitch;
 
     if (player.cameraMode === 'third_person_behind') {
-      const camDist = 5;
-      const eyeHeight = 2.0;
+      const camDist = GC.CAMERA.THIRD_PERSON_DISTANCE;
+      const eyeHeight = GC.CAMERA.THIRD_PERSON_EYE_HEIGHT;
       const lookDir = getLookDirection(player);
       camera.position.set(
         player.position.x - lookDir.x * camDist,
@@ -1282,7 +1280,7 @@ function startGame(config, jumpStateId) {
         player.position.z - lookDir.z * camDist
       );
     } else {
-      camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
+      camera.position.set(player.position.x, player.position.y + GC.CAMERA.FIRST_PERSON_EYE_HEIGHT, player.position.z);
     }
 
     // Stream chunks as player moves
@@ -1293,7 +1291,7 @@ function startGame(config, jumpStateId) {
       loadingScreen.style.display = 'none';
     }
 
-    worldRenderer.update(player.position.x, player.position.z, 4);
+    worldRenderer.update(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
     renderer.render(scene, camera);
 
     const phase = gameClock.getPhase();
@@ -1331,14 +1329,14 @@ function startGame(config, jumpStateId) {
     hotbarBar.innerHTML = hotbarHTML;
 
     // NPC proximity hint
-    const nearbyNPC = findNearestInteractableNPC(npcSystem, player.position, 5);
+    const nearbyNPC = findNearestInteractableNPC(npcSystem, player.position, GC.NPC.INTERACT_RANGE);
     const npcHint = nearbyNPC ? `<div style="color:#c9a84c;margin-top:4px">[T] Talk to ${nearbyNPC.name}</div>` : '';
     const dialogueLine = dialogueMessage ? `<div style="color:#eee;background:rgba(0,0,0,0.6);padding:6px 10px;margin-top:6px;border-radius:4px;max-width:400px">${dialogueMessage}</div>` : '';
 
     // Restorable site hint
     let siteHint = '';
     for (const site of allRestorableSites) {
-      if (!site.restored && checkProximityTrigger(player.position, site.position, 10)) {
+      if (!site.restored && checkProximityTrigger(player.position, site.position, GC.RESTORATION.HINT_RANGE)) {
         const reqs = site.requirements.map(r => `${r.count} ${r.type.replace(/_/g, ' ')}`).join(', ');
         siteHint = `<div style="color:#aed581;margin-top:4px">[R] Restore ${site.name} (needs: ${reqs})</div>`;
         break;
