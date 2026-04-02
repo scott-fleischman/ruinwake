@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mineBlock, placeBlock, raycast, interactPlace } from '../../src/core/actions.js';
+import { mineBlock, breakBlock, placeBlock, raycast, interactPlace } from '../../src/core/actions.js';
 import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 import { ItemType } from '../../src/core/item.js';
@@ -37,6 +37,42 @@ describe('mineBlock', () => {
     const inv = new Inventory(10);
     const result = mineBlock(world, inv, 0, 100, 0);
     expect(result).toBe(false);
+  });
+});
+
+describe('breakBlock', () => {
+  it('returns drops and sets block to AIR without touching inventory', () => {
+    const world = new World();
+    world.setBlock(5, 10, 5, BlockType.STONE);
+    const result = breakBlock(world, 5, 10, 5, ToolType.PICKAXE);
+    expect(result).not.toBeNull();
+    expect(result.drops.length).toBeGreaterThan(0);
+    expect(result.drops[0].type).toBe('stone');
+    expect(world.getBlock(5, 10, 5)).toBe(BlockType.AIR);
+  });
+
+  it('returns null for non-mineable blocks', () => {
+    const world = new World();
+    const result = breakBlock(world, 0, 100, 0);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when tool requirement not met', () => {
+    const world = new World();
+    world.setBlock(5, 10, 5, BlockType.STONE);
+    const result = breakBlock(world, 5, 10, 5, null);
+    expect(result).toBeNull();
+    expect(world.getBlock(5, 10, 5)).toBe(BlockType.STONE);
+  });
+
+  it('returns multiple drops for grass', () => {
+    const world = new World();
+    world.setBlock(5, 10, 5, BlockType.GRASS);
+    const result = breakBlock(world, 5, 10, 5);
+    expect(result).not.toBeNull();
+    const types = result.drops.map(d => d.type);
+    expect(types).toContain('dirt');
+    expect(types).toContain('fiber');
   });
 });
 
