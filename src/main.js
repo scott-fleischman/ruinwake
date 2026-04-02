@@ -598,7 +598,7 @@ function startGame(config, jumpStateId) {
   const mapRenderer = new MapRenderer(mapLayerSystem, mapCanvas2D);
   const minimapRenderer = new MapRenderer(mapLayerSystem, minimapCanvas);
   // Minimap always uses overview zoom
-  minimapRenderer.zoom = MapZoom.OVERVIEW;
+  minimapRenderer.setZoom(MapZoom.OVERVIEW);
 
   function updateMapPanel(playerPos) {
     const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
