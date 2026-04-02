@@ -81,8 +81,15 @@ import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 import { BlockBreaker } from './core/blockBreaker.js';
+import { toggleDoor } from './core/door.js';
+import { BlockType } from './core/block.js';
+import { ChestStorage } from './core/chestStorage.js';
+import { worldBuildings, worldFeatures, worldTrees, worldStations, getBuildingForNPC } from './core/worldData.js';
+import { MapLayerSystem } from './core/mapLayers.js';
+import { MapRenderer, MapZoom } from './core/mapRenderer.js';
 import { ChunkManager } from './core/chunkManager.js';
 import { isInWater, getWaterSlowdown } from './core/waterPhysics.js';
+import { getMovementPenalty } from './core/terrainDifficulty.js';
 import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
@@ -276,6 +283,49 @@ function startGame(config, jumpStateId) {
   const restSystem = new RestSystem();
   const freshnessTracker = new FreshnessTracker();
   const blockBreaker = new BlockBreaker();
+  const chestStorage = new ChestStorage();
+  let openChestPos = null; // {x,y,z} of currently open chest, or null
+  const chestPanel = document.getElementById('chest-panel');
+  const chestItemsEl = document.getElementById('chest-items');
+
+  function openChestAt(x, y, z) {
+    openChestPos = { x, y, z };
+    updateChestPanel();
+  }
+
+  function closeChest() {
+    openChestPos = null;
+    chestPanel.style.display = 'none';
+  }
+
+  function updateChestPanel() {
+    if (!openChestPos) { chestPanel.style.display = 'none'; return; }
+    chestPanel.style.display = 'block';
+    const items = chestStorage.getItems(openChestPos.x, openChestPos.y, openChestPos.z);
+    if (items.length === 0) {
+      chestItemsEl.innerHTML = '<div style="color:#888">Empty</div>';
+      return;
+    }
+    chestItemsEl.innerHTML = items.map((item, i) =>
+      `<div data-chest-idx="${i}" style="padding:4px 8px;cursor:pointer;border-radius:4px;color:#aed581;border:1px solid #333;margin:2px 0">${getItemIcon(item.type)} ${item.type.replace(/_/g, ' ')} x${item.count}</div>`
+    ).join('');
+    chestItemsEl.onclick = (e) => {
+      const el = e.target.closest('[data-chest-idx]');
+      if (!el || !openChestPos) return;
+      const idx = parseInt(el.getAttribute('data-chest-idx'));
+      const items2 = chestStorage.getItems(openChestPos.x, openChestPos.y, openChestPos.z);
+      if (idx >= 0 && idx < items2.length) {
+        const taken = chestStorage.takeItem(openChestPos.x, openChestPos.y, openChestPos.z, items2[idx].type);
+        if (taken) {
+          inventory.add(taken.type, taken.count);
+          dialogueMessage = `Took ${taken.count} ${taken.type.replace(/_/g, ' ')}`;
+          dialogueTimer = 1.5;
+          updateChestPanel();
+        }
+      }
+    };
+  }
+
   const deathSystem = new DeathSystem();
   const creativeMode = new CreativeMode();
   const dialogueManager = new DialogueManager();
@@ -291,25 +341,117 @@ function startGame(config, jumpStateId) {
   // Determine racial building style
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
 
-  for (const npc of allNPCs) {
-    // Place a proper building for each NPC (offset so NPC spawns at door)
-    const nx = Math.floor(npc.position.x);
-    const nz = Math.floor(npc.position.z);
-    const nh = getHeightAt(nx, nz, config.seed);
-    const buildingX = nx - 6;
-    const buildingZ = nz - 2;
-    placeBuilding(world, { x: buildingX, y: nh + 1, z: buildingZ }, {
-      wallBlock: 32, // OAK_PLANKS
-      roofBlock: 11, // PLANKS
-      radius: 4,
-      height: 4,
-      bed: true,
-      chest: npc.hasTrades(),
+  // ── Place all pre-baked world buildings ──
+  const npcById = new Map(allNPCs.map(n => [n.id, n]));
+  for (const bldg of worldBuildings) {
+    const bh = getHeightAt(bldg.x, bldg.z, config.seed);
+    placeBuilding(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
+      wallBlock: bldg.wallBlock,
+      roofBlock: bldg.roofBlock,
+      floorBlock: bldg.floorBlock,
+      radius: bldg.radius,
+      height: bldg.height,
+      bed: bldg.bed,
+      chest: bldg.chest,
     });
-    // Place NPC at door height, outside the building
+    // Populate chest with pre-defined items
+    if (bldg.chest && bldg.chestItems) {
+      const chestX = bldg.x - bldg.radius + 1;
+      const chestY = bh + 1;
+      const chestZ = bldg.z + bldg.radius - 1;
+      for (const item of bldg.chestItems) {
+        chestStorage.addItem(chestX, chestY, chestZ, item.type, item.count);
+      }
+    }
+    // Assign NPC to building door
+    if (bldg.npcId) {
+      const npc = npcById.get(bldg.npcId);
+      if (npc) {
+        // Place NPC just outside door (+x side, center z)
+        npc.position.x = bldg.x + bldg.radius + 1;
+        npc.position.y = bh + 2;
+        npc.position.z = bldg.z;
+        npc.spawnPosition = { ...npc.position };
+        npcSystem.addNPC(npc);
+        npcById.delete(bldg.npcId);
+      }
+    }
+  }
+  // Add any remaining NPCs that don't have buildings
+  for (const [, npc] of npcById) {
+    const nh = getHeightAt(Math.floor(npc.position.x), Math.floor(npc.position.z), config.seed);
     npc.position.y = nh + 2;
     npc.spawnPosition = { ...npc.position };
     npcSystem.addNPC(npc);
+  }
+
+  // ── Place world features (fences, paths, wells, etc.) ──
+  for (const feat of worldFeatures) {
+    if (feat.type === 'line') {
+      // Interpolate blocks along a line
+      const dx = feat.x2 - feat.x1;
+      const dz = feat.z2 - feat.z1;
+      const steps = Math.max(Math.abs(dx), Math.abs(dz));
+      for (let i = 0; i <= steps; i++) {
+        const t = steps === 0 ? 0 : i / steps;
+        const fx = Math.round(feat.x1 + dx * t);
+        const fz = Math.round(feat.z1 + dz * t);
+        const fh = getHeightAt(fx, fz, config.seed);
+        if (feat.surface) {
+          world.setBlock(fx, fh, fz, feat.block);
+        } else {
+          world.setBlock(fx, fh + feat.dy, fz, feat.block);
+        }
+      }
+    } else if (feat.type === 'well') {
+      const wh = getHeightAt(feat.x, feat.z, config.seed);
+      // 3x3 stone ring with water inside
+      for (let ddx = -1; ddx <= 1; ddx++) {
+        for (let ddz = -1; ddz <= 1; ddz++) {
+          if (ddx === 0 && ddz === 0) {
+            world.setBlock(feat.x, wh + 1, feat.z, BlockType.WATER);
+          } else {
+            world.setBlock(feat.x + ddx, wh + 1, feat.z + ddz, BlockType.COBBLESTONE);
+          }
+        }
+      }
+    } else if (feat.type === 'blocks') {
+      const baseH = getHeightAt(feat.x, feat.z, config.seed);
+      for (const b of feat.blocks) {
+        const bx = feat.x + b.dx;
+        const bz = feat.z + b.dz;
+        const bh = b.surface ? getHeightAt(bx, bz, config.seed) : baseH;
+        world.setBlock(bx, bh + b.dy, bz, b.block);
+      }
+    }
+  }
+
+  // ── Place special trees ──
+  for (const tree of worldTrees) {
+    const th = getHeightAt(tree.x, tree.z, config.seed);
+    const trunkH = tree.type === 'large' ? 6 : 4;
+    const canopyR = tree.type === 'large' ? 3 : 2;
+    for (let dy = 1; dy <= trunkH; dy++) {
+      world.setBlock(tree.x, th + dy, tree.z, BlockType.WOOD);
+    }
+    const topY = th + trunkH;
+    for (let ddx = -canopyR; ddx <= canopyR; ddx++) {
+      for (let ddz = -canopyR; ddz <= canopyR; ddz++) {
+        for (let dy = 0; dy <= 2; dy++) {
+          if (ddx === 0 && ddz === 0 && dy === 0) continue;
+          const dist = Math.sqrt(ddx * ddx + ddz * ddz) + dy * 0.7;
+          if (dist <= canopyR + 0.6) {
+            world.setBlock(tree.x + ddx, topY + dy, tree.z + ddz, BlockType.LEAVES);
+          }
+        }
+      }
+    }
+  }
+
+  // ── Place world crafting stations ──
+  for (const st of worldStations) {
+    const sh = getHeightAt(st.x, st.z, config.seed);
+    world.setBlock(st.x, sh + st.dy, st.z, st.block);
   }
   let dialogueMessage = '';
   let dialogueTimer = 0;
@@ -406,43 +548,39 @@ function startGame(config, jumpStateId) {
     dirLight.intensity = dirLevels[phase] || 0.8;
   }
 
-  // --- Map panel rendering ---
+  // --- Map panel rendering (canvas-based) ---
   const mapPanel = document.getElementById('map-panel');
-  const mapCanvas = document.getElementById('map-canvas');
+  const mapTitle = document.getElementById('map-title');
+  const mapCanvas2D = document.getElementById('map-canvas-2d');
+  const mapExploredSpan = document.getElementById('map-explored');
+  const mapLayerSystem = new MapLayerSystem(
+    (x, z) => getHeightAt(x, z, config.seed),
+    (x, z) => getBiomeAt(x, z, config.seed),
+    config.seed,
+  );
+  const mapRenderer = new MapRenderer(mapLayerSystem, mapCanvas2D);
 
   function updateMapPanel(playerPos) {
     mapPanel.style.display = mapScreen.isOpen ? 'block' : 'none';
     if (!mapScreen.isOpen) return;
-    const data = mapScreen.getMapData(playerPos);
-    const W = 460, H = 320;
-    // Full world bounds: x from -100 to 560, z from -120 to 150
-    const WORLD_X_MIN = -100, WORLD_X_MAX = 560;
-    const WORLD_Z_MIN = -120, WORLD_Z_MAX = 150;
-    const toX = (wx) => ((wx - WORLD_X_MIN) / (WORLD_X_MAX - WORLD_X_MIN)) * W;
-    const toY = (wz) => ((wz - WORLD_Z_MIN) / (WORLD_Z_MAX - WORLD_Z_MIN)) * H;
 
-    let html = '';
-    // Landmarks as labeled dots
-    for (const lm of data.landmarks) {
-      const x = toX(lm.x);
-      const y = toY(lm.z);
-      html += `<div style="position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%);text-align:center"><div style="width:8px;height:8px;background:#c9a84c;border-radius:50%;margin:0 auto"></div><div style="font-size:9px;color:#c9a84c;white-space:nowrap">${lm.name}</div></div>`;
-    }
-    // Gap 4: Quest objective markers (red dots)
     const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
     const questMarkerList = getQuestMarkers(questTriggers, activeQuestIds);
-    for (const qm of questMarkerList) {
-      const qx = toX(qm.x);
-      const qy = toY(qm.z);
-      html += `<div style="position:absolute;left:${qx}px;top:${qy}px;transform:translate(-50%,-50%);text-align:center"><div style="width:8px;height:8px;background:#e53935;border-radius:50%;margin:0 auto"></div><div style="font-size:9px;color:#e53935;white-space:nowrap">${qm.label}</div></div>`;
-    }
-    // Player position
-    const px = toX(data.playerPos.x);
-    const py = toY(data.playerPos.z);
-    html += `<div style="position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);width:10px;height:10px;background:#4caf50;border-radius:50%;border:2px solid #fff"></div>`;
-    // Explored percentage
-    html += `<div style="position:absolute;bottom:4px;right:8px;font-size:11px;color:#888">Explored: ${Math.round(data.explored)}%</div>`;
-    mapCanvas.innerHTML = html;
+
+    mapRenderer.draw({
+      playerPos,
+      fogOfWar,
+      buildings: worldBuildings,
+      npcs: npcSystem.getAllNPCs(),
+      stations: worldStations,
+      landmarks: allLandmarks,
+      questMarkers: questMarkerList,
+    });
+
+    mapTitle.textContent = mapRenderer.zoom === MapZoom.OVERVIEW
+      ? 'World Map [M]'
+      : 'Detail Map [M]';
+    mapExploredSpan.textContent = Math.round(mapScreen.getExploredPercentage());
   }
 
   // --- Skill tree panel rendering ---
@@ -619,7 +757,21 @@ function startGame(config, jumpStateId) {
     // Reveal fog around player
     fogOfWar.reveal(player.position.x, player.position.z, GC.FOG.REVEAL_RADIUS);
 
+    // Add visited markers when entering landmark regions
+    for (const lm of allLandmarks) {
+      const dx = player.position.x - lm.position.x;
+      const dz = player.position.z - lm.position.z;
+      if (Math.sqrt(dx * dx + dz * dz) < lm.radius * 0.5) {
+        mapRenderer.addVisitedMarker(lm.position.x, lm.position.z, lm.name);
+      }
+    }
+
     // Menu cursor management — release pointer lock when any menu is open
+    // Close chest on Escape
+    if (openChestPos && input.consumeKeyPress('Escape')) {
+      closeChest();
+    }
+
     const anyMenuOpen = shouldReleaseCursor({
       inventory: document.getElementById('inventory-panel').style.display !== 'none',
       crafting: craftingUI.isOpen,
@@ -627,6 +779,7 @@ function startGame(config, jumpStateId) {
       skillTree: skillTreeUI.isOpen,
       map: mapScreen.isOpen,
       settings: settings.isOpen,
+      chest: !!openChestPos,
     });
     input.menuOpen = anyMenuOpen;
     if (anyMenuOpen && document.pointerLockElement) {
@@ -697,6 +850,10 @@ function startGame(config, jumpStateId) {
     if (input.consumeKeyPress('KeyM')) {
       mapScreen.toggle();
       if (!mapScreen.isOpen) renderer.domElement.requestPointerLock();
+    }
+    // Z key toggles map zoom while map is open
+    if (mapScreen.isOpen && input.consumeKeyPress('KeyZ')) {
+      mapRenderer.toggleZoom();
     }
     if (mapScreen.isOpen) {
       updateMapPanel(player.position);
@@ -1069,17 +1226,32 @@ function startGame(config, jumpStateId) {
       const inWater = isInWater(world, player.position);
       const waterMod = getWaterSlowdown(inWater);
 
+      // Slope penalty: check height difference in movement direction
+      const px = Math.floor(player.position.x);
+      const pz = Math.floor(player.position.z);
+      const curH = getHeightAt(px, pz, config.seed);
+      let slopeMod = 1.0;
+      if (moveInput.forward || moveInput.right) {
+        const cosYaw = Math.cos(player.yaw);
+        const sinYaw = Math.sin(player.yaw);
+        const aheadX = Math.floor(player.position.x + sinYaw * 2);
+        const aheadZ = Math.floor(player.position.z + cosYaw * 2);
+        const aheadH = getHeightAt(aheadX, aheadZ, config.seed);
+        const heightDiff = Math.abs(aheadH - curH);
+        slopeMod = getMovementPenalty(heightDiff);
+      }
+
       const sprinting = input.keys['ShiftLeft'] && moveInput.forward && !player.crouching;
       if (sprinting && survivalStats.stamina > 0) {
         const saved = player.moveSpeed;
         const sprintMod = getRaceSprintMultiplier(config.raceId);
-        player.moveSpeed *= GC.SURVIVAL.SPRINT_MULTIPLIER * sprintMod * raceSpeedMod * fractureMod * waterMod;
+        player.moveSpeed *= GC.SURVIVAL.SPRINT_MULTIPLIER * sprintMod * raceSpeedMod * fractureMod * waterMod * slopeMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
         survivalStats.applySprint(gameDt);
       } else {
         const saved = player.moveSpeed;
-        player.moveSpeed *= raceSpeedMod * fractureMod * waterMod;
+        player.moveSpeed *= raceSpeedMod * fractureMod * waterMod * slopeMod;
         player.applyMovementInput(moveInput, dt);
         player.moveSpeed = saved;
       }
@@ -1117,14 +1289,27 @@ function startGame(config, jumpStateId) {
     if (input.locked && input.consumeRightClick()) {
       const hit = raycast(world, eyePos, forward, 6);
       if (hit) {
-        const selectedItem = hotbar.getSelectedItem();
-        const itemType = selectedItem ? selectedItem.type : null;
-        if (itemType && ITEM_TO_BLOCK[itemType] !== undefined) {
-          const px = hit.blockPos.x + hit.normal.x;
-          const py = hit.blockPos.y + hit.normal.y;
-          const pz = hit.blockPos.z + hit.normal.z;
-          if (placeBlock(world, inventory, px, py, pz, itemType)) {
-            worldRenderer.markDirty(px, py, pz);
+        const hitBlock = world.getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+        // Check if hitting a door or chest first
+        if (hitBlock === BlockType.DOOR || hitBlock === BlockType.DOOR_OPEN) {
+          if (toggleDoor(world, hit.blockPos.x, hit.blockPos.y, hit.blockPos.z)) {
+            worldRenderer.markDirty(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+            worldRenderer.markDirty(hit.blockPos.x, hit.blockPos.y + 1, hit.blockPos.z);
+            worldRenderer.markDirty(hit.blockPos.x, hit.blockPos.y - 1, hit.blockPos.z);
+          }
+        } else if (hitBlock === BlockType.CHEST) {
+          // Open chest UI (handled below in chest system)
+          openChestAt(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+        } else {
+          const selectedItem = hotbar.getSelectedItem();
+          const itemType = selectedItem ? selectedItem.type : null;
+          if (itemType && ITEM_TO_BLOCK[itemType] !== undefined) {
+            const px = hit.blockPos.x + hit.normal.x;
+            const py = hit.blockPos.y + hit.normal.y;
+            const pz = hit.blockPos.z + hit.normal.z;
+            if (placeBlock(world, inventory, px, py, pz, itemType)) {
+              worldRenderer.markDirty(px, py, pz);
+            }
           }
         }
       }
@@ -1334,10 +1519,10 @@ function startGame(config, jumpStateId) {
       }
     }
 
-    // Update NPC wandering AI
+    // Update NPC wandering AI (with wall collision)
     const getHeightNPC = (x, z) => getHeightAt(x, z, config.seed);
     for (const npc of allNPCs) {
-      npc.updateAI(dt, getHeightNPC);
+      npc.updateAI(dt, getHeightNPC, world);
     }
 
     // Process dropped items: pickup and lifetime

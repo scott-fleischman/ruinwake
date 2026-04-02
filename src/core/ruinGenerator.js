@@ -96,9 +96,12 @@ export function placeBuilding(world, position, opts = {}) {
         const onEdge = Math.abs(dx) === radius || Math.abs(dz) === radius;
         if (!onEdge) continue;
 
-        // Leave doorway on +x side (2 wide, 3 tall)
-        if (dx === radius && Math.abs(dz) <= 1 && dy < 3) continue;
-
+        // Doorway on +x side, center column (dz=0), 2 blocks tall
+        if (dx === radius && dz === 0 && dy < 2) {
+          world.setBlock(bx + dx, by + dy, bz + dz, BlockType.DOOR);
+          continue;
+        }
+        // Above door is wall, flanking is wall
         world.setBlock(bx + dx, by + dy, bz + dz, wallBlock);
       }
     }

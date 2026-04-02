@@ -50,9 +50,11 @@ export const BlockType = Object.freeze({
   TALL_GRASS: 40,
   CHEST: 41,
   BED: 42,
+  DOOR: 43,
+  DOOR_OPEN: 44,
 });
 
-const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS, BlockType.LEAVES, BlockType.BED]);
+const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS, BlockType.LEAVES, BlockType.BED, BlockType.DOOR_OPEN]);
 
 export function isBlockSolid(blockType) {
   return !NON_SOLID.has(blockType);
@@ -143,6 +145,8 @@ export const HARDNESS = Object.freeze({
   [BlockType.TORCH]: 'hand',
   [BlockType.CHEST]: 'hand',
   [BlockType.BED]: 'hand',
+  [BlockType.DOOR]: 'hand',
+  [BlockType.DOOR_OPEN]: 'hand',
 });
 
 export function canMine(blockType, toolType) {

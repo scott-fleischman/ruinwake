@@ -1,4 +1,5 @@
 import { QuestStatus } from './quest.js';
+import { isBlockSolid } from './block.js';
 
 export class NPC {
   constructor({ id, name, position, factionId, dialogueId, dialogue = {}, trades = [] }) {
@@ -17,7 +18,16 @@ export class NPC {
     this._wanderRadius = 6;
   }
 
-  updateAI(dt, getHeight) {
+  _collidesWithWorld(x, z, world) {
+    if (!world) return false;
+    const bx = Math.floor(x);
+    const by = Math.floor(this.position.y);
+    const bz = Math.floor(z);
+    return isBlockSolid(world.getBlock(bx, by, bz)) ||
+           isBlockSolid(world.getBlock(bx, by + 1, bz));
+  }
+
+  updateAI(dt, getHeight, world) {
     this._wanderTimer -= dt;
     if (this._wanderTimer <= 0) {
       // Pick a new random direction or idle
@@ -34,20 +44,30 @@ export class NPC {
       }
     }
 
-    // Move in wander direction
+    // Move in wander direction with wall collision
     if (this._wanderDirX !== 0 || this._wanderDirZ !== 0) {
       const newX = this.position.x + this._wanderDirX * this._wanderSpeed * dt;
       const newZ = this.position.z + this._wanderDirZ * this._wanderSpeed * dt;
       // Stay within wander radius of spawn
       const dx = newX - this.spawnPosition.x;
       const dz = newZ - this.spawnPosition.z;
-      if (dx * dx + dz * dz <= this._wanderRadius * this._wanderRadius) {
-        this.position.x = newX;
-        this.position.z = newZ;
-      } else {
+      if (dx * dx + dz * dz > this._wanderRadius * this._wanderRadius) {
         // Turn back toward spawn
-        this._wanderDirX = -dx / Math.sqrt(dx * dx + dz * dz);
-        this._wanderDirZ = -dz / Math.sqrt(dx * dx + dz * dz);
+        const len = Math.sqrt(dx * dx + dz * dz);
+        this._wanderDirX = -dx / len;
+        this._wanderDirZ = -dz / len;
+      } else {
+        // Check collision on each axis independently
+        if (!this._collidesWithWorld(newX, this.position.z, world)) {
+          this.position.x = newX;
+        } else {
+          this._wanderDirX = -this._wanderDirX; // reverse on hit
+        }
+        if (!this._collidesWithWorld(this.position.x, newZ, world)) {
+          this.position.z = newZ;
+        } else {
+          this._wanderDirZ = -this._wanderDirZ;
+        }
       }
     }
 
@@ -95,6 +115,10 @@ export class NPCSystem {
 
   getNPC(id) {
     return this._npcs.get(id);
+  }
+
+  getAllNPCs() {
+    return Array.from(this._npcs.values());
   }
 
   findNearby(position, radius) {

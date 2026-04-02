@@ -55,6 +55,8 @@ export const BLOCK_COLORS = {
   [BlockType.TALL_GRASS]: [0.28, 0.56, 0.20],  // wild meadow grass
   [BlockType.CHEST]: [0.55, 0.38, 0.18],       // wooden chest
   [BlockType.BED]: [0.60, 0.15, 0.12],         // red blanket bed
+  [BlockType.DOOR]: [0.42, 0.28, 0.14],        // dark wood door
+  [BlockType.DOOR_OPEN]: [0.42, 0.28, 0.14],   // open door (same color, non-solid)
 };
 
 const DEFAULT_COLOR = [1, 0, 1];

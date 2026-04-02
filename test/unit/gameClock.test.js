@@ -35,7 +35,8 @@ describe('GameClock', () => {
 
   it('reports DUSK phase during transition', () => {
     const clock = new GameClock();
-    clock.tick(DAY_LENGTH * 0.55);
+    // Dusk starts at dawn+day duration, tick to middle of dusk
+    clock.tick(DAY_LENGTH * 0.52);
     expect(clock.getPhase()).toBe(Phase.DUSK);
   });
 

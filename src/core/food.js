@@ -35,6 +35,9 @@ export const foods = {
   athelas_tea: new Food({ id: 'athelas_tea', name: 'Athelas Tea', category: FoodCategory.RESTORATIVE, hungerRestore: 10, effects: [{ type: FoodEffect.HEALTH_REGEN, duration: 60, strength: 3 }, { type: FoodEffect.CORRUPTION_RESISTANCE, duration: 60, strength: 2 }] }),
   trail_rations: new Food({ id: 'trail_rations', name: 'Trail Rations', category: FoodCategory.PRESERVED, hungerRestore: 20 }),
   herb_salad: new Food({ id: 'herb_salad', name: 'Herb Salad', category: FoodCategory.MEAL, hungerRestore: 30, effects: [{ type: FoodEffect.FOCUS_REGEN, duration: 90, strength: 2 }] }),
+  bread: new Food({ id: 'bread', name: 'Bread', category: FoodCategory.COOKED, hungerRestore: 20 }),
+  berries: new Food({ id: 'berries', name: 'Berries', category: FoodCategory.RAW, hungerRestore: 8 }),
+  mushroom: new Food({ id: 'mushroom', name: 'Mushroom', category: FoodCategory.RAW, hungerRestore: 6 }),
 };
 
 export function getFood(id) {
