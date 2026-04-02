@@ -4,6 +4,7 @@ import { GridInventory as Inventory } from './gridInventory.js';
 import { SurvivalStats } from './survival.js';
 import { Player } from './player.js';
 import { SURFACE_Y } from './terrain.js';
+import { getRacePhysicalSize } from './raceTraits.js';
 
 export const Difficulty = Object.freeze({
   STORY: 'story',
@@ -46,7 +47,12 @@ export function applyConfig(config) {
   survivalStats.focus = race.statModifiers.focus;
   survivalStats.maxFocus = race.statModifiers.focus;
 
-  const player = new Player({ x: 0.5, y: SURFACE_Y + 2, z: 0.5 });
+  const raceSize = getRacePhysicalSize(config.raceId);
+  const player = new Player({ x: 0.5, y: SURFACE_Y + 2, z: 0.5 }, {
+    physicalHeight: raceSize.height,
+    physicalWidth: raceSize.width,
+    eyeHeight: raceSize.eyeHeight,
+  });
 
   return { player, inventory, survivalStats, race, cls };
 }

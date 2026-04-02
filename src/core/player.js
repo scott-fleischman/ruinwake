@@ -2,7 +2,7 @@ export const DEFAULT_MOVE_SPEED = 5.0;
 const CROUCH_SPEED_MULTIPLIER = 0.5;
 
 export class Player {
-  constructor({ x, y, z }, { moveSpeed = DEFAULT_MOVE_SPEED } = {}) {
+  constructor({ x, y, z }, { moveSpeed = DEFAULT_MOVE_SPEED, physicalHeight = 1.8, physicalWidth = 0.6, eyeHeight = 1.6 } = {}) {
     this.position = { x, y, z };
     this.velocity = { x: 0, y: 0, z: 0 };
     this.yaw = 0;
@@ -11,6 +11,9 @@ export class Player {
     this.onGround = false;
     this.crouching = false;
     this.cameraMode = 'first_person';
+    this.physicalHeight = physicalHeight;
+    this.physicalWidth = physicalWidth;
+    this.eyeHeight = eyeHeight;
   }
 
   toggleCamera() {

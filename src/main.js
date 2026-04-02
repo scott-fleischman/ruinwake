@@ -1323,7 +1323,7 @@ function startGame(config, jumpStateId) {
 
     // Shared look direction and eye position for both click handlers
     const forward = getLookDirection(player);
-    const eyePos = { x: player.position.x, y: player.position.y + GC.CAMERA.FIRST_PERSON_EYE_HEIGHT, z: player.position.z };
+    const eyePos = { x: player.position.x, y: player.position.y + (player.eyeHeight || GC.CAMERA.FIRST_PERSON_EYE_HEIGHT), z: player.position.z };
 
     if (input.locked && input.consumeRightClick()) {
       const hit = raycast(world, eyePos, forward, 6);
@@ -1646,7 +1646,7 @@ function startGame(config, jumpStateId) {
         player.position.z - lookDir.z * camDist
       );
     } else {
-      camera.position.set(player.position.x, player.position.y + GC.CAMERA.FIRST_PERSON_EYE_HEIGHT, player.position.z);
+      camera.position.set(player.position.x, player.position.y + (player.eyeHeight || GC.CAMERA.FIRST_PERSON_EYE_HEIGHT), player.position.z);
     }
 
     // Stream chunks as player moves

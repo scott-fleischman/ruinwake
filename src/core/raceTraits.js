@@ -36,6 +36,23 @@ export function getRaceStealthBonus(raceId) {
   return 0;
 }
 
+// ─── Physical dimensions per race ─────────────────────────────────────────
+
+const RACE_SIZES = {
+  man:    { height: 1.8, width: 0.6, eyeHeight: 1.6 },
+  elf:    { height: 1.9, width: 0.6, eyeHeight: 1.7 },
+  dwarf:  { height: 1.4, width: 0.65, eyeHeight: 1.2 },
+  hobbit: { height: 1.1, width: 0.5, eyeHeight: 0.95 },
+};
+
+/**
+ * Returns physical dimensions { height, width, eyeHeight } for a race.
+ * Defaults to man if race is unknown.
+ */
+export function getRacePhysicalSize(raceId) {
+  return RACE_SIZES[raceId] || RACE_SIZES.man;
+}
+
 // ─── Gap 3: Restoration site rewards (Sec 13.5, 20) ───────────────────────
 
 const SITE_NAMES = {
