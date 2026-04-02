@@ -68,7 +68,7 @@ export function createGameState(config) {
   const world = new World();
 
   // Chunk streaming
-  const chunkMgr = new ChunkManager(world, config.seed, {
+  const chunkMgr = new ChunkManager(world, {
     loadDistance: GC.CHUNKS.LOAD_DISTANCE,
     maxChunksPerFrame: GC.CHUNKS.MAX_PER_FRAME,
     useWorker: false, // headless — no Worker in tests
@@ -78,13 +78,13 @@ export function createGameState(config) {
   // Place ruins at restorable sites
   const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
   for (const site of allRestorableSites) {
-    const h = getHeightAt(site.position.x, site.position.z, config.seed);
+    const h = getHeightAt(site.position.x, site.position.z);
     placeRuin(world, { x: site.position.x, y: h + 1, z: site.position.z }, ruinSizes[site.id] || 'small');
   }
 
   // Player, inventory, survival
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
-  const spawnHeight = getHeightAt(0, 0, config.seed);
+  const spawnHeight = getHeightAt(0, 0);
   player.position.y = spawnHeight + 2;
 
   const difficultyMods = getDifficultyModifiers(config.difficulty);
@@ -92,7 +92,7 @@ export function createGameState(config) {
   // Core systems
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
-  const weatherSystem = new WeatherSystem(config.seed);
+  const weatherSystem = new WeatherSystem();
   const fogOfWar = new FogOfWar({ width: GC.FOG.WIDTH, height: GC.FOG.HEIGHT, cellSize: GC.FOG.CELL_SIZE });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
@@ -161,7 +161,7 @@ export function createGameState(config) {
   for (const npc of allNPCs) {
     const nx = Math.floor(npc.position.x);
     const nz = Math.floor(npc.position.z);
-    const nh = getHeightAt(nx, nz, config.seed);
+    const nh = getHeightAt(nx, nz);
     placeRuin(world, { x: nx - 4, y: nh + 1, z: nz - 4 }, 'small');
     npc.position.y = findSafeY(world, nx, nz, nh);
     npcSystem.addNPC(npc);
@@ -172,7 +172,7 @@ export function createGameState(config) {
   inventory.add('map_fragment', 1);
 
   // Enemy spawning
-  let spawnSeed = config.seed;
+  let spawnSeed = 42;
   const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
   const spawner = new EnemySpawner(spawnRng);
 

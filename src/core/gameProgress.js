@@ -98,7 +98,7 @@ export const JUMP_STATES = [
     description: 'Survived first night, restored watch-post, ward activated',
     percent: 12,
     applyState: (ctx) => {
-      const { questSystem, inventory, survivalStats, experienceSystem, player, progress, factionSystem, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, survivalStats, experienceSystem, player, progress, factionSystem, getHeightAt } = ctx;
       // Complete ch1
       questSystem.activate('ch1_embers');
       questSystem.advanceObjective('ch1_embers', 'ch1_survive', 1);
@@ -119,7 +119,7 @@ export const JUMP_STATES = [
       // Teleport near Bree
       player.position.x = 70;
       player.position.z = 15;
-      player.position.y = getHeightAt(70, 15, seed) + 2;
+      player.position.y = getHeightAt(70, 15) + 2;
     },
   },
   {
@@ -129,7 +129,7 @@ export const JUMP_STATES = [
     percent: 25,
     applyState: (ctx) => {
       JUMP_STATES[1].applyState(ctx);
-      const { questSystem, inventory, experienceSystem, player, progress, factionSystem, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, experienceSystem, player, progress, factionSystem, getHeightAt } = ctx;
       questSystem.activate('ch2_roads');
       questSystem.advanceObjective('ch2_roads', 'ch2_restore', 1);
       questSystem.advanceObjective('ch2_roads', 'ch2_meet_npc', 1);
@@ -145,7 +145,7 @@ export const JUMP_STATES = [
       for (let i = 0; i < 3; i++) progress.surviveNight();
       player.position.x = 180;
       player.position.z = 30;
-      player.position.y = getHeightAt(180, 30, seed) + 2;
+      player.position.y = getHeightAt(180, 30) + 2;
     },
   },
   {
@@ -155,7 +155,7 @@ export const JUMP_STATES = [
     percent: 50,
     applyState: (ctx) => {
       JUMP_STATES[2].applyState(ctx);
-      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt } = ctx;
       // Ch3
       questSystem.activate('ch3_records');
       questSystem.advanceObjective('ch3_records', 'ch3_reach_rivendell', 1);
@@ -178,7 +178,7 @@ export const JUMP_STATES = [
       for (let i = 0; i < 3; i++) progress.surviveNight();
       player.position.x = 380;
       player.position.z = 40;
-      player.position.y = getHeightAt(380, 40, seed) + 2;
+      player.position.y = getHeightAt(380, 40) + 2;
     },
   },
   {
@@ -188,7 +188,7 @@ export const JUMP_STATES = [
     percent: 75,
     applyState: (ctx) => {
       JUMP_STATES[3].applyState(ctx);
-      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt } = ctx;
       // Ch5
       questSystem.activate('ch5_darkwood');
       questSystem.advanceObjective('ch5_darkwood', 'ch5_enter_mirkwood', 1);
@@ -211,7 +211,7 @@ export const JUMP_STATES = [
       for (let i = 0; i < 2; i++) progress.surviveNight();
       player.position.x = 420;
       player.position.z = 80;
-      player.position.y = getHeightAt(420, 80, seed) + 2;
+      player.position.y = getHeightAt(420, 80) + 2;
     },
   },
   {
@@ -221,7 +221,7 @@ export const JUMP_STATES = [
     percent: 90,
     applyState: (ctx) => {
       JUMP_STATES[4].applyState(ctx);
-      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt } = ctx;
       questSystem.activate('ch7_shadow');
       questSystem.advanceObjective('ch7_shadow', 'ch7_assault', 1);
       questSystem.advanceObjective('ch7_shadow', 'ch7_disable_link', 1);
@@ -233,7 +233,7 @@ export const JUMP_STATES = [
       progress.useRelic();
       player.position.x = 30;
       player.position.z = 30;
-      player.position.y = getHeightAt(30, 30, seed) + 2;
+      player.position.y = getHeightAt(30, 30) + 2;
     },
   },
   {
@@ -243,7 +243,7 @@ export const JUMP_STATES = [
     percent: 100,
     applyState: (ctx) => {
       JUMP_STATES[5].applyState(ctx);
-      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt, seed } = ctx;
+      const { questSystem, inventory, experienceSystem, player, progress, getHeightAt } = ctx;
       questSystem.activate('ch8_after');
       questSystem.advanceObjective('ch8_after', 'ch8_celebrate', 1);
       questSystem.advanceObjective('ch8_after', 'ch8_explore', 1);
@@ -273,7 +273,7 @@ export const JUMP_STATES = [
       experienceSystem.addExperience(1000);
       player.position.x = 0;
       player.position.z = 0;
-      player.position.y = getHeightAt(0, 0, seed) + 2;
+      player.position.y = getHeightAt(0, 0) + 2;
     },
   },
 ];

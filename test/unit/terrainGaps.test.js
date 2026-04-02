@@ -20,14 +20,13 @@ function getBlock(data, wx, wy, wz) {
 
 describe('Terrain has no gaps', () => {
   it('every surface column has solid ground below', () => {
-    const seed = 42;
-    const data = generateColumnData(0, 0, seed);
+    const data = generateColumnData(0, 0);
 
     for (let lx = 0; lx < 16; lx++) {
       for (let lz = 0; lz < 16; lz++) {
         const wx = lx;
         const wz = lz;
-        const h = getHeightAt(wx, wz, seed);
+        const h = getHeightAt(wx, wz);
 
         // Surface block should be solid (not air)
         const surface = getBlock(data, wx, h, wz);
@@ -41,14 +40,13 @@ describe('Terrain has no gaps', () => {
   });
 
   it('no water blocks above terrain surface (except rivers)', () => {
-    const seed = 42;
-    const data = generateColumnData(0, 0, seed);
+    const data = generateColumnData(0, 0);
 
     for (let lx = 0; lx < 16; lx++) {
       for (let lz = 0; lz < 16; lz++) {
         const wx = lx;
         const wz = lz;
-        const h = getHeightAt(wx, wz, seed);
+        const h = getHeightAt(wx, wz);
 
         // Check 5 blocks above surface — should NOT be water
         // (trees/leaves/grass are ok, but water above ground is a bug)
@@ -61,16 +59,15 @@ describe('Terrain has no gaps', () => {
   });
 
   it('river water blocks are only at or below river bed level', () => {
-    const seed = 42;
     // Generate chunk near the Shire brook (around x=20, z=3)
-    const data = generateColumnData(1, 0, seed);
+    const data = generateColumnData(1, 0);
 
     let waterAboveSurface = 0;
     for (let lx = 0; lx < 16; lx++) {
       for (let lz = 0; lz < 16; lz++) {
         const wx = 16 + lx;
         const wz = lz;
-        const h = getHeightAt(wx, wz, seed);
+        const h = getHeightAt(wx, wz);
 
         // Count water blocks above surface + 1 (surface itself can be water for rivers)
         for (let dy = 2; dy <= 10; dy++) {

@@ -33,8 +33,8 @@ function getPixel(fb, x, y) {
   return { r: fb.color[i], g: fb.color[i+1], b: fb.color[i+2] };
 }
 
-function loadColumn(world, cx, cz, seed) {
-  const data = generateColumnData(cx, cz, seed);
+function loadColumn(world, cx, cz) {
+  const data = generateColumnData(cx, cz);
   for (const [key, arr] of Object.entries(data.blocks)) {
     const buf = arr instanceof ArrayBuffer ? new Uint8Array(arr) : arr;
     const chunk = new Chunk();
@@ -67,7 +67,7 @@ describe('No magenta fallback-color pixels', () => {
     const world = new World();
     for (let cx = -1; cx <= 1; cx++) {
       for (let cz = -1; cz <= 1; cz++) {
-        loadColumn(world, cx, cz, 42);
+        loadColumn(world, cx, cz);
       }
     }
     const fb = renderScene(world, [8, 50, -5], [8, 30, 8], 128, 128);
@@ -89,10 +89,10 @@ describe('No chunk boundary seams', () => {
   it('terrain at chunk boundary (x=16) has no vertical sky gap', () => {
     const world = new World();
     // Generate chunks on both sides of x=16 boundary
-    loadColumn(world, 0, 0, 42);
-    loadColumn(world, 1, 0, 42);
-    loadColumn(world, 0, -1, 42);
-    loadColumn(world, 1, -1, 42);
+    loadColumn(world, 0, 0);
+    loadColumn(world, 1, 0);
+    loadColumn(world, 0, -1);
+    loadColumn(world, 1, -1);
 
     // Camera looking straight at the chunk boundary from the side
     const fb = renderScene(world, [16, 38, -8], [16, 30, 8], 128, 128);
@@ -141,13 +141,13 @@ describe('Biomes are visually distinct', () => {
   it('Shire (grass) looks different from Mountains (stone)', () => {
     // Render Shire terrain
     const shireWorld = new World();
-    loadColumn(shireWorld, 0, 0, 42); // Shire at (0,0)
+    loadColumn(shireWorld, 0, 0); // Shire at (0,0)
 
     const shireFb = renderScene(shireWorld, [8, 45, -5], [8, 30, 8], 64, 64);
 
     // Render Mountain terrain
     const mtWorld = new World();
-    loadColumn(mtWorld, 16, 3, 42); // Mountains at (~270, ~50)
+    loadColumn(mtWorld, 16, 3); // Mountains at (~270, ~50)
 
     const mtFb = renderScene(mtWorld, [264, 60, 43], [270, 45, 50], 64, 64);
 

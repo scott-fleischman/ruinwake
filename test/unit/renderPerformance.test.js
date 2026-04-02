@@ -38,7 +38,7 @@ describe('Render performance profiling', () => {
     const start = performance.now();
     const iterations = 5;
     for (let i = 0; i < iterations; i++) {
-      generateColumnData(i, 0, 42);
+      generateColumnData(i, 0);
     }
     const elapsed = performance.now() - start;
     const perColumn = elapsed / iterations;
@@ -50,7 +50,7 @@ describe('Render performance profiling', () => {
   it('measure full initial chunk load time', () => {
     const world = new World();
     const start = performance.now();
-    const cm = new ChunkManager(world, 42, { loadDistance: 3 });
+    const cm = new ChunkManager(world, { loadDistance: 3 });
     cm.generateInitialChunks(0, 0);
     const elapsed = performance.now() - start;
 

@@ -4,15 +4,15 @@ import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 
 describe('ChunkManager', () => {
-  it('creates with world, seed, and options', () => {
+  it('creates with world and options', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 4 });
+    const cm = new ChunkManager(world, { loadDistance: 4 });
     expect(cm).toBeDefined();
   });
 
   it('generateInitialChunks populates chunks around spawn', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2 });
+    const cm = new ChunkManager(world, { loadDistance: 2 });
     cm.generateInitialChunks(0, 0);
     // Should have generated some chunks
     expect(world.chunks.size).toBeGreaterThan(0);
@@ -20,7 +20,7 @@ describe('ChunkManager', () => {
 
   it('generated chunks have terrain (not all air)', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2 });
+    const cm = new ChunkManager(world, { loadDistance: 2 });
     cm.generateInitialChunks(0, 0);
     // Check that some blocks are solid near surface
     const block = world.getBlock(0, 30, 0);
@@ -29,7 +29,7 @@ describe('ChunkManager', () => {
 
   it('update generates new chunks as player moves', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2, maxChunksPerFrame: 50 });
+    const cm = new ChunkManager(world, { loadDistance: 2, maxChunksPerFrame: 50 });
     cm.generateInitialChunks(0, 0);
     const initialCount = world.chunks.size;
 
@@ -41,7 +41,7 @@ describe('ChunkManager', () => {
 
   it('only generates chunks within load distance', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2 });
+    const cm = new ChunkManager(world, { loadDistance: 2 });
     cm.generateInitialChunks(0, 0);
     // Chunk at (0,0) should exist
     expect(world.getChunk(0, 1, 0)).toBeTruthy();
@@ -49,13 +49,13 @@ describe('ChunkManager', () => {
     expect(world.getChunk(20, 1, 0)).toBeNull();
   });
 
-  it('chunk terrain is deterministic (same seed = same blocks)', () => {
+  it('chunk terrain is deterministic (same blocks each time)', () => {
     const world1 = new World();
-    const cm1 = new ChunkManager(world1, 42, { loadDistance: 2 });
+    const cm1 = new ChunkManager(world1, { loadDistance: 2 });
     cm1.generateInitialChunks(0, 0);
 
     const world2 = new World();
-    const cm2 = new ChunkManager(world2, 42, { loadDistance: 2 });
+    const cm2 = new ChunkManager(world2, { loadDistance: 2 });
     cm2.generateInitialChunks(0, 0);
 
     // Same blocks at same position

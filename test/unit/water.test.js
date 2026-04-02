@@ -12,7 +12,7 @@ describe('Water generation', () => {
 
   it('air blocks at or below water level are filled with water', () => {
     const world = new World();
-    generateTerrain(world, { seed: 42 });
+    generateTerrain(world);
 
     // Search across the whole world for any water block
     let foundWater = false;
@@ -33,7 +33,7 @@ describe('Water generation', () => {
 
   it('blocks above water level are not water', () => {
     const world = new World();
-    generateTerrain(world, { seed: 42 });
+    generateTerrain(world);
 
     // Check that blocks well above water level aren't water
     for (let x = 0; x < 10; x++) {

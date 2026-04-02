@@ -16,6 +16,9 @@ export const WORLD_MAX_Z = 150;
 const HEIGHT_SCALE = 0.02;
 const BIOME_SCALE = 0.02;
 
+// Fixed world seed — the world is always the same
+const WORLD_SEED = 42;
+
 function seededRandom(seed) {
   let s = seed;
   return () => {
@@ -39,11 +42,11 @@ const REGION_BIOMES = [
 ];
 
 /**
- * Get biome at world (x, z) for a given seed.
+ * Get biome at world (x, z).
  * Uses nearest geographic region center for the Hobbit corridor,
  * weighted by region radius so larger regions dominate.
  */
-export function getBiomeAt(x, z, seed) {
+export function getBiomeAt(x, z) {
   let bestBiome = BiomeType.PLAINS;
   let bestDist = Infinity;
 
@@ -62,13 +65,13 @@ export function getBiomeAt(x, z, seed) {
 }
 
 /**
- * Get terrain height at world (x, z) for a given seed.
+ * Get terrain height at world (x, z).
  * Multi-octave noise scaled by biome height range.
  */
-export function getHeightAt(x, z, seed) {
-  const biome = getBiomeAt(x, z, seed);
-  const n1 = simplex2D(x * HEIGHT_SCALE + seed * 0.1, z * HEIGHT_SCALE);
-  const n2 = simplex2D(x * HEIGHT_SCALE * 2 + seed * 0.1 + 100, z * HEIGHT_SCALE * 2 + 100) * 0.5;
+export function getHeightAt(x, z) {
+  const biome = getBiomeAt(x, z);
+  const n1 = simplex2D(x * HEIGHT_SCALE + WORLD_SEED * 0.1, z * HEIGHT_SCALE);
+  const n2 = simplex2D(x * HEIGHT_SCALE * 2 + WORLD_SEED * 0.1 + 100, z * HEIGHT_SCALE * 2 + 100) * 0.5;
   const n = (n1 + n2) / 1.5; // normalize to ~[-1, 1]
   const t = (n + 1) / 2; // [0, 1]
   return Math.floor(biome.minHeight + t * (biome.maxHeight - biome.minHeight));
@@ -81,11 +84,11 @@ const ORE_CONFIGS = [
   { type: BlockType.IRON_ORE, threshold: 0.8, maxY: 20 },
 ];
 
-function getOreType(x, y, z, seed) {
+function getOreType(x, y, z) {
   for (const ore of ORE_CONFIGS) {
     if (y > ore.maxY) continue;
     const n = simplex2D(
-      x * ORE_SCALE + y * 0.3 + seed * 0.1 + ore.type * 100,
+      x * ORE_SCALE + y * 0.3 + WORLD_SEED * 0.1 + ore.type * 100,
       z * ORE_SCALE + y * 0.3
     );
     if (n > ore.threshold) return ore.type;
@@ -93,7 +96,7 @@ function getOreType(x, y, z, seed) {
   return null;
 }
 
-function fillColumn(world, x, z, surfaceY, surfaceBlock, seed) {
+function fillColumn(world, x, z, surfaceY, surfaceBlock) {
   // Snow cap: blocks above snow elevation get snow surface
   const actualSurface = surfaceY >= SNOW_ELEVATION ? BlockType.SNOW : surfaceBlock;
   world.setBlock(x, surfaceY, z, actualSurface);
@@ -101,7 +104,7 @@ function fillColumn(world, x, z, surfaceY, surfaceBlock, seed) {
     world.setBlock(x, surfaceY - dy, z, BlockType.DIRT);
   }
   for (let y = 0; y < surfaceY - DIRT_DEPTH; y++) {
-    const ore = getOreType(x, y, z, seed);
+    const ore = getOreType(x, y, z);
     world.setBlock(x, y, z, ore || BlockType.STONE);
   }
 }
@@ -132,33 +135,33 @@ const TALL_GRASS_DENSITY = {
   [BiomeType.PLAINS]: 0.05,
 };
 
-export function generateTerrain(world, { seed = 0 } = {}) {
-  const rand = seededRandom(seed);
+export function generateTerrain(world) {
+  const rand = seededRandom(WORLD_SEED);
   for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
     for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
-      const biome = getBiomeAt(x, z, seed);
-      const h = getHeightAt(x, z, seed);
-      fillColumn(world, x, z, h, biome.surfaceBlock, seed);
+      const biome = getBiomeAt(x, z);
+      const h = getHeightAt(x, z);
+      fillColumn(world, x, z, h, biome.surfaceBlock);
     }
   }
   // Place trees based on biome density
   for (let x = WORLD_MIN_X + 3; x < WORLD_MAX_X - 3; x++) {
     for (let z = WORLD_MIN_Z + 3; z < WORLD_MAX_Z - 3; z++) {
-      const biome = getBiomeAt(x, z, seed);
+      const biome = getBiomeAt(x, z);
       if (rand() < biome.treeDensity) {
-        const h = getHeightAt(x, z, seed);
+        const h = getHeightAt(x, z);
         placeTree(world, x, z, h);
       }
     }
   }
   // Place tall grass on forest/mirkwood/shire/plains surfaces without trees
-  const grassRand = seededRandom(seed + 7);
+  const grassRand = seededRandom(WORLD_SEED + 7);
   for (let x = WORLD_MIN_X; x < WORLD_MAX_X; x++) {
     for (let z = WORLD_MIN_Z; z < WORLD_MAX_Z; z++) {
-      const biome = getBiomeAt(x, z, seed);
+      const biome = getBiomeAt(x, z);
       const density = TALL_GRASS_DENSITY[biome.type] || 0;
       if (density > 0 && grassRand() < density) {
-        const h = getHeightAt(x, z, seed);
+        const h = getHeightAt(x, z);
         // Only place tall grass if the block above surface is air (no tree trunk)
         if (world.getBlock(x, h + 1, z) === BlockType.AIR) {
           world.setBlock(x, h + 1, z, BlockType.TALL_GRASS);

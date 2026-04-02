@@ -57,7 +57,6 @@ describe('Gap 1 — Difficulty modifiers applied in game loop', () => {
       raceId: 'man',
       classId: 'ranger',
       difficulty: 'harsh',
-      seed: 42,
     });
     expect(config.difficulty).toBe('harsh');
   });
@@ -205,7 +204,6 @@ describe('Gap 5 — World/character name in config', () => {
       raceId: 'man',
       classId: 'ranger',
       difficulty: 'standard',
-      seed: 42,
       worldName: 'Arda',
     });
     expect(config.worldName).toBe('Arda');
@@ -216,7 +214,6 @@ describe('Gap 5 — World/character name in config', () => {
       raceId: 'elf',
       classId: 'archer',
       difficulty: 'standard',
-      seed: 7,
       characterName: 'Legolas',
     });
     expect(config.characterName).toBe('Legolas');
@@ -227,7 +224,6 @@ describe('Gap 5 — World/character name in config', () => {
       raceId: 'dwarf',
       classId: 'miner',
       difficulty: 'harsh',
-      seed: 99,
     });
     expect(config.worldName).toBe('');
     expect(config.characterName).toBe('');

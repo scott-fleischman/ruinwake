@@ -247,7 +247,7 @@ export class MapRenderer {
       for (let px = 0; px < W; px++) {
         const wx = vpMinX + px;
         const wz = vpMinZ + py;
-        const h = this._layers._getHeight(wx, wz, this._layers._seed);
+        const h = this._layers._getHeight(wx, wz);
         let [r, g, b] = heightToColor(h);
 
         // Fog

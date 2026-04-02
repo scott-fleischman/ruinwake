@@ -23,8 +23,8 @@ function isSkyPixel(fb, x, y, tolerance = 5) {
          Math.abs(fb.color[i+2] - SKY_B) <= tolerance;
 }
 
-function loadColumn(world, cx, cz, seed) {
-  const data = generateColumnData(cx, cz, seed);
+function loadColumn(world, cx, cz) {
+  const data = generateColumnData(cx, cz);
   for (const [key, arr] of Object.entries(data.blocks)) {
     const buf = arr instanceof ArrayBuffer ? new Uint8Array(arr) : arr;
     const chunk = new Chunk();
@@ -56,7 +56,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
     // Generate a 3x3 chunk area
     for (let cx = -1; cx <= 1; cx++) {
       for (let cz = -1; cz <= 1; cz++) {
-        loadColumn(world, cx, cz, 42);
+        loadColumn(world, cx, cz);
       }
     }
 
@@ -81,7 +81,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
     const world = new World();
     for (let cx = -1; cx <= 1; cx++) {
       for (let cz = -1; cz <= 1; cz++) {
-        loadColumn(world, cx, cz, 42);
+        loadColumn(world, cx, cz);
       }
     }
 
@@ -106,7 +106,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
     const world = new World();
     for (let cx = -1; cx <= 1; cx++) {
       for (let cz = -1; cz <= 1; cz++) {
-        loadColumn(world, cx, cz, 42);
+        loadColumn(world, cx, cz);
       }
     }
 

@@ -5,15 +5,15 @@ import { BlockType } from '../../src/core/block.js';
 import { World } from '../../src/core/world.js';
 
 /**
- * Helper: find world positions that fall in a given biome for a given seed.
+ * Helper: find world positions that fall in a given biome.
  * Scans a wide grid with coarser step to cover enough noise space for all biomes.
  * BIOME_SCALE is 0.008, so we need large world coords for noise diversity.
  */
-function findBiomePositions(biomeType, seed, range = 500, step = 4) {
+function findBiomePositions(biomeType, range = 500, step = 4) {
   const positions = [];
   for (let x = -range; x < range; x += step) {
     for (let z = -range; z < range; z += step) {
-      const biome = getBiomeAt(x, z, seed);
+      const biome = getBiomeAt(x, z);
       if (biome.type === biomeType) {
         positions.push({ x, z });
       }
@@ -35,33 +35,31 @@ function countBlocksAboveSurface(world, x, z, surfaceY, blockType, maxScan = 20)
   return count;
 }
 
-const SEED = 42;
-
 describe('biome-aware terrain generation', () => {
   describe('mountain biome produces tall peaks', () => {
     it('mountain biome max height exceeds 45', () => {
-      const positions = findBiomePositions(BiomeType.MOUNTAIN, SEED);
+      const positions = findBiomePositions(BiomeType.MOUNTAIN);
       expect(positions.length).toBeGreaterThan(0);
 
       let maxHeight = 0;
       for (const { x, z } of positions) {
-        const h = getHeightAt(x, z, SEED);
+        const h = getHeightAt(x, z);
         if (h > maxHeight) maxHeight = h;
       }
       expect(maxHeight).toBeGreaterThan(45);
     });
 
     it('mountain biome avg height is significantly above plains avg height', () => {
-      const mountainPositions = findBiomePositions(BiomeType.MOUNTAIN, SEED);
-      const plainsPositions = findBiomePositions(BiomeType.PLAINS, SEED);
+      const mountainPositions = findBiomePositions(BiomeType.MOUNTAIN);
+      const plainsPositions = findBiomePositions(BiomeType.PLAINS);
       expect(mountainPositions.length).toBeGreaterThan(0);
       expect(plainsPositions.length).toBeGreaterThan(0);
 
       const mountainAvg =
-        mountainPositions.reduce((sum, { x, z }) => sum + getHeightAt(x, z, SEED), 0) /
+        mountainPositions.reduce((sum, { x, z }) => sum + getHeightAt(x, z), 0) /
         mountainPositions.length;
       const plainsAvg =
-        plainsPositions.reduce((sum, { x, z }) => sum + getHeightAt(x, z, SEED), 0) /
+        plainsPositions.reduce((sum, { x, z }) => sum + getHeightAt(x, z), 0) /
         plainsPositions.length;
 
       // Mountains should average at least 10 blocks higher than plains
@@ -71,11 +69,11 @@ describe('biome-aware terrain generation', () => {
 
   describe('plains biome stays low and flat', () => {
     it('plains biome max height stays below 40', () => {
-      const positions = findBiomePositions(BiomeType.PLAINS, SEED);
+      const positions = findBiomePositions(BiomeType.PLAINS);
       expect(positions.length).toBeGreaterThan(0);
 
       for (const { x, z } of positions) {
-        const h = getHeightAt(x, z, SEED);
+        const h = getHeightAt(x, z);
         expect(h).toBeLessThan(40);
       }
     });
@@ -83,13 +81,13 @@ describe('biome-aware terrain generation', () => {
 
   describe('shire biome has gentle rolling hills', () => {
     it('shire height variance is lower than mountain height variance', () => {
-      const shirePositions = findBiomePositions(BiomeType.SHIRE, SEED);
-      const mountainPositions = findBiomePositions(BiomeType.MOUNTAIN, SEED);
+      const shirePositions = findBiomePositions(BiomeType.SHIRE);
+      const mountainPositions = findBiomePositions(BiomeType.MOUNTAIN);
       expect(shirePositions.length).toBeGreaterThan(0);
       expect(mountainPositions.length).toBeGreaterThan(0);
 
       function variance(positions) {
-        const heights = positions.map(({ x, z }) => getHeightAt(x, z, SEED));
+        const heights = positions.map(({ x, z }) => getHeightAt(x, z));
         const mean = heights.reduce((a, b) => a + b, 0) / heights.length;
         return heights.reduce((sum, h) => sum + (h - mean) ** 2, 0) / heights.length;
       }
@@ -100,9 +98,9 @@ describe('biome-aware terrain generation', () => {
     });
 
     it('shire max height stays below 40', () => {
-      const positions = findBiomePositions(BiomeType.SHIRE, SEED);
+      const positions = findBiomePositions(BiomeType.SHIRE);
       for (const { x, z } of positions) {
-        const h = getHeightAt(x, z, SEED);
+        const h = getHeightAt(x, z);
         expect(h).toBeLessThan(40);
       }
     });
@@ -117,17 +115,17 @@ describe('biome-aware terrain generation', () => {
      */
     it('forest biome has wood blocks above surface level', () => {
       const world = new World();
-      generateTerrain(world, { seed: SEED });
+      generateTerrain(world);
 
       // Scan the generated terrain extent for forest biome columns with wood
       let totalWood = 0;
       let forestColumns = 0;
       for (let x = -250; x < 550; x += 2) {
         for (let z = -100; z < 150; z += 2) {
-          const biome = getBiomeAt(x, z, SEED);
+          const biome = getBiomeAt(x, z);
           if (biome.type === BiomeType.FOREST) {
             forestColumns++;
-            const h = getHeightAt(x, z, SEED);
+            const h = getHeightAt(x, z);
             totalWood += countBlocksAboveSurface(world, x, z, h, BlockType.WOOD);
           }
         }
@@ -139,14 +137,14 @@ describe('biome-aware terrain generation', () => {
 
     it('forest biome has leaf blocks above surface level', () => {
       const world = new World();
-      generateTerrain(world, { seed: SEED });
+      generateTerrain(world);
 
       let totalLeaves = 0;
       for (let x = -250; x < 550; x += 2) {
         for (let z = -100; z < 150; z += 2) {
-          const biome = getBiomeAt(x, z, SEED);
+          const biome = getBiomeAt(x, z);
           if (biome.type === BiomeType.FOREST) {
-            const h = getHeightAt(x, z, SEED);
+            const h = getHeightAt(x, z);
             totalLeaves += countBlocksAboveSurface(world, x, z, h, BlockType.LEAVES);
           }
         }
@@ -156,14 +154,14 @@ describe('biome-aware terrain generation', () => {
 
     it('forest biome places tall grass on surface', () => {
       const world = new World();
-      generateTerrain(world, { seed: SEED });
+      generateTerrain(world);
 
       let tallGrassCount = 0;
       for (let x = -250; x < 550; x += 2) {
         for (let z = -100; z < 150; z += 2) {
-          const biome = getBiomeAt(x, z, SEED);
+          const biome = getBiomeAt(x, z);
           if (biome.type === BiomeType.FOREST) {
-            const h = getHeightAt(x, z, SEED);
+            const h = getHeightAt(x, z);
             if (world.getBlock(x, h + 1, z) === BlockType.TALL_GRASS) {
               tallGrassCount++;
             }
@@ -177,15 +175,15 @@ describe('biome-aware terrain generation', () => {
 
   describe('mirkwood biome has dense canopy', () => {
     it('mirkwood tree density config is higher than forest', () => {
-      const mirkwood = getBiomeAt(400, 40, SEED);
-      const forest = getBiomeAt(140, 40, SEED);
+      const mirkwood = getBiomeAt(400, 40);
+      const forest = getBiomeAt(140, 40);
       expect(mirkwood.type).toBe(BiomeType.MIRKWOOD);
       expect(forest.type).toBe(BiomeType.FOREST);
       expect(mirkwood.treeDensity).toBeGreaterThan(forest.treeDensity);
     });
 
     it('mirkwood uses mud surface (distinct from forest grass)', () => {
-      const mirkwood = getBiomeAt(400, 40, SEED);
+      const mirkwood = getBiomeAt(400, 40);
       expect(mirkwood.surfaceBlock).toBe(BlockType.MUD);
     });
   });

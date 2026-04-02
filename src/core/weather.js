@@ -35,9 +35,8 @@ const VISIBILITY_MODIFIERS = {
 };
 
 export class WeatherSystem {
-  constructor(seed) {
-    this._seed = seed;
-    this._rng = seed;
+  constructor() {
+    this._rng = 42;
     this.current = WeatherType.CLEAR;
     this.elapsed = 0;
     this.duration = this._rollDuration();

@@ -25,7 +25,6 @@ export function serializeGameState(world, player, inventory, extra = {}) {
 
   const state = {
     version: 2,
-    seed: extra.seed || 0,
     player: {
       position: { ...player.position },
       velocity: { ...player.velocity },

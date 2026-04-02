@@ -14,18 +14,18 @@ describe('WeatherType', () => {
 
 describe('WeatherSystem', () => {
   it('starts with clear weather', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     expect(ws.current).toBe(WeatherType.CLEAR);
   });
 
   it('tick advances the weather timer', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     ws.tick(10);
     expect(ws.elapsed).toBe(10);
   });
 
   it('weather can change after duration expires', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     // Tick past the initial weather duration
     ws.tick(ws.duration + 1);
     // Weather should have changed (or reset timer)
@@ -33,35 +33,35 @@ describe('WeatherSystem', () => {
   });
 
   it('getTemperatureModifier returns 0 for clear weather', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     expect(ws.getTemperatureModifier()).toBe(0);
   });
 
   it('getTemperatureModifier returns negative for snow', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     ws.current = WeatherType.SNOW;
     expect(ws.getTemperatureModifier()).toBeLessThan(0);
   });
 
   it('getTemperatureModifier returns negative for storm', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     ws.current = WeatherType.STORM;
     expect(ws.getTemperatureModifier()).toBeLessThan(0);
   });
 
   it('getVisibilityModifier returns 1 for clear', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     expect(ws.getVisibilityModifier()).toBe(1);
   });
 
   it('getVisibilityModifier returns less than 1 for fog', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     ws.current = WeatherType.FOG;
     expect(ws.getVisibilityModifier()).toBeLessThan(1);
   });
 
   it('getVisibilityModifier returns less than 1 for storm', () => {
-    const ws = new WeatherSystem(42);
+    const ws = new WeatherSystem();
     ws.current = WeatherType.STORM;
     expect(ws.getVisibilityModifier()).toBeLessThan(1);
   });

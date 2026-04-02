@@ -136,7 +136,6 @@ document.getElementById('start-btn').addEventListener('click', () => {
     raceId: raceSelect.value,
     classId: classSelect.value,
     difficulty: document.getElementById('difficulty-select').value,
-    seed: 42,
     worldName: document.getElementById('world-name').value,
     characterName: document.getElementById('character-name').value,
   });
@@ -202,7 +201,7 @@ function startGame(config, jumpStateId) {
   };
 
   // Lazy chunk streaming with optional Web Worker
-  const chunkMgr = new ChunkManager(world, config.seed, {
+  const chunkMgr = new ChunkManager(world, {
     loadDistance: 6,
     maxChunksPerFrame: GC.CHUNKS.MAX_PER_FRAME,
     useWorker: true,
@@ -216,7 +215,7 @@ function startGame(config, jumpStateId) {
   // Place ruin structures at restorable site positions (within loaded area)
   const ruinSizes = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
   for (const site of allRestorableSites) {
-    const h = getHeightAt(site.position.x, site.position.z, config.seed);
+    const h = getHeightAt(site.position.x, site.position.z);
     placeRuin(world, { x: site.position.x, y: h + 1, z: site.position.z }, ruinSizes[site.id] || 'small');
   }
 
@@ -226,12 +225,12 @@ function startGame(config, jumpStateId) {
   const difficultyMods = getDifficultyModifiers(config.difficulty);
 
   // Set player spawn height based on terrain heightmap
-  const spawnHeight = getHeightAt(0, 0, config.seed);
+  const spawnHeight = getHeightAt(0, 0);
   player.position.y = spawnHeight + 2;
 
   const gameClock = new GameClock();
   const combatSystem = new CombatSystem();
-  const weatherSystem = new WeatherSystem(config.seed);
+  const weatherSystem = new WeatherSystem();
   const fogOfWar = new FogOfWar({ width: GC.FOG.WIDTH, height: GC.FOG.HEIGHT, cellSize: GC.FOG.CELL_SIZE });
   const experienceSystem = new ExperienceSystem();
   const equipment = new Equipment();
@@ -329,7 +328,7 @@ function startGame(config, jumpStateId) {
   const deathSystem = new DeathSystem();
   const creativeMode = new CreativeMode();
   const dialogueManager = new DialogueManager();
-  const spawnPos = { x: 0, y: getHeightAt(0, 0, config.seed) + 2, z: 0 };
+  const spawnPos = { x: 0, y: getHeightAt(0, 0) + 2, z: 0 };
   let isDead = false;
 
   // Apply class passive effect
@@ -344,7 +343,7 @@ function startGame(config, jumpStateId) {
   // ── Place all pre-baked world buildings ──
   const npcById = new Map(allNPCs.map(n => [n.id, n]));
   for (const bldg of worldBuildings) {
-    const bh = getHeightAt(bldg.x, bldg.z, config.seed);
+    const bh = getHeightAt(bldg.x, bldg.z);
     placeBuilding(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
       wallBlock: bldg.wallBlock,
       roofBlock: bldg.roofBlock,
@@ -379,7 +378,7 @@ function startGame(config, jumpStateId) {
   }
   // Add any remaining NPCs that don't have buildings
   for (const [, npc] of npcById) {
-    const nh = getHeightAt(Math.floor(npc.position.x), Math.floor(npc.position.z), config.seed);
+    const nh = getHeightAt(Math.floor(npc.position.x), Math.floor(npc.position.z));
     npc.position.y = nh + 2;
     npc.spawnPosition = { ...npc.position };
     npcSystem.addNPC(npc);
@@ -396,7 +395,7 @@ function startGame(config, jumpStateId) {
         const t = steps === 0 ? 0 : i / steps;
         const fx = Math.round(feat.x1 + dx * t);
         const fz = Math.round(feat.z1 + dz * t);
-        const fh = getHeightAt(fx, fz, config.seed);
+        const fh = getHeightAt(fx, fz);
         if (feat.surface) {
           world.setBlock(fx, fh, fz, feat.block);
         } else {
@@ -404,7 +403,7 @@ function startGame(config, jumpStateId) {
         }
       }
     } else if (feat.type === 'well') {
-      const wh = getHeightAt(feat.x, feat.z, config.seed);
+      const wh = getHeightAt(feat.x, feat.z);
       // 3x3 stone ring with water inside
       for (let ddx = -1; ddx <= 1; ddx++) {
         for (let ddz = -1; ddz <= 1; ddz++) {
@@ -416,11 +415,11 @@ function startGame(config, jumpStateId) {
         }
       }
     } else if (feat.type === 'blocks') {
-      const baseH = getHeightAt(feat.x, feat.z, config.seed);
+      const baseH = getHeightAt(feat.x, feat.z);
       for (const b of feat.blocks) {
         const bx = feat.x + b.dx;
         const bz = feat.z + b.dz;
-        const bh = b.surface ? getHeightAt(bx, bz, config.seed) : baseH;
+        const bh = b.surface ? getHeightAt(bx, bz) : baseH;
         world.setBlock(bx, bh + b.dy, bz, b.block);
       }
     }
@@ -428,7 +427,7 @@ function startGame(config, jumpStateId) {
 
   // ── Place special trees ──
   for (const tree of worldTrees) {
-    const th = getHeightAt(tree.x, tree.z, config.seed);
+    const th = getHeightAt(tree.x, tree.z);
     const trunkH = tree.type === 'large' ? 6 : 4;
     const canopyR = tree.type === 'large' ? 3 : 2;
     for (let dy = 1; dy <= trunkH; dy++) {
@@ -450,7 +449,7 @@ function startGame(config, jumpStateId) {
 
   // ── Place world crafting stations ──
   for (const st of worldStations) {
-    const sh = getHeightAt(st.x, st.z, config.seed);
+    const sh = getHeightAt(st.x, st.z);
     world.setBlock(st.x, sh + st.dy, st.z, st.block);
   }
   let dialogueMessage = '';
@@ -478,7 +477,7 @@ function startGame(config, jumpStateId) {
     });
   }
 
-  let spawnSeed = config.seed;
+  let spawnSeed = 42;
   const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
   const spawner = new EnemySpawner(spawnRng);
   let spawnTimer = 0;
@@ -554,9 +553,8 @@ function startGame(config, jumpStateId) {
   const mapCanvas2D = document.getElementById('map-canvas-2d');
   const mapExploredSpan = document.getElementById('map-explored');
   const mapLayerSystem = new MapLayerSystem(
-    (x, z) => getHeightAt(x, z, config.seed),
-    (x, z) => getBiomeAt(x, z, config.seed),
-    config.seed,
+    (x, z) => getHeightAt(x, z),
+    (x, z) => getBiomeAt(x, z),
   );
   const mapRenderer = new MapRenderer(mapLayerSystem, mapCanvas2D);
 
@@ -690,7 +688,7 @@ function startGame(config, jumpStateId) {
     if (jumpState) {
       jumpState.applyState({
         questSystem, inventory, survivalStats, experienceSystem, player,
-        progress, factionSystem, getHeightAt, seed: config.seed,
+        progress, factionSystem, getHeightAt,
       });
     }
   }
@@ -745,7 +743,7 @@ function startGame(config, jumpStateId) {
     }
 
     // Update biome temperature at player position
-    const biome = getBiomeAt(player.position.x, player.position.z, config.seed);
+    const biome = getBiomeAt(player.position.x, player.position.z);
     survivalStats.setBiomeTemperature(biome.type);
 
     weatherSystem.tick(gameDt);
@@ -1239,14 +1237,14 @@ function startGame(config, jumpStateId) {
       // Slope penalty: check height difference in movement direction
       const px = Math.floor(player.position.x);
       const pz = Math.floor(player.position.z);
-      const curH = getHeightAt(px, pz, config.seed);
+      const curH = getHeightAt(px, pz);
       let slopeMod = 1.0;
       if (moveInput.forward || moveInput.right) {
         const cosYaw = Math.cos(player.yaw);
         const sinYaw = Math.sin(player.yaw);
         const aheadX = Math.floor(player.position.x + sinYaw * 2);
         const aheadZ = Math.floor(player.position.z + cosYaw * 2);
-        const aheadH = getHeightAt(aheadX, aheadZ, config.seed);
+        const aheadH = getHeightAt(aheadX, aheadZ);
         const heightDiff = Math.abs(aheadH - curH);
         slopeMod = getMovementPenalty(heightDiff);
       }
@@ -1334,13 +1332,13 @@ function startGame(config, jumpStateId) {
         phase: gameClock.getPhase(),
         playerPos: player.position,
         existingCount: aliveCount,
-        getHeight: (x, z) => getHeightAt(x, z, config.seed),
+        getHeight: (x, z) => getHeightAt(x, z),
       });
       enemies.push(...newEnemies);
     }
 
     // Enemy AI — apply stealth aggro reduction when crouching
-    const getHeight = (x, z) => getHeightAt(x, z, config.seed);
+    const getHeight = (x, z) => getHeightAt(x, z);
     for (const enemy of enemies) {
       if (!enemy.isDead()) {
         // Temporarily reduce aggro range if player is crouching
@@ -1517,7 +1515,7 @@ function startGame(config, jumpStateId) {
             // Replace the ruin with a proper restored building
             const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
             const restoreSize = sizeMap[site.id] || 'small';
-            const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z), config.seed);
+            const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z));
             placeRestoredSite(world, { x: site.position.x, y: sh + 1, z: site.position.z }, restoreSize);
             // Mark all nearby chunks dirty for re-render
             const sx = Math.floor(site.position.x);
@@ -1541,7 +1539,7 @@ function startGame(config, jumpStateId) {
     }
 
     // Update NPC wandering AI (with wall collision)
-    const getHeightNPC = (x, z) => getHeightAt(x, z, config.seed);
+    const getHeightNPC = (x, z) => getHeightAt(x, z);
     for (const npc of allNPCs) {
       npc.updateAI(dt, getHeightNPC, world);
     }

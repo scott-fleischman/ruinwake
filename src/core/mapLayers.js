@@ -40,12 +40,10 @@ export class MapLayerSystem {
   /**
    * @param {function(number,number):number} getHeightAt
    * @param {function(number,number):object} getBiomeAt  — returns { type, name }
-   * @param {number} seed
    */
-  constructor(getHeightAt, getBiomeAt, seed) {
+  constructor(getHeightAt, getBiomeAt) {
     this._getHeight = getHeightAt;
     this._getBiome  = getBiomeAt;
-    this._seed      = seed;
   }
 
   // ── Coordinate helpers ──
@@ -81,7 +79,7 @@ export class MapLayerSystem {
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const { x, z } = this.gridToWorld(col, row, resolution);
-        data[row * width + col] = this._getHeight(x, z, this._seed);
+        data[row * width + col] = this._getHeight(x, z);
       }
     }
     return { width, height, data };
@@ -94,7 +92,7 @@ export class MapLayerSystem {
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const { x, z } = this.gridToWorld(col, row, resolution);
-        data[row * width + col] = this._getBiome(x, z, this._seed).type;
+        data[row * width + col] = this._getBiome(x, z).type;
       }
     }
     return { width, height, data };

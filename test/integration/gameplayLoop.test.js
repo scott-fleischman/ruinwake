@@ -20,9 +20,9 @@ import { applyGravity, resolveCollision } from '../../src/core/physics.js';
 describe('Headless gameplay loop', () => {
   it('player can spawn, mine blocks, and craft items', () => {
     const world = new World();
-    generateTerrain(world, { seed: 42 });
+    generateTerrain(world);
     const player = new Player({ x: 0, y: 0, z: 0 });
-    player.position.y = getHeightAt(0, 0, 42) + 2;
+    player.position.y = getHeightAt(0, 0) + 2;
     const inv = new Inventory(36);
     const crafting = new CraftingSystem(allRecipes);
 
@@ -30,7 +30,7 @@ describe('Headless gameplay loop', () => {
     let woodMined = false;
     for (let x = -5; x <= 5 && !woodMined; x++) {
       for (let z = -5; z <= 5 && !woodMined; z++) {
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         for (let y = h; y >= h - 3; y--) {
           const block = world.getBlock(x, y, z);
           if (block === BlockType.WOOD) {
@@ -46,7 +46,7 @@ describe('Headless gameplay loop', () => {
     let stoneMined = false;
     for (let x = -5; x <= 5 && !stoneMined; x++) {
       for (let z = -5; z <= 5 && !stoneMined; z++) {
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         for (let y = h - 1; y >= h - 5; y--) {
           const block = world.getBlock(x, y, z);
           if (block === BlockType.STONE) {
@@ -111,11 +111,11 @@ describe('Headless gameplay loop', () => {
 
   it('player can place mined blocks back', () => {
     const world = new World();
-    generateTerrain(world, { seed: 42 });
+    generateTerrain(world);
     const inv = new Inventory(36);
 
     // Mine a stone block (dig down from surface until we find stone)
-    const h = getHeightAt(0, 0, 42);
+    const h = getHeightAt(0, 0);
     for (let y = h; y >= h - 10; y--) {
       if (world.getBlock(0, y, 0) === BlockType.STONE) {
         mineBlock(world, inv, 0, y, 0, ToolType.PICKAXE);

@@ -120,14 +120,14 @@ Tone:
 
 7.1 World Model
 
-The macro geography is fixed to Middle-earth locations used in this project. The micro terrain, resource nodes, foliage density, ruin states, dungeon details, weather patterns, loot distribution, and some side content can vary by seed.
+The geography is fixed to Middle-earth locations used in this project. The terrain, resource nodes, foliage density, ruin states, dungeon details, weather patterns, and loot distribution are deterministic — every playthrough uses the same world.
 
 In other words:
-	•	the map is not random in overall shape
+	•	the map is not random
 	•	the world is not infinite
 	•	the world is large and seamless
 	•	the landmark geography is authored
-	•	local detail and replay variation are partly procedural
+	•	local detail is procedural but deterministic
 
 7.2 Map Scope for v1
 
@@ -169,7 +169,6 @@ Example biome identities:
 
 The player selects:
 	•	world name
-	•	seed
 	•	tutorial: on/off
 	•	difficulty: Story / Standard / Harsh
 	•	race

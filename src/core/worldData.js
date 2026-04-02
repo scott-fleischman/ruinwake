@@ -2,8 +2,8 @@
  * Pre-baked world data for Ruinwake.
  *
  * Instead of random placement, every building, feature, and decoration
- * is hand-placed here.  Terrain heights / biomes are still computed from
- * the deterministic seed-42 noise — only structures sit on top of that.
+ * is hand-placed here.  Terrain heights / biomes are computed from
+ * deterministic noise — only structures sit on top of that.
  *
  * Each region mirrors the Hobbit corridor (spec 7.2):
  *   Shire → Bree → Trollshaws → Rivendell → Misty Mountains →

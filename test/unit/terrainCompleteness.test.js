@@ -7,7 +7,7 @@ import { getHeightAt } from '../../src/core/terrain.js';
 describe('Terrain completeness after chunk generation', () => {
   it('every column in loaded area has solid ground at surface height', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 3 });
+    const cm = new ChunkManager(world, { loadDistance: 3 });
     cm.generateInitialChunks(0, 0);
 
     let missingGround = 0;
@@ -16,7 +16,7 @@ describe('Terrain completeness after chunk generation', () => {
     for (let x = -24; x < 24; x++) {
       for (let z = -24; z < 24; z++) {
         totalChecked++;
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         const surface = world.getBlock(x, h, z);
         if (!isBlockSolid(surface) && surface !== BlockType.WATER) {
           missingGround++;
@@ -30,13 +30,13 @@ describe('Terrain completeness after chunk generation', () => {
 
   it('every column has continuous solid blocks below surface', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 3 });
+    const cm = new ChunkManager(world, { loadDistance: 3 });
     cm.generateInitialChunks(0, 0);
 
     let gapsBelow = 0;
     for (let x = -20; x < 20; x += 2) {
       for (let z = -20; z < 20; z += 2) {
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         // Check 3 blocks below surface — should all be solid
         for (let y = h - 1; y >= h - 3; y--) {
           const block = world.getBlock(x, y, z);
@@ -51,7 +51,7 @@ describe('Terrain completeness after chunk generation', () => {
 
   it('no sky visible below terrain surface (check bottom faces)', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 3 });
+    const cm = new ChunkManager(world, { loadDistance: 3 });
     cm.generateInitialChunks(0, 0);
 
     // For each column, check that the block BELOW the surface block is solid
@@ -59,7 +59,7 @@ describe('Terrain completeness after chunk generation', () => {
     let skyHoles = 0;
     for (let x = -20; x < 20; x++) {
       for (let z = -20; z < 20; z++) {
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         const surface = world.getBlock(x, h, z);
         const below = world.getBlock(x, h - 1, z);
         if (isBlockSolid(surface) && below === BlockType.AIR) {
@@ -72,7 +72,7 @@ describe('Terrain completeness after chunk generation', () => {
 
   it('river areas have water blocks filling the channel (no air gaps)', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 3 });
+    const cm = new ChunkManager(world, { loadDistance: 3 });
     cm.generateInitialChunks(0, 0);
 
     const { getRiverAt } = require('../../src/core/river.js');
@@ -80,7 +80,7 @@ describe('Terrain completeness after chunk generation', () => {
     for (let x = -20; x < 20; x++) {
       for (let z = -20; z < 20; z++) {
         if (!getRiverAt(x, z)) continue;
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         // River channel: from surface down 2 blocks should be water, not air
         for (let y = h; y > h - 2; y--) {
           const block = world.getBlock(x, y, z);

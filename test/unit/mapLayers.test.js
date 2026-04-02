@@ -22,7 +22,7 @@ function stubBiome(x, z) {
 
 describe('MapLayerSystem', () => {
   it('creates terrain height grid at given resolution', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getTerrainHeightGrid(4);
     // Grid should cover world extent at resolution 4 (1 sample per 4 blocks)
     const expectedCols = Math.ceil((WORLD_MAX_X - WORLD_MIN_X) / 4);
@@ -33,7 +33,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('terrain grid captures height variation', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getTerrainHeightGrid(4);
     // Find min and max heights in the grid
     let min = Infinity, max = -Infinity;
@@ -48,7 +48,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('creates biome grid mapping world regions', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getBiomeGrid(4);
     expect(grid.width).toBeGreaterThan(0);
     // Check that multiple biome types appear
@@ -59,7 +59,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('creates population grid from buildings and NPCs', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getPopulationGrid(worldBuildings, allNPCs, 4);
     expect(grid.width).toBeGreaterThan(0);
     // At least some cells should have non-zero population
@@ -68,7 +68,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('Shire has higher population density than wilderness', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getPopulationGrid(worldBuildings, allNPCs, 4);
     // Sample population near Shire (0,0) vs wilderness (150, 100)
     const shireCell = layers.worldToGrid(0, 0, 4);
@@ -89,7 +89,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('creates slope grid detecting steep terrain', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const grid = layers.getSlopeGrid(4);
     expect(grid.width).toBeGreaterThan(0);
     // Mountains should have steep slopes
@@ -101,7 +101,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('converts world coordinates to grid coordinates and back', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const { col, row } = layers.worldToGrid(100, 50, 4);
     const { x, z } = layers.gridToWorld(col, row, 4);
     // Should be within one resolution step
@@ -110,7 +110,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('terrain color map returns RGB array', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const colors = layers.getTerrainColorMap(8);
     expect(colors.width).toBeGreaterThan(0);
     expect(colors.data.length).toBe(colors.width * colors.height * 3); // RGB
@@ -122,7 +122,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('building footprints are at correct grid positions', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const footprints = layers.getBuildingFootprints(worldBuildings, 4);
     expect(footprints.length).toBe(worldBuildings.length);
     for (const fp of footprints) {
@@ -134,7 +134,7 @@ describe('MapLayerSystem', () => {
   });
 
   it('station locations are at correct grid positions', () => {
-    const layers = new MapLayerSystem(stubHeight, stubBiome, 42);
+    const layers = new MapLayerSystem(stubHeight, stubBiome);
     const stations = layers.getStationMarkers(worldStations, 4);
     expect(stations.length).toBe(worldStations.length);
   });

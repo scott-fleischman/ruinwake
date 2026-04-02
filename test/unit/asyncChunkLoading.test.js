@@ -22,7 +22,7 @@ import { generateColumnData } from '../../src/core/chunkWorkerLogic.js';
 describe('Async chunk loading race condition', () => {
   it('ChunkManager exposes dirty chunks when data is loaded', () => {
     const world = new World();
-    const chunkMgr = new ChunkManager(world, 42, { useWorker: false, loadDistance: 2 });
+    const chunkMgr = new ChunkManager(world, { useWorker: false, loadDistance: 2 });
 
     chunkMgr.generateInitialChunks(0, 0);
 
@@ -34,7 +34,7 @@ describe('Async chunk loading race condition', () => {
 
   it('subsequent consumeMeshDirtyChunks returns empty after consumption', () => {
     const world = new World();
-    const chunkMgr = new ChunkManager(world, 42, { useWorker: false, loadDistance: 2 });
+    const chunkMgr = new ChunkManager(world, { useWorker: false, loadDistance: 2 });
 
     chunkMgr.generateInitialChunks(0, 0);
     chunkMgr.consumeMeshDirtyChunks(); // consume first batch
@@ -44,11 +44,9 @@ describe('Async chunk loading race condition', () => {
   });
 
   it('premature mesh from tree spillover has fewer faces than complete mesh', () => {
-    const seed = 42;
-
     // Generate two adjacent columns
-    const dataA = generateColumnData(0, 0, seed);
-    const dataB = generateColumnData(1, 0, seed);
+    const dataA = generateColumnData(0, 0);
+    const dataB = generateColumnData(1, 0);
 
     // Find chunks from column A that spill into column 1's space (tree leaves)
     const spilloverKeys = Object.keys(dataA.blocks).filter(k => {
@@ -56,7 +54,7 @@ describe('Async chunk loading race condition', () => {
       return cx === 1 && cz === 0;
     });
 
-    // If no tree spillover in this seed, create a synthetic test case
+    // If no tree spillover in this terrain, create a synthetic test case
     if (spilloverKeys.length === 0) {
       // Directly test: a chunk with only leaves builds differently than with terrain
       const world = new World();

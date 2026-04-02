@@ -5,7 +5,7 @@ import { createGameConfig } from '../../src/core/gameConfig.js';
 function makeConfig(overrides = {}) {
   return createGameConfig({
     raceId: 'man', classId: 'ranger', difficulty: 'standard',
-    seed: 42, worldName: 'Test', characterName: 'Hero',
+    worldName: 'Test', characterName: 'Hero',
     ...overrides,
   });
 }

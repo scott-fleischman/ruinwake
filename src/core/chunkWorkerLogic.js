@@ -10,17 +10,20 @@ import { simplex2D } from './noise.js';
 const CHUNK_SIZE = 16;
 const DIRT_DEPTH = 3;
 
+// Fixed world seed — the world is always the same
+const WORLD_SEED = 42;
+
 const ORE_CONFIGS = [
   { type: BlockType.COAL_ORE, threshold: 0.7, maxY: 28 },
   { type: BlockType.COPPER_ORE, threshold: 0.75, maxY: 24 },
   { type: BlockType.IRON_ORE, threshold: 0.8, maxY: 20 },
 ];
 
-function getOreType(x, y, z, seed) {
+function getOreType(x, y, z) {
   for (const ore of ORE_CONFIGS) {
     if (y > ore.maxY) continue;
     const n = simplex2D(
-      x * 0.1 + y * 0.3 + seed * 0.1 + ore.type * 100,
+      x * 0.1 + y * 0.3 + WORLD_SEED * 0.1 + ore.type * 100,
       z * 0.1 + y * 0.3
     );
     if (n > ore.threshold) return ore.type;
@@ -28,15 +31,15 @@ function getOreType(x, y, z, seed) {
   return null;
 }
 
-function posHash(x, z, seed) {
-  let h = (x * 374761 + z * 668265 + seed * 982451) | 0;
+function posHash(x, z) {
+  let h = (x * 374761 + z * 668265 + WORLD_SEED * 982451) | 0;
   h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
   h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
   return ((h >> 16) ^ h) & 0x7fffffff;
 }
 
-function posRandom(x, z, seed) {
-  return posHash(x, z, seed) / 0x7fffffff;
+function posRandom(x, z) {
+  return posHash(x, z) / 0x7fffffff;
 }
 
 const TALL_GRASS_DENSITY = { shire: 0.1, forest: 0.3, mirkwood: 0.2, plains: 0.05 };
@@ -69,7 +72,7 @@ function setBlock(chunks, wx, wy, wz, blockType) {
  * Returns { blocks: { 'cx,cy,cz': Uint8Array, ... } }
  * The caller merges these into the World.
  */
-export function generateColumnData(cx, cz, seed) {
+export function generateColumnData(cx, cz) {
   const chunks = {};
   const x0 = cx * CHUNK_SIZE;
   const z0 = cz * CHUNK_SIZE;
@@ -78,8 +81,8 @@ export function generateColumnData(cx, cz, seed) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = x0 + lx;
       const wz = z0 + lz;
-      const biome = getBiomeAt(wx, wz, seed);
-      const h = getHeightAt(wx, wz, seed);
+      const biome = getBiomeAt(wx, wz);
+      const h = getHeightAt(wx, wz);
       const river = getRiverAt(wx, wz);
 
       // Surface + dirt + stone/ore
@@ -88,7 +91,7 @@ export function generateColumnData(cx, cz, seed) {
         setBlock(chunks, wx, h - dy, wz, BlockType.DIRT);
       }
       for (let y = 0; y < h - DIRT_DEPTH; y++) {
-        const ore = getOreType(wx, y, wz, seed);
+        const ore = getOreType(wx, y, wz);
         setBlock(chunks, wx, y, wz, ore || BlockType.STONE);
       }
 
@@ -113,7 +116,7 @@ export function generateColumnData(cx, cz, seed) {
       }
 
       // Trees
-      const treeRoll = posRandom(wx, wz, seed);
+      const treeRoll = posRandom(wx, wz);
       if (treeRoll < biome.treeDensity) {
         const trunkH = 4;
         for (let dy = 1; dy <= trunkH; dy++) {
@@ -133,7 +136,7 @@ export function generateColumnData(cx, cz, seed) {
       } else {
         // Tall grass
         const grassDensity = TALL_GRASS_DENSITY[biome.type] || 0;
-        const grassRoll = posRandom(wx, wz, seed + 7);
+        const grassRoll = posRandom(wx, wz);
         if (grassDensity > 0 && grassRoll < grassDensity) {
           // Check if spot above surface is empty (no tree placed by adjacent column)
           const cy = Math.floor((h + 1) / CHUNK_SIZE);

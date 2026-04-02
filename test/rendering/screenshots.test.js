@@ -23,8 +23,8 @@ mkdirSync(PASS_DIR, { recursive: true });
 
 // ── World helpers ────────────────────────────────────────────────────
 
-function loadColumnIntoWorld(world, cx, cz, seed = 42) {
-  const data = generateColumnData(cx, cz, seed);
+function loadColumnIntoWorld(world, cx, cz) {
+  const data = generateColumnData(cx, cz);
   for (const [key, arr] of Object.entries(data.blocks)) {
     const chunk = new Chunk();
     const buf = arr instanceof ArrayBuffer ? new Uint8Array(arr) : arr;
@@ -35,13 +35,13 @@ function loadColumnIntoWorld(world, cx, cz, seed = 42) {
   }
 }
 
-function makeWorldArea(centerX, centerZ, chunkRadius = 4, seed = 42) {
+function makeWorldArea(centerX, centerZ, chunkRadius = 4) {
   const world = new World();
   const ccx = Math.floor(centerX / CHUNK_SIZE);
   const ccz = Math.floor(centerZ / CHUNK_SIZE);
   for (let dx = -chunkRadius; dx <= chunkRadius; dx++) {
     for (let dz = -chunkRadius; dz <= chunkRadius; dz++) {
-      loadColumnIntoWorld(world, ccx + dx, ccz + dz, seed);
+      loadColumnIntoWorld(world, ccx + dx, ccz + dz);
     }
   }
   return world;

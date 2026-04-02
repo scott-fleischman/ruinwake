@@ -23,7 +23,7 @@
 - Rendering, audio, input, networking, persistence, and platform APIs are adapters around the gameplay core.
 - No gameplay rule may depend directly on renderer state.
 - Prefer pure functions and explicit state transitions.
-- All randomness must be injectable and seedable.
+- All randomness must be injectable and deterministic.
 - All time must be explicit and simulated through clocks/ticks, never wall clock.
 - Avoid hidden globals and hidden mutable state.
 
@@ -56,7 +56,7 @@ See `TESTING.md` for the operational definition of each test layer, required loc
   - console.error
   - unhandled promise rejections
   - unexpected console.log / console.warn in production paths
-- Render-validation scenarios must start from deterministic seeds, replays, saves, or explicit state fixtures with camera, clock, and lighting inputs defined up front.
+- Render-validation scenarios must start from deterministic replays, saves, or explicit state fixtures with camera, clock, and lighting inputs defined up front.
 - Prefer semantic DOM or scene assertions for visible state and HUD correctness; use screenshots as regression evidence for presentation, not as the sole proof of gameplay correctness.
 - Voxel, occlusion, chunk-boundary, and visibility changes must pair render/runtime checks with spatial, contract, or scene-debug assertions. Screenshots alone do not prove that geometry is correct.
 - The rendering pass is not the primary proof that gameplay works. It is a presentation validation layer.

@@ -11,9 +11,8 @@ import { generateColumnData } from './chunkWorkerLogic.js';
  * data in _cache and loads/unloads chunks around the player.
  */
 export class ChunkManager {
-  constructor(world, seed, opts = {}) {
+  constructor(world, opts = {}) {
     this._world = world;
-    this._seed = seed;
     this._loadDistance = opts.loadDistance || 6;
     this._unloadDistance = opts.unloadDistance || (this._loadDistance + 3);
     this._maxPerFrame = opts.maxChunksPerFrame || 4;
@@ -119,7 +118,7 @@ export class ChunkManager {
   _generateColumnSync(cx, cz) {
     const colKey = `${cx},${cz}`;
     if (this._generated.has(colKey)) return;
-    const data = generateColumnData(cx, cz, this._seed);
+    const data = generateColumnData(cx, cz);
     this._cacheAndLoadColumn(cx, cz, data);
     this._totalCompleted++;
     if (this._onProgress) this._onProgress(this._totalCompleted, this._totalRequested);
@@ -130,7 +129,7 @@ export class ChunkManager {
     if (this._generated.has(key) || this._pending.has(key)) return;
     this._pending.add(key);
     this._totalRequested++;
-    this._worker.postMessage({ type: 'generate', cx, cz, seed: this._seed, id: key });
+    this._worker.postMessage({ type: 'generate', cx, cz, id: key });
   }
 
   _onWorkerMessage(e) {

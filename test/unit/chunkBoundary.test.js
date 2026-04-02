@@ -7,7 +7,7 @@ import { getHeightAt } from '../../src/core/terrain.js';
 describe('Chunk boundary rendering', () => {
   it('no gaps at chunk boundaries — surface blocks are never overwritten by adjacent tree leaves', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2 });
+    const cm = new ChunkManager(world, { loadDistance: 2 });
     cm.generateInitialChunks(0, 0);
 
     // Check surface blocks at chunk boundaries (x=15/16, z=15/16)
@@ -18,7 +18,7 @@ describe('Chunk boundary rendering', () => {
           for (let lz = 0; lz < 16; lz++) {
             const wx = cx * 16 + lx;
             const wz = cz * 16 + lz;
-            const h = getHeightAt(wx, wz, 42);
+            const h = getHeightAt(wx, wz);
             const surface = world.getBlock(wx, h, wz);
             if (surface === BlockType.AIR) {
               gaps++;
@@ -32,13 +32,13 @@ describe('Chunk boundary rendering', () => {
 
   it('surface blocks below terrain height are always solid or water', () => {
     const world = new World();
-    const cm = new ChunkManager(world, 42, { loadDistance: 2 });
+    const cm = new ChunkManager(world, { loadDistance: 2 });
     cm.generateInitialChunks(0, 0);
 
     let problems = 0;
     for (let x = -16; x < 32; x += 4) {
       for (let z = -16; z < 32; z += 4) {
-        const h = getHeightAt(x, z, 42);
+        const h = getHeightAt(x, z);
         for (let y = h; y >= h - 3; y--) {
           const block = world.getBlock(x, y, z);
           if (block === BlockType.AIR) {

@@ -18,11 +18,9 @@ import { MapLayerSystem } from '../../src/core/mapLayers.js';
 import { getHeightAt, getBiomeAt, WORLD_MIN_X, WORLD_MAX_X, WORLD_MIN_Z, WORLD_MAX_Z } from '../../src/core/terrain.js';
 import { getMovementPenalty, isCliff, CLIFF_THRESHOLD } from '../../src/core/terrainDifficulty.js';
 
-const SEED = 42;
 const layers = new MapLayerSystem(
-  (x, z) => getHeightAt(x, z, SEED),
-  (x, z) => getBiomeAt(x, z, SEED),
-  SEED,
+  (x, z) => getHeightAt(x, z),
+  (x, z) => getBiomeAt(x, z),
 );
 
 // ── Region & Connectivity ──────────────────────────────────────────
@@ -30,22 +28,22 @@ const layers = new MapLayerSystem(
 describe('Region connectivity', () => {
   it('all landmark regions exist in the world', () => {
     for (const lm of allLandmarks) {
-      const h = getHeightAt(lm.position.x, lm.position.z, SEED);
+      const h = getHeightAt(lm.position.x, lm.position.z);
       expect(h, `${lm.name} has invalid height`).toBeGreaterThan(0);
     }
   });
 
   it('spawn point (0,0) is in the Shire', () => {
-    const biome = getBiomeAt(0, 0, SEED);
+    const biome = getBiomeAt(0, 0);
     expect(biome.type).toBe('shire');
   });
 
   it('player can walk east from Shire to Bree without cliff barriers', () => {
     // Walk along z=10 from x=0 to x=80
-    let prevH = getHeightAt(0, 10, SEED);
+    let prevH = getHeightAt(0, 10);
     let maxDiff = 0;
     for (let x = 1; x <= 80; x++) {
-      const h = getHeightAt(x, 10, SEED);
+      const h = getHeightAt(x, 10);
       const diff = Math.abs(h - prevH);
       if (diff > maxDiff) maxDiff = diff;
       prevH = h;
@@ -58,7 +56,7 @@ describe('Region connectivity', () => {
     const heights = [];
     for (let x = 250; x <= 300; x += 2) {
       for (let z = 30; z <= 70; z += 2) {
-        heights.push(getHeightAt(x, z, SEED));
+        heights.push(getHeightAt(x, z));
       }
     }
     const maxH = Math.max(...heights);
