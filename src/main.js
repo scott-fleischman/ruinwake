@@ -992,6 +992,7 @@ function startGame(config, jumpStateId) {
         stations: worldStations,
         landmarks: allLandmarks,
         questMarkers: questMarkerList,
+        mini: true,
       });
     } else {
       minimapContainer.style.display = 'none';

@@ -97,7 +97,7 @@ export class MapRenderer {
 
   _drawOverview(ctx, W, H, opts) {
     const res = OVERVIEW_RES;
-    const { playerPos, fogOfWar, buildings, landmarks, questMarkers } = opts;
+    const { playerPos, fogOfWar, buildings, landmarks, questMarkers, mini } = opts;
 
     // 1. Terrain + biome (cached)
     if (!this._overviewImage) {
@@ -166,8 +166,6 @@ export class MapRenderer {
 
     // Landmarks
     if (landmarks) {
-      ctx.font = '10px monospace';
-      ctx.textAlign = 'center';
       for (const lm of landmarks) {
         const lx = toX(lm.position.x);
         const ly = toY(lm.position.z);
@@ -180,9 +178,13 @@ export class MapRenderer {
         ctx.lineTo(lx - 4, ly);
         ctx.closePath();
         ctx.fill();
-        // Label
-        ctx.fillStyle = '#c9a84c';
-        ctx.fillText(lm.name, lx, ly - 8);
+        // Label (skip on minimap to avoid clutter)
+        if (!mini) {
+          ctx.font = '10px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#c9a84c';
+          ctx.fillText(lm.name, lx, ly - 8);
+        }
       }
     }
 
@@ -219,14 +221,14 @@ export class MapRenderer {
     ctx.fill();
     ctx.stroke();
 
-    // Legend
-    this._drawLegend(ctx, W, H);
-
-    // Zoom hint
-    ctx.fillStyle = '#888';
-    ctx.font = '11px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText('Z: Toggle zoom | M: Close', W - 8, H - 6);
+    // Legend and zoom hint (skip on minimap to avoid clutter)
+    if (!mini) {
+      this._drawLegend(ctx, W, H);
+      ctx.fillStyle = '#888';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('Z: Toggle zoom | M: Close', W - 8, H - 6);
+    }
   }
 
   // ── Detail (player-centred) ──
