@@ -833,45 +833,93 @@ export function captureStructurePalette(buildings, outputPath, opts = {}) {
       }
     }
 
-    // Place building using inline logic (avoids importing placeBuilding with complex deps)
+    // Place building with peaked roof, windows, chimney
     const wallBlock = bldg.wallBlock || BlockType.OAK_PLANKS;
     const roofBlock = bldg.roofBlock || BlockType.PLANKS;
     const floorBlock = bldg.floorBlock || BlockType.COBBLESTONE;
     const radius = bldg.radius || 4;
     const bheight = bldg.height || 4;
+    const by = 32;
 
+    // Foundation (wider than building)
+    for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+      for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+        world.setBlock(dx, 31, dz, BlockType.COBBLESTONE);
+      }
+    }
     // Floor
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dz = -radius; dz <= radius; dz++) {
         world.setBlock(dx, 31, dz, floorBlock);
       }
     }
-    // Walls
+    // Clear interior
+    for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+      for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+        for (let dy = 0; dy <= bheight + radius + 3; dy++) {
+          world.setBlock(dx, by + dy, dz, BlockType.AIR);
+        }
+      }
+    }
+    // Walls with windows
     for (let dy = 0; dy < bheight; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
         for (let dz = -radius; dz <= radius; dz++) {
           const onEdge = Math.abs(dx) === radius || Math.abs(dz) === radius;
           if (!onEdge) continue;
           if (dx === radius && dz === 0 && dy < 2) continue; // door
-          world.setBlock(dx, 32 + dy, dz, wallBlock);
+          // Windows at height 2
+          if (dy === 2) {
+            const isCorner = Math.abs(dx) === radius && Math.abs(dz) === radius;
+            if (!isCorner) {
+              if (Math.abs(dx) === radius && dz !== 0 && Math.abs(dz) < radius && dz % 3 === 0) {
+                world.setBlock(dx, by + dy, dz, BlockType.GLASS);
+                continue;
+              }
+              if (Math.abs(dz) === radius && dx !== 0 && Math.abs(dx) < radius && dx % 3 === 0) {
+                world.setBlock(dx, by + dy, dz, BlockType.GLASS);
+                continue;
+              }
+            }
+          }
+          world.setBlock(dx, by + dy, dz, wallBlock);
         }
       }
     }
-    // Roof
-    for (let dx = -radius; dx <= radius; dx++) {
-      for (let dz = -radius; dz <= radius; dz++) {
-        world.setBlock(dx, 32 + bheight, dz, roofBlock);
+    // Gable walls
+    for (let layer = 0; layer <= radius; layer++) {
+      const xSpan = radius - layer;
+      if (xSpan < 0) break;
+      for (let dx = -xSpan; dx <= xSpan; dx++) {
+        world.setBlock(dx, by + bheight + layer, -radius, wallBlock);
+        world.setBlock(dx, by + bheight + layer, radius, wallBlock);
       }
     }
-    // Torch inside
+    // Peaked roof (ridge along Z, narrows on X, overhangs by 1)
+    for (let layer = 0; layer <= radius + 1; layer++) {
+      const xSpan = radius + 1 - layer;
+      if (xSpan < 0) break;
+      for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+        world.setBlock(-xSpan, by + bheight + layer, dz, roofBlock);
+        if (xSpan > 0) world.setBlock(xSpan, by + bheight + layer, dz, roofBlock);
+      }
+    }
+    // Chimney
+    const roofTop = by + bheight + radius + 1;
+    for (let dy = bheight; dy <= roofTop - by + 1; dy++) {
+      world.setBlock(radius - 1, by + dy, radius - 1, BlockType.COBBLESTONE);
+    }
+    world.setBlock(radius - 1, roofTop + 2, radius - 1, BlockType.COBBLESTONE);
+    // Torch
     world.setBlock(0, 34, -radius + 1, BlockType.TORCH);
 
-    // Camera: isometric elevated view
-    const camDist = radius * 3 + 4;
+    // Camera: raised for peaked roof visibility
+    const roofHeight = bheight + radius + 2;
+    const camDist = radius * 3 + 5;
     const proj = mat4Perspective(Math.PI / 4, 1, 0.1, 100);
     const view = mat4LookAt(
-      [camDist, 36 + bheight, camDist],
-      [0, 32 + bheight / 2, 0],
+      [camDist, 32 + roofHeight + 2, camDist],
+      [0, 32 + roofHeight * 0.4, 0],
       [0, 1, 0]
     );
     const mvp = mat4Multiply(proj, view);

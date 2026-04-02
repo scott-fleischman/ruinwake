@@ -57,8 +57,7 @@ export function placeRuin(world, position, size = 'small') {
 }
 
 /**
- * Place a proper building with four walls, door, full roof, and a bed inside.
- * Used for NPC homes and restored sites.
+ * Place a building with peaked roof, windows, chimney, and foundation.
  */
 export function placeBuilding(world, position, opts = {}) {
   const wallBlock = opts.wallBlock || BlockType.OAK_PLANKS;
@@ -73,12 +72,20 @@ export function placeBuilding(world, position, opts = {}) {
   const by = Math.floor(position.y);
   const bz = Math.floor(position.z);
 
-  // Clear interior first
-  for (let dx = -radius; dx <= radius; dx++) {
-    for (let dz = -radius; dz <= radius; dz++) {
-      for (let dy = 0; dy <= height + 1; dy++) {
+  // Clear interior and above (for peaked roof)
+  const roofPeak = radius + 2;
+  for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+    for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+      for (let dy = 0; dy <= height + roofPeak; dy++) {
         world.setBlock(bx + dx, by + dy, bz + dz, BlockType.AIR);
       }
+    }
+  }
+
+  // Foundation (cobblestone, extends 1 block past walls)
+  for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+    for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+      world.setBlock(bx + dx, by - 1, bz + dz, BlockType.COBBLESTONE);
     }
   }
 
@@ -89,7 +96,7 @@ export function placeBuilding(world, position, opts = {}) {
     }
   }
 
-  // Four walls with a door on +x side
+  // Four walls with door, and windows
   for (let dy = 0; dy < height; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dz = -radius; dz <= radius; dz++) {
@@ -101,28 +108,71 @@ export function placeBuilding(world, position, opts = {}) {
           world.setBlock(bx + dx, by + dy, bz + dz, BlockType.DOOR);
           continue;
         }
-        // Above door is wall, flanking is wall
+
+        // Windows at height 2 on side walls (every 3 blocks, skip corners)
+        if (dy === 2 && BlockType.GLASS) {
+          const isCorner = Math.abs(dx) === radius && Math.abs(dz) === radius;
+          if (!isCorner) {
+            // Windows on X walls
+            if (Math.abs(dx) === radius && dz !== 0 && Math.abs(dz) < radius && dz % 3 === 0) {
+              world.setBlock(bx + dx, by + dy, bz + dz, BlockType.GLASS);
+              continue;
+            }
+            // Windows on Z walls
+            if (Math.abs(dz) === radius && dx !== 0 && Math.abs(dx) < radius && dx % 3 === 0) {
+              world.setBlock(bx + dx, by + dy, bz + dz, BlockType.GLASS);
+              continue;
+            }
+          }
+        }
+
         world.setBlock(bx + dx, by + dy, bz + dz, wallBlock);
       }
     }
   }
 
-  // Full roof
-  for (let dx = -radius; dx <= radius; dx++) {
-    for (let dz = -radius; dz <= radius; dz++) {
-      world.setBlock(bx + dx, by + height, bz + dz, roofBlock);
+  // Gable walls (triangular infill above wall height on Z-axis walls)
+  for (let layer = 0; layer <= radius; layer++) {
+    const xSpan = radius - layer;
+    if (xSpan < 0) break;
+    for (let dx = -xSpan; dx <= xSpan; dx++) {
+      // Front gable (z = -radius)
+      world.setBlock(bx + dx, by + height + layer, bz - radius, wallBlock);
+      // Back gable (z = +radius)
+      world.setBlock(bx + dx, by + height + layer, bz + radius, wallBlock);
     }
   }
 
-  // Torch inside
+  // Peaked roof — ridge runs along Z axis, narrows along X
+  for (let layer = 0; layer <= radius + 1; layer++) {
+    const xSpan = radius + 1 - layer;
+    if (xSpan < 0) break;
+    for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+      // Place roof blocks on both slopes
+      world.setBlock(bx - xSpan, by + height + layer, bz + dz, roofBlock);
+      if (xSpan > 0) {
+        world.setBlock(bx + xSpan, by + height + layer, bz + dz, roofBlock);
+      }
+    }
+  }
+
+  // Chimney (cobblestone, on one corner, rises above roof peak)
+  const chimneyX = bx + radius - 1;
+  const chimneyZ = bz + radius - 1;
+  const roofTop = by + height + radius + 1;
+  for (let dy = height; dy <= roofTop + 1; dy++) {
+    world.setBlock(chimneyX, by + dy, chimneyZ, BlockType.COBBLESTONE);
+  }
+  // Chimney cap
+  world.setBlock(chimneyX, roofTop + 2, chimneyZ, BlockType.COBBLESTONE);
+
+  // Interior: torch, bed, chest
   world.setBlock(bx, by + 2, bz - radius + 1, BlockType.TORCH);
 
-  // Bed in corner
   if (placeBed) {
     world.setBlock(bx - radius + 1, by, bz - radius + 1, BlockType.BED);
   }
 
-  // Chest if requested
   if (placeChest) {
     world.setBlock(bx - radius + 1, by, bz + radius - 1, BlockType.CHEST);
   }
@@ -130,7 +180,6 @@ export function placeBuilding(world, position, opts = {}) {
 
 /**
  * Place a fully restored version of a ruin site.
- * Has complete walls, roof, torches, and decorative elements.
  */
 export function placeRestoredSite(world, position, size = 'small') {
   const configs = {
