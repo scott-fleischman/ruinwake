@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeBuilding } from '../../src/core/ruinGenerator.js';
+import { placeBuilding, placeHobbitHole } from '../../src/core/ruinGenerator.js';
 import { BlockType, isBlockSolid } from '../../src/core/block.js';
 
 function makeWorld() {
@@ -131,6 +131,74 @@ describe('placeBuilding', () => {
       const overshoot = highest - roofRidgeY;
       expect(overshoot, `radius=${radius} h=${height}: chimney overshoot`).toBeLessThanOrEqual(2);
     }
+  });
+
+  it('foundation fills gaps on sloped terrain (no AIR below floor)', () => {
+    const world = makeWorld();
+    const radius = 4;
+    const by = 10;
+    // Simulate sloped terrain: center is at y=9 (solid), edges drop to y=6
+    for (let dx = -(radius + 2); dx <= radius + 2; dx++) {
+      for (let dz = -(radius + 2); dz <= radius + 2; dz++) {
+        const dist = Math.max(Math.abs(dx), Math.abs(dz));
+        const groundY = 9 - Math.floor(dist * 0.7); // slopes down from center
+        for (let y = 0; y <= groundY; y++) {
+          world.setBlock(10 + dx, y, 10 + dz, BlockType.DIRT);
+        }
+      }
+    }
+
+    placeBuilding(world, { x: 10, y: by, z: 10 }, { radius, height: 4 });
+
+    // No AIR should be visible below the floor within the building footprint
+    for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+      for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+        // Check from floor level (by-1) down to where terrain starts
+        let foundAir = false;
+        let belowFloor = false;
+        for (let y = by - 2; y >= 0; y--) {
+          const block = world.getBlock(10 + dx, y, 10 + dz);
+          if (isBlockSolid(block)) break; // hit solid ground, done
+          foundAir = true;
+          belowFloor = true;
+        }
+        expect(foundAir, `gap below floor at dx=${dx}, dz=${dz}`).toBe(false);
+      }
+    }
+  });
+
+  it('has windows (GLASS blocks) in walls', () => {
+    const world = makeWorld();
+    placeBuilding(world, { x: 10, y: 10, z: 10 }, { radius: 4, height: 4 });
+
+    let glassCount = 0;
+    for (let dy = 0; dy < 4; dy++) {
+      for (let dx = -4; dx <= 4; dx++) {
+        for (let dz = -4; dz <= 4; dz++) {
+          if (world.getBlock(10 + dx, 10 + dy, 10 + dz) === BlockType.GLASS) {
+            glassCount++;
+          }
+        }
+      }
+    }
+    expect(glassCount, 'building should have glass windows').toBeGreaterThan(0);
+  });
+
+  it('small buildings (radius=3) also have windows', () => {
+    const world = makeWorld();
+    placeBuilding(world, { x: 10, y: 10, z: 10 }, { radius: 3, height: 3 });
+
+    let glassCount = 0;
+    for (let dy = 0; dy < 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        for (let dz = -3; dz <= 3; dz++) {
+          if (world.getBlock(10 + dx, 10 + dy, 10 + dz) === BlockType.GLASS) {
+            glassCount++;
+          }
+        }
+      }
+    }
+    expect(glassCount, 'small building should have glass windows').toBeGreaterThan(0);
   });
 
   it('interior is clear (no trees or terrain)', () => {
