@@ -2,8 +2,16 @@
  * Pure input state — no DOM dependency. Fully testable headlessly.
  * Mutation methods are called by the DOMInputAdapter (or test harness).
  */
+const DEFAULT_BINDINGS = {
+  forward: 'KeyW',
+  back: 'KeyS',
+  left: 'KeyA',
+  right: 'KeyD',
+  jump: 'Space',
+};
+
 export class InputState {
-  constructor() {
+  constructor(keyBindings) {
     this.keys = {};
     this._justPressed = {};
     this.mouseDx = 0;
@@ -14,6 +22,7 @@ export class InputState {
     this.scrollDelta = 0;
     this.menuOpen = false;
     this.onPointerUnlock = null;
+    this._bindings = keyBindings || DEFAULT_BINDINGS;
   }
 
   // --- Mutation methods (called by adapter) ---
@@ -59,16 +68,17 @@ export class InputState {
   // --- Query methods (called by game loop) ---
 
   getMovementInput() {
+    const b = this._bindings;
     return {
-      forward: !!this.keys['KeyW'],
-      back: !!this.keys['KeyS'],
-      left: !!this.keys['KeyA'],
-      right: !!this.keys['KeyD'],
+      forward: !!this.keys[b.forward],
+      back: !!this.keys[b.back],
+      left: !!this.keys[b.left],
+      right: !!this.keys[b.right],
     };
   }
 
   getJump() {
-    return !!this.keys['Space'];
+    return !!this.keys[this._bindings.jump];
   }
 
   consumeMouse() {

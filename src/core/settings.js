@@ -7,12 +7,37 @@ export const SENSITIVITY_MAX = 3.0;
 export const FOV_MIN = 60;
 export const FOV_MAX = 110;
 
+export const DEFAULT_KEY_BINDINGS = Object.freeze({
+  forward: 'KeyW',
+  back: 'KeyS',
+  left: 'KeyA',
+  right: 'KeyD',
+  jump: 'Space',
+  sprint: 'ShiftLeft',
+  crouch: 'KeyC',
+  interact: 'KeyT',
+  eat: 'KeyF',
+  throwItem: 'KeyH',
+  crafting: 'KeyE',
+  inventory: 'KeyI',
+  questLog: 'KeyQ',
+  skillTree: 'Tab',
+  map: 'KeyM',
+  mapZoom: 'KeyZ',
+  restore: 'KeyR',
+  relic: 'KeyX',
+  guard: 'KeyG',
+  camera: 'KeyV',
+  settings: 'KeyP',
+});
+
 export class Settings {
   constructor() {
     this.sensitivity = 1.0;
     this.fov = 75;
     this.tutorialEnabled = true;
     this.isOpen = false;
+    this.keyBindings = { ...DEFAULT_KEY_BINDINGS };
   }
 
   setSensitivity(value) {
@@ -29,6 +54,16 @@ export class Settings {
 
   getMouseSensitivity(baseSensitivity) {
     return baseSensitivity * this.sensitivity;
+  }
+
+  setKeyBinding(action, keyCode) {
+    if (!(action in DEFAULT_KEY_BINDINGS)) return false;
+    this.keyBindings[action] = keyCode;
+    return true;
+  }
+
+  resetKeyBindings() {
+    this.keyBindings = { ...DEFAULT_KEY_BINDINGS };
   }
 
   toggleOpen() {
