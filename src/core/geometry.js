@@ -141,7 +141,7 @@ const SNOW_SIDE_COLOR = [0.85, 0.88, 0.92];    // slightly blue-gray snow sides
 const COBBLE_TOP_COLOR = [0.50, 0.50, 0.48];   // cobblestone top highlight
 
 export function shouldRenderBlock(blockType) {
-  return blockType !== BlockType.AIR;
+  return blockType !== BlockType.AIR && blockType !== BlockType.DOOR_OPEN;
 }
 
 function getFaceColor(block, faceDir) {
