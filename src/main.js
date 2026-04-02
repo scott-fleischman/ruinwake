@@ -143,6 +143,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     difficulty: document.getElementById('difficulty-select').value,
     worldName: document.getElementById('world-name').value,
     characterName: document.getElementById('character-name').value,
+    tutorial: document.getElementById('tutorial-check').checked,
   });
   document.getElementById('new-game').style.display = 'none';
   startGame(config, pendingJumpState);
