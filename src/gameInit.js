@@ -60,6 +60,7 @@ import { getClassPassiveEffect } from './core/classPassives.js';
 import { getRaceStealthBonus } from './core/raceTraits.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
 import { createFactionSystem, createCombinedQuestSystem } from './core/systemWiring.js';
+import { createRng } from './core/rng.js';
 
 /**
  * Create all headless game systems from a config.
@@ -182,9 +183,7 @@ export function createGameState(config) {
   inventory.add('map_fragment', 1);
 
   // Enemy spawning
-  let spawnSeed = 42;
-  const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
-  const spawner = new EnemySpawner(spawnRng);
+  const spawner = new EnemySpawner(createRng(42));
 
   const questTriggers = new QuestWorldTriggers();
   const progress = new GameProgress();

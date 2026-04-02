@@ -100,6 +100,7 @@ import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
+import { createRng } from './core/rng.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -197,7 +198,8 @@ function startGame(config, jumpStateId) {
     'Old ruins hold secrets that time cannot erase...',
   ];
   loadingScreen.style.display = 'flex';
-  loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(Math.random() * FLAVOR_TEXTS.length)];
+  const uiRng = createRng(7);
+  loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(uiRng() * FLAVOR_TEXTS.length)];
 
   const onLoadProgress = (completed, total) => {
     const pct = Math.round((completed / total) * 100);
@@ -205,7 +207,7 @@ function startGame(config, jumpStateId) {
     loadingPct.textContent = `${pct}% — ${completed}/${total} chunks`;
     // Cycle flavor text every ~25%
     if (completed % Math.max(1, Math.floor(total / 4)) === 0) {
-      loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(Math.random() * FLAVOR_TEXTS.length)];
+      loadingFlavor.textContent = FLAVOR_TEXTS[Math.floor(uiRng() * FLAVOR_TEXTS.length)];
     }
   };
 
@@ -486,19 +488,19 @@ function startGame(config, jumpStateId) {
   const PICKUP_RANGE = 2.0;
   const DROP_LIFETIME = 120; // seconds before despawn
 
+  const gameRng = createRng(42);
+
   function spawnDroppedItem(position, itemType, count) {
     droppedItems.push({
-      position: { x: position.x + (Math.random() - 0.5) * 0.5, y: position.y + 0.5, z: position.z + (Math.random() - 0.5) * 0.5 },
+      position: { x: position.x + (gameRng() - 0.5) * 0.5, y: position.y + 0.5, z: position.z + (gameRng() - 0.5) * 0.5 },
       type: itemType,
       count,
       lifetime: DROP_LIFETIME,
-      bobPhase: Math.random() * Math.PI * 2,
+      bobPhase: gameRng() * Math.PI * 2,
     });
   }
 
-  let spawnSeed = 42;
-  const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
-  const spawner = new EnemySpawner(spawnRng);
+  const spawner = new EnemySpawner(gameRng);
   let spawnTimer = 0;
 
   // --- Renderer ---
@@ -1205,7 +1207,7 @@ function startGame(config, jumpStateId) {
         if (inCorruptedZone) {
           dialogueMessage = 'The corruption resists your power... ' + dialogueMessage;
           const spawnChance = getCorruptionSpawnChance(true);
-          if (Math.random() < spawnChance) {
+          if (gameRng() < spawnChance) {
             const corruptEnemy = spawner.spawn(player.position, biome.type);
             if (corruptEnemy) enemies.push(corruptEnemy);
           }
