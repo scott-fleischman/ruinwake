@@ -53,4 +53,13 @@ export class World {
     const chunk = this._getOrCreateChunk(cx, cy, cz);
     chunk.setBlock(lx, ly, lz, blockType);
   }
+
+  restoreFrom(savedWorld) {
+    this.chunks.clear();
+    for (const [key, chunk] of savedWorld.chunks) {
+      const copy = new Chunk();
+      copy.blocks.set(chunk.blocks);
+      this.chunks.set(key, copy);
+    }
+  }
 }

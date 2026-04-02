@@ -48,6 +48,7 @@ import { checkProximityTrigger } from './core/questTrigger.js';
 import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
+import { downloadSaveFile, uploadSaveFile } from './core/saveFile.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
 import { placeRuin, placeBuilding, placeRestoredSite } from './core/ruinGenerator.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
@@ -1073,52 +1074,64 @@ function startGame(config, jumpStateId) {
       if (dialogueTimer <= 0) dialogueMessage = '';
     }
 
-    // Save game (F5)
+    // Save game (F5) — downloads compressed save file
     if (input.consumeKeyPress('F5')) {
       try {
         const saveData = serializeGameState(world, player, inventory, {
           survivalStats,
           quests: questSystem,
+          factions: factionSystem,
+          fastTravel,
+          fogOfWar,
+          loreJournal,
+          skillTree: skillTreeSystem,
         });
-        localStorage.setItem('lotry_save', saveData);
-        dialogueMessage = 'Game saved!';
-        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
+        downloadSaveFile(saveData).then(() => {
+          dialogueMessage = 'Game saved!';
+          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
+        }).catch(() => {
+          dialogueMessage = 'Save failed!';
+          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
+        });
       } catch (e) {
         dialogueMessage = 'Save failed!';
         dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
       }
     }
 
-    // Load game (F9)
+    // Load game (F9) — opens file picker for compressed save
     if (input.consumeKeyPress('F9')) {
-      try {
-        const saveData = localStorage.getItem('lotry_save');
-        if (saveData) {
-          const loaded = deserializeGameState(saveData);
-          Object.assign(player.position, loaded.player.position);
-          player.velocity = loaded.player.velocity;
-          player.yaw = loaded.player.yaw;
-          player.pitch = loaded.player.pitch;
-          player.onGround = loaded.player.onGround;
-          // Reload inventory
-          for (const item of inventory.getItems()) inventory.remove(item.type, item.count);
-          for (const item of loaded.inventory.getItems()) inventory.add(item.type, item.count);
-          if (loaded.survivalStats) Object.assign(survivalStats, loaded.survivalStats);
-          if (loaded.questData) questSystem.deserialize(loaded.questData);
-          // Force re-render all chunks
-          for (const key of worldRenderer.meshes.keys()) {
-            worldRenderer.dirty.add(key);
-          }
-          dialogueMessage = 'Game loaded!';
-          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
-        } else {
-          dialogueMessage = 'No save found';
-          dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
+      uploadSaveFile().then(saveData => {
+        const loaded = deserializeGameState(saveData);
+        // Restore world
+        world.restoreFrom(loaded.world);
+        // Restore player
+        Object.assign(player.position, loaded.player.position);
+        player.velocity = loaded.player.velocity;
+        player.yaw = loaded.player.yaw;
+        player.pitch = loaded.player.pitch;
+        player.onGround = loaded.player.onGround;
+        // Reload inventory
+        for (const item of inventory.getItems()) inventory.remove(item.type, item.count);
+        for (const item of loaded.inventory.getItems()) inventory.add(item.type, item.count);
+        // Restore subsystems
+        if (loaded.survivalStats) Object.assign(survivalStats, loaded.survivalStats);
+        if (loaded.questData) questSystem.deserialize(loaded.questData);
+        if (loaded.factionData) factionSystem.deserialize(loaded.factionData);
+        if (loaded.fastTravelData) fastTravel.deserialize(loaded.fastTravelData);
+        if (loaded.fogOfWarData) fogOfWar.deserialize(loaded.fogOfWarData);
+        if (loaded.loreJournalData) loreJournal.deserialize(loaded.loreJournalData);
+        if (loaded.skillTreeData) skillTreeSystem.deserialize(loaded.skillTreeData);
+        // Force re-render all chunks
+        for (const key of worldRenderer.meshes.keys()) {
+          worldRenderer.dirty.add(key);
         }
-      } catch (e) {
+        dialogueMessage = 'Game loaded!';
+        dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
+      }).catch(() => {
         dialogueMessage = 'Load failed!';
         dialogueTimer = GC.DIALOGUE.SAVE_FEEDBACK_DURATION;
-      }
+      });
     }
 
     // Eat food (F key)
