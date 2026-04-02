@@ -61,13 +61,14 @@ import { getRaceStealthBonus } from './core/raceTraits.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
 import { createFactionSystem, createCombinedQuestSystem } from './core/systemWiring.js';
 import { createRng } from './core/rng.js';
+import { ChestStorage } from './core/chestStorage.js';
 
 /**
  * Create all headless game systems from a config.
  * Returns a state object containing every system.
  * No DOM access — fully testable.
  */
-export function createGameState(config) {
+export function createGameState(config, options = {}) {
   const GC = GAME_CONSTANTS;
   const fullClassId = `${config.raceId}_${config.classId}`;
   const world = new World();
@@ -76,7 +77,8 @@ export function createGameState(config) {
   const chunkMgr = new ChunkManager(world, {
     loadDistance: GC.CHUNKS.LOAD_DISTANCE,
     maxChunksPerFrame: GC.CHUNKS.MAX_PER_FRAME,
-    useWorker: false, // headless — no Worker in tests
+    useWorker: options.useWorker ?? false,
+    onProgress: options.onProgress,
   });
   chunkMgr.generateInitialChunks(0, 0);
 
@@ -187,9 +189,10 @@ export function createGameState(config) {
 
   const questTriggers = new QuestWorldTriggers();
   const progress = new GameProgress();
+  const chestStorage = new ChestStorage();
 
   return {
-    config, world, chunkMgr, player, inventory, survivalStats, race, cls,
+    config, fullClassId, world, chunkMgr, player, inventory, survivalStats, race, cls,
     difficultyMods, gameClock, combatSystem, weatherSystem, fogOfWar,
     experienceSystem, equipment, skillTreeSystem, skillTreeUI, hotbar,
     fearSystem, nightDanger, settings, gamePause, unifiedMenu, minimapState,
@@ -199,6 +202,7 @@ export function createGameState(config) {
     fastTravel, discoverySystem, restSystem, freshnessTracker, blockBreaker,
     deathSystem, creativeMode, dialogueManager, spawnPos, classPassive,
     racialStyle, spawner, enemies: [], spawnTimer: 0, questTriggers, progress,
+    chestStorage, droppedItems: [],
     dialogueMessage: '', dialogueTimer: 0, invSelectedSlot: -1,
     survivedFirstNight: false, isDead: false,
   };
