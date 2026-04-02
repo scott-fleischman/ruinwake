@@ -6,29 +6,28 @@ import { BlockType } from '../../src/core/block.js';
 import { buildEnemyModel, BEAST_TYPES } from '../../src/render/enemyRenderer.js';
 import { buildNPCModel } from '../../src/render/npcRenderer.js';
 
-describe('TALL_GRASS billboard sprite (crossed planes)', () => {
-  it('produces fewer vertices than a full cube', () => {
+describe('TALL_GRASS fan-blade sprite (6 blades)', () => {
+  it('produces 24 vertices for 6 fan blades', () => {
     const world = new World();
     world.setBlock(0, 0, 0, BlockType.TALL_GRASS);
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
-    // A full cube exposed on all 6 faces produces 24 verts (6 faces * 4 verts).
-    // 3 crossed planes produce 12 verts (3 planes * 4 verts).
+    // 6 fan blades * 4 verts each = 24 vertices
     expect(geo).not.toBeNull();
-    expect(geo.vertexCount).toBe(12);
+    expect(geo.vertexCount).toBe(24);
   });
 
-  it('produces 4 triangles (12 indices) for crossed planes', () => {
+  it('produces 24 triangles (72 indices) for double-sided fan blades', () => {
     const world = new World();
     world.setBlock(0, 0, 0, BlockType.TALL_GRASS);
     const chunk = world.getChunk(0, 0, 0);
     const geo = buildChunkGeometry(chunk, 0, 0, 0, world);
     expect(geo).not.toBeNull();
-    // 3 planes * 4 triangles per plane (double-sided) * 3 indices = 36
-    expect(geo.indices.length).toBe(36);
+    // 6 blades * 2 sides * 2 triangles * 3 indices = 72
+    expect(geo.indices.length).toBe(72);
   });
 
-  it('places vertices diagonally across the block', () => {
+  it('places fan blade tips above the block base', () => {
     const world = new World();
     world.setBlock(3, 5, 7, BlockType.TALL_GRASS);
     const chunk = world.getChunk(0, 0, 0);
@@ -41,11 +40,11 @@ describe('TALL_GRASS billboard sprite (crossed planes)', () => {
       verts.push([geo.positions[i], geo.positions[i + 1], geo.positions[i + 2]]);
     }
 
-    // Vertices should span from block origin to block origin+1 on Y axis
+    // Fan blades: base at block Y (5), tips at Y + 0.28
     const minY = Math.min(...verts.map(v => v[1]));
     const maxY = Math.max(...verts.map(v => v[1]));
     expect(minY).toBeCloseTo(5, 0);
-    expect(maxY).toBeCloseTo(6, 0);
+    expect(maxY).toBeCloseTo(5.28, 1);
   });
 
   it('uses TALL_GRASS color for all vertices', () => {
@@ -57,10 +56,10 @@ describe('TALL_GRASS billboard sprite (crossed planes)', () => {
 
     const expectedColor = BLOCK_COLORS[BlockType.TALL_GRASS];
     for (let i = 0; i < geo.colors.length; i += 3) {
-      // Allow for per-vertex noise + lighting variation (up to +-0.15)
-      expect(Math.abs(geo.colors[i] - expectedColor[0])).toBeLessThan(0.2);
-      expect(Math.abs(geo.colors[i + 1] - expectedColor[1])).toBeLessThan(0.2);
-      expect(Math.abs(geo.colors[i + 2] - expectedColor[2])).toBeLessThan(0.2);
+      // Allow for per-vertex noise + tip-to-base gradient (tipFactor 0.40–0.96)
+      expect(Math.abs(geo.colors[i] - expectedColor[0])).toBeLessThan(0.4);
+      expect(Math.abs(geo.colors[i + 1] - expectedColor[1])).toBeLessThan(0.4);
+      expect(Math.abs(geo.colors[i + 2] - expectedColor[2])).toBeLessThan(0.4);
     }
   });
 });
@@ -207,11 +206,11 @@ describe('per-vertex color variation', () => {
 
     expect(allIdentical).toBe(false);
 
-    // All vertex colors should still be in reasonable range (noise + lighting)
+    // All vertex colors should still be in reasonable range (noise + face lighting)
     for (let i = 0; i < geo.colors.length; i += 3) {
-      expect(Math.abs(geo.colors[i] - baseColor[0])).toBeLessThanOrEqual(0.25);
-      expect(Math.abs(geo.colors[i + 1] - baseColor[1])).toBeLessThanOrEqual(0.25);
-      expect(Math.abs(geo.colors[i + 2] - baseColor[2])).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(geo.colors[i] - baseColor[0])).toBeLessThanOrEqual(0.35);
+      expect(Math.abs(geo.colors[i + 1] - baseColor[1])).toBeLessThanOrEqual(0.35);
+      expect(Math.abs(geo.colors[i + 2] - baseColor[2])).toBeLessThanOrEqual(0.35);
     }
   });
 });
