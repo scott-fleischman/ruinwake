@@ -333,7 +333,7 @@ function startGame(config, jumpStateId) {
   let isDead = false;
 
   // Apply class passive effect
-  const classPassive = getClassPassiveEffect(config.classId);
+  const classPassive = getClassPassiveEffect(fullClassId);
 
   // Give player a starter map item
   inventory.add('map_fragment', 1);
