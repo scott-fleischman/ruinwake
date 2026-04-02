@@ -38,17 +38,20 @@ describe('handleThrowInput runtime wiring', () => {
 });
 
 describe('mineBlockWithTool runtime wiring', () => {
-  it('mines a block and decrements tool durability', () => {
+  it('mines a block, returns drops, and decrements tool durability', () => {
     const state = makeState();
     const tool = new Tool({ type: 'pickaxe', damage: 5, durability: 10 });
+    const beforeStone = state.inventory.count('stone');
 
-    // Place a mineable block
     state.world.setBlock(5, 30, 5, BlockType.STONE);
-    const result = mineBlockWithTool(state.world, state.inventory, 5, 30, 5, tool);
+    const result = mineBlockWithTool(state.world, 5, 30, 5, tool);
 
     expect(result.mined).toBe(true);
+    expect(result.drops).toEqual([{ type: 'stone', count: 1 }]);
     expect(tool.durability).toBe(9);
     expect(state.world.getBlock(5, 30, 5)).toBe(BlockType.AIR);
+    // inventory is NOT modified — caller decides what to do with drops
+    expect(state.inventory.count('stone')).toBe(beforeStone);
   });
 
   it('reports broken when tool durability reaches zero', () => {
@@ -56,11 +59,20 @@ describe('mineBlockWithTool runtime wiring', () => {
     const tool = new Tool({ type: 'pickaxe', damage: 5, durability: 1 });
 
     state.world.setBlock(5, 30, 5, BlockType.STONE);
-    const result = mineBlockWithTool(state.world, state.inventory, 5, 30, 5, tool);
+    const result = mineBlockWithTool(state.world, 5, 30, 5, tool);
 
     expect(result.mined).toBe(true);
     expect(result.broken).toBe(true);
+    expect(result.drops.length).toBeGreaterThan(0);
     expect(tool.isBroken()).toBe(true);
+  });
+
+  it('returns empty drops for non-mineable blocks', () => {
+    const state = makeState();
+    const result = mineBlockWithTool(state.world, 0, 200, 0, null);
+
+    expect(result.mined).toBe(false);
+    expect(result.drops).toEqual([]);
   });
 });
 
