@@ -10,6 +10,7 @@
 - Do not skip the refactor step just because the test is green.
 - Keep red, green, and refactor updates as separate commits.
 - Prefer many tiny TDD-step commits over large speculative rewrites.
+- Non-code changes (documentation, configuration, build files) must also be committed immediately — do not batch them.
 
 ## Toolchain rule
 - Use Node through `nvm` for all work in this repository.
@@ -78,6 +79,27 @@ For any non-trivial feature, refactor, or subsystem change:
 - create or update the relevant plan section before implementation
 - break the work into small red-green-refactor slices
 
+## Documentation rule
+Every commit that changes gameplay, controls, architecture, or test infrastructure must also update the relevant docs. The live documentation files are:
+
+| File | What to update |
+|------|---------------|
+| **README.md** | Feature list, control table, architecture summary, dev commands |
+| **CHEAT_SHEET.md** | Controls, walkthrough coordinates, NPC/enemy/crafting/discoverable tables |
+| **PLANS.md** | Roadmap status, completed features, current vertical slice items |
+| **TESTING.md** | Only when adding new test layers or changing test conventions |
+
+Specifically, update docs when a commit adds or changes:
+- Key bindings or controls
+- Block types, enemies, items, or recipes
+- NPCs, quests, or landmarks
+- Crafting stations or skill trees
+- New test layers
+- Architecture changes
+- New gameplay systems
+
+Do not update docs for pure refactors or internal test changes with no user-visible effect.
+
 ## Completion checklist
 Before stopping work, verify:
 - new or updated tests exist
@@ -86,6 +108,7 @@ Before stopping work, verify:
 - no accidental console logging or debug prints remain
 - randomness and time are injectable
 - architectural docs/plans are updated if the design changed
+- README.md, CHEAT_SHEET.md, and PLANS.md reflect any gameplay or control changes
 
 ## Decision rule
 When several designs are possible, choose the one that improves:

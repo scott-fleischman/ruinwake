@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source ~/.nvm/nvm.sh && nvm use *)",
+      "Bash(npx vitest *)",
+      "Bash(npx vite *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git branch*)",
+      "Bash(git stash*)",
+      "Bash(git rm *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(cat *)"
+    ]
+  }
+}

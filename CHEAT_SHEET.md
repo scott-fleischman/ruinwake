@@ -12,7 +12,7 @@ Your HUD shows coordinates as **Pos: X, Z** in the bottom info bar. Use these to
 | Shift | Sprint (or fly down in Creative) |
 | C | Crouch (reduces enemy detection) |
 | LClick | Mine block / Attack enemy |
-| RClick | Place selected block |
+| RClick | Use / interact (toggle doors, place block) |
 | F | Eat best food |
 | R | Restore nearby site |
 | T | Talk to NPC / Accept quest |
@@ -24,6 +24,8 @@ Your HUD shows coordinates as **Pos: X, Z** in the bottom info bar. Use these to
 | Q | Quest log |
 | Tab | Skill trees |
 | M | World map |
+| Z | Toggle map zoom (overview / detail) |
+| Esc | Close any open menu |
 | P | Settings (sensitivity, FOV) |
 | V | Toggle 1st/3rd person camera |
 | 1-8 / Scroll | Select hotbar slot |

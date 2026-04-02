@@ -6,20 +6,22 @@ You choose a race (Man, Elf, Dwarf, Hobbit) and class (3 per race), then journey
 
 ## What's in the game
 
-- **4 races, 12 classes** with distinct stats, starter gear, and passives
-- **8-chapter main quest** following The Hobbit's travel corridor
-- **27 side quests** across 6 factions with reputation tracking
-- **600x270 block world** with 5 biomes, 41 block types, rivers, and water
-- **15 enemy types** from wolves to wraiths with block collision and terrain following
-- **84 items**, 30+ recipes, 7 crafting stations (hand, workbench, forge, campfire, kitchen, loom, rune table)
-- **6 skill trees** (54 nodes) with race/class starting unlocks
-- **5 restorable ruins** with visible structures and material requirements
-- **7 NPCs** with unique lore-rich dialogue and quest acceptance
-- **Magic system** with 7 relic abilities (Ward Light, Heal Wound, Calm Fear...)
+- **Multiple races and classes** with distinct stats, starter gear, and passives
+- **Multi-chapter main quest** following The Hobbit's travel corridor
+- **Side quests** across multiple factions with reputation tracking
+- **Large voxel world** with multiple biomes, block types, rivers, and water
+- **Many enemy types** from wolves to wraiths with block collision and terrain following
+- **Crafting system** with recipes across multiple stations (hand, workbench, forge, campfire, kitchen, loom, rune table)
+- **Skill trees** with race/class starting unlocks
+- **Restorable ruins** with visible structures and material requirements
+- **NPCs** with unique lore-rich dialogue and quest acceptance
+- **Magic system** with relic abilities (Ward Light, Heal Wound, Calm Fear...)
 - **Survival**: hunger, stamina, temperature, corruption, fear, shelter quality, food freshness, injuries
 - **Day/night cycle** with weather, night danger escalation, and corruption zones
+- **2D map system** with overview and detail zoom, exploration markers, fog of war
+- **Terrain difficulty** with slope-based movement penalties and impassable cliffs
 - **Death and respawn**, creative mode (F4), save/load (F5/F9)
-- **100% completion tracker** with 13 categories and a jump-to-state debug menu
+- **100% completion tracker** with jump-to-state debug menu
 
 ## How to play
 
@@ -34,13 +36,14 @@ See **[CHEAT_SHEET.md](CHEAT_SHEET.md)** for a full walkthrough with coordinates
 | **Space** | Jump |
 | **Shift** | Sprint |
 | **LClick** (hold) | Mine block / Attack |
-| **RClick** | Place selected block |
+| **RClick** | Use / interact (toggle doors, place block) |
 | **Scroll / 1-8** | Select hotbar slot |
 | **E** | Crafting |
 | **I** | Inventory (click slots to move items) |
 | **Q** | Quest log |
 | **Tab** | Skill trees |
 | **M** | World map |
+| **Z** | Toggle map zoom (overview / detail) |
 | **T** | Talk to NPC |
 | **F** | Eat food |
 | **R** | Restore nearby ruin |
@@ -51,6 +54,7 @@ See **[CHEAT_SHEET.md](CHEAT_SHEET.md)** for a full walkthrough with coordinates
 | **P** | Settings |
 | **F4** | Creative mode |
 | **F5 / F9** | Save / Load |
+| **Esc** | Close any open menu |
 | **`** | Completion tracker |
 
 ### Getting started
@@ -70,7 +74,7 @@ See **[CHEAT_SHEET.md](CHEAT_SHEET.md)** for a full walkthrough with coordinates
 nvm use 22.18.0
 npm install
 npm run dev          # start dev server at localhost:5173
-npm test             # run all 1168+ tests
+npm test             # run all tests
 ```
 
 ### Key commands
@@ -96,9 +100,9 @@ View with: ImageMagick (`display`), macOS Preview, GIMP, or `convert file.ppm fi
 
 ### Architecture
 
-- **`src/core/`** — 96 headless gameplay modules (no rendering deps)
+- **`src/core/`** — Headless gameplay modules (no rendering deps)
 - **`src/render/`** — Three.js adapters
 - **`src/worker/`** — Web Worker for background terrain generation
-- **`test/`** — 7 test layers across 131 files
+- **`test/`** — 9 test layers (unit, contract, integration, property, solvability, spatial, human-capacity, rendering, performance)
 
 See also: [AGENTS.md](AGENTS.md) (dev rules), [TESTING.md](TESTING.md) (test conventions), [PLANS.md](PLANS.md) (roadmap), [CHEAT_SHEET.md](CHEAT_SHEET.md) (walkthrough), [spec.md](spec.md) (full spec)
