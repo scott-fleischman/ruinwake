@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruinwake</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #0a0a0a; color: #ddd; font-family: monospace; }
+    canvas { display: block; }
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #ddd;
+      font-size: 14px;
+      pointer-events: none;
+      text-shadow: 1px 1px 2px #000;
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 24px;
+      pointer-events: none;
+      text-shadow: 1px 1px 2px #000;
+      display: none;
+    }
+    #instructions {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ccc;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(0,0,0,0.85);
+      padding: 20px 24px;
+      border-radius: 8px;
+      display: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 380px;
+    }
+    #new-game {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,20,0.92);
+      padding: 30px 40px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      width: 460px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    #new-game h1 { text-align: center; color: #c9a84c; margin-bottom: 20px; font-size: 22px; }
+    #new-game label { display: block; margin: 12px 0 4px; color: #aaa; font-size: 13px; }
+    #new-game select, #new-game input {
+      width: 100%; padding: 8px; background: #1a1a2a; color: #ddd;
+      border: 1px solid #555; border-radius: 4px; font-family: monospace; font-size: 14px;
+    }
+    #new-game .info { color: #888; font-size: 12px; margin-top: 4px; min-height: 32px; }
+    #start-btn {
+      display: block; width: 100%; margin-top: 20px; padding: 12px;
+      background: #4a6e2f; color: #fff; border: none; border-radius: 6px;
+      font-family: monospace; font-size: 16px; cursor: pointer;
+    }
+    #start-btn:hover { background: #5a8a3a; }
+    #crafting-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,20,0.92);
+      padding: 20px 30px;
+      border-radius: 10px;
+      border: 1px solid #555;
+      width: 400px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+    }
+    #crafting-panel h2 { color: #c9a84c; margin-bottom: 12px; font-size: 18px; }
+    #crafting-panel .recipe {
+      padding: 6px 8px;
+      margin: 2px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    #crafting-panel .recipe.selected { background: #3a5a2f; color: #fff; }
+    #crafting-panel .recipe.unavailable { color: #666; }
+    #crafting-panel .recipe.available { color: #aed581; }
+    #crafting-panel .hint { color: #888; font-size: 11px; margin-top: 10px; }
+    #quest-log {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background: rgba(10,10,20,0.88);
+      padding: 16px 20px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      width: 280px;
+      max-height: 50vh;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+    }
+    #quest-log h2 { color: #c9a84c; margin-bottom: 10px; font-size: 16px; }
+    #quest-log .quest { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+    #quest-log .quest-name { color: #aed581; font-weight: bold; }
+    #quest-log .objective { color: #999; margin-left: 8px; }
+    #quest-log .objective.complete { color: #6a6; text-decoration: line-through; }
+    #quest-log .hint { color: #888; font-size: 11px; margin-top: 8px; }
+    #skill-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,20,0.92);
+      padding: 20px 30px;
+      border-radius: 10px;
+      border: 1px solid #555;
+      width: 440px;
+      max-height: 75vh;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+    }
+    #skill-panel h2 { color: #c9a84c; margin-bottom: 8px; font-size: 18px; }
+    #skill-panel .tree-nav { color: #888; font-size: 12px; margin-bottom: 10px; }
+    #skill-panel .node { padding: 5px 8px; margin: 2px 0; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    #skill-panel .node.unlocked { color: #aed581; }
+    #skill-panel .node.available { color: #c9a84c; }
+    #skill-panel .node.locked { color: #555; }
+    #skill-panel .node.selected { background: #3a5a2f; }
+    #skill-panel .hint { color: #888; font-size: 11px; margin-top: 10px; }
+    #hotbar-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 50;
+    }
+    #hotbar-bar .slot {
+      width: 50px;
+      height: 50px;
+      background: rgba(10,10,20,0.7);
+      border: 2px solid #555;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #aaa;
+      position: relative;
+    }
+    #hotbar-bar .slot.selected {
+      border-color: #c9a84c;
+      background: rgba(40,40,20,0.8);
+    }
+    #hotbar-bar .slot .num {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 9px;
+      color: #666;
+    }
+    #hotbar-bar .slot .item-name {
+      font-size: 9px;
+      color: #ddd;
+      text-align: center;
+      overflow: hidden;
+      max-width: 46px;
+    }
+    #hotbar-bar .slot .item-count {
+      font-size: 8px;
+      color: #888;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-Cr0lbHFI.js"></script>
+</head>
+<body>
+  <div id="new-game">
+    <h1>Ruinwake</h1>
+    <label for="world-name">World Name</label>
+    <input id="world-name" type="text" placeholder="Middle-earth" maxlength="30">
+    <label for="character-name">Character Name</label>
+    <input id="character-name" type="text" placeholder="Adventurer" maxlength="30">
+    <label for="race-select">Race</label>
+    <select id="race-select">
+      <option value="man">Man</option>
+      <option value="elf">Elf</option>
+      <option value="dwarf">Dwarf</option>
+      <option value="hobbit">Hobbit</option>
+    </select>
+    <div id="race-info" class="info"></div>
+    <label for="class-select">Class</label>
+    <select id="class-select"></select>
+    <div id="class-info" class="info"></div>
+    <label for="difficulty-select">Difficulty</label>
+    <select id="difficulty-select">
+      <option value="story">Story</option>
+      <option value="standard" selected>Standard</option>
+      <option value="harsh">Harsh</option>
+    </select>
+    <button id="start-btn">Begin Journey</button>
+    <div style="margin-top:12px;border-top:1px solid #333;padding-top:12px">
+      <button id="jump-btn" style="display:block;width:100%;padding:8px;background:#2a3a4a;color:#89a;border:1px solid #456;border-radius:4px;font-family:monospace;font-size:13px;cursor:pointer">Jump to Game State (Debug)</button>
+      <div id="jump-menu" style="display:none;margin-top:8px">
+        <div style="color:#888;font-size:11px;margin-bottom:6px">Warp to a game state with progress simulated:</div>
+        <div id="jump-list"></div>
+      </div>
+    </div>
+  </div>
+  <div id="loading-screen" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#0a0a1a;display:none;z-index:300;flex-direction:column;justify-content:center;align-items:center">
+    <div style="color:#c9a84c;font-size:28px;font-weight:bold;margin-bottom:20px">Building Ruinwake...</div>
+    <div id="loading-flavor" style="color:#888;font-size:14px;margin-bottom:24px;font-style:italic;text-align:center;max-width:400px"></div>
+    <div style="width:300px;height:16px;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden">
+      <div id="loading-fill" style="height:100%;background:linear-gradient(90deg,#2a5a1a,#4a8a2f);border-radius:8px;width:0%;transition:width 0.15s"></div>
+    </div>
+    <div id="loading-pct" style="color:#aaa;font-size:13px;margin-top:10px">0%</div>
+  </div>
+  <div id="hud"></div>
+  <div id="progress-panel" style="position:absolute;top:50%;right:20px;transform:translateY(-50%);background:rgba(10,10,20,0.92);padding:16px 20px;border-radius:8px;border:1px solid #444;width:280px;max-height:70vh;overflow-y:auto;display:none;z-index:100">
+    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:16px">Completion [` key]</h2>
+    <div id="progress-bar" style="background:#222;border-radius:4px;height:20px;margin-bottom:10px;overflow:hidden"><div id="progress-fill" style="background:#4a6e2f;height:100%;transition:width 0.3s"></div></div>
+    <div id="progress-pct" style="text-align:center;color:#c9a84c;font-size:18px;margin-bottom:10px"></div>
+    <div id="progress-list" style="font-size:12px;line-height:1.8"></div>
+  </div>
+  <div id="crosshair">+</div>
+  <div id="break-bar" style="position:absolute;top:calc(50% + 20px);left:50%;transform:translateX(-50%);width:60px;height:6px;background:rgba(0,0,0,0.5);border-radius:3px;display:none;pointer-events:none;z-index:10"><div id="break-fill" style="height:100%;background:#c9a84c;border-radius:3px;width:0%;transition:width 0.05s"></div></div>
+  <div id="health-bar-wrap" style="position:absolute;bottom:70px;left:10px;width:160px;pointer-events:none;display:none">
+    <div style="font-size:10px;color:#888;margin-bottom:2px">HP</div>
+    <div style="background:rgba(0,0,0,0.5);border-radius:4px;height:12px;overflow:hidden"><div id="health-bar-fill" style="height:100%;background:#c44;border-radius:4px;transition:width 0.2s"></div></div>
+    <div style="font-size:10px;color:#888;margin-top:4px">STA</div>
+    <div style="background:rgba(0,0,0,0.5);border-radius:4px;height:8px;overflow:hidden"><div id="stamina-bar-fill" style="height:100%;background:#4a8;border-radius:4px;transition:width 0.2s"></div></div>
+    <div style="font-size:10px;color:#888;margin-top:4px">HUN</div>
+    <div style="background:rgba(0,0,0,0.5);border-radius:4px;height:8px;overflow:hidden"><div id="hunger-bar-fill" style="height:100%;background:#a84;border-radius:4px;transition:width 0.2s"></div></div>
+  </div>
+  <div id="death-screen" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(80,0,0,0.7);display:none;z-index:200;justify-content:center;align-items:center;flex-direction:column">
+    <div style="color:#ff4444;font-size:36px;font-weight:bold;text-shadow:2px 2px 4px #000">You Have Fallen</div>
+    <div style="color:#ddd;font-size:16px;margin-top:16px">Press Enter to respawn at the watch-post</div>
+  </div>
+  <div id="dialogue-panel" style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,10,20,0.92);padding:16px 24px;border-radius:10px;border:1px solid #555;width:450px;display:none;z-index:100">
+    <div id="dialogue-message" style="color:#eee;font-size:14px;margin-bottom:10px"></div>
+    <div id="dialogue-choices" style="font-size:13px"></div>
+  </div>
+  <div id="map-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(5,15,5,0.92);padding:20px;border-radius:10px;border:1px solid #444;width:500px;height:420px;display:none;z-index:100"><h2 id="map-title" style="color:#c9a84c;margin-bottom:10px;font-size:18px">World Map [M]</h2><canvas id="map-canvas-2d" width="460" height="320" style="width:460px;height:320px;background:#1a2a1a;border-radius:4px;image-rendering:pixelated"></canvas><div style="color:#888;font-size:11px;margin-top:8px">M Close | Z Zoom | Explored: <span id="map-explored">0</span>%</div></div>
+  <div id="skill-panel"><h2>Skills [Tab]</h2><div id="skill-tree-nav" class="tree-nav"></div><div id="skill-tree-nodes"></div><div class="hint">←→ Switch tree | ↑↓ Navigate | Enter Unlock | Tab Close</div></div>
+  <div id="inventory-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px;border-radius:10px;border:1px solid #555;width:440px;max-height:80vh;overflow-y:auto;display:none;z-index:100">
+    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">Inventory [I]</h2>
+    <div id="inventory-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:12px"></div>
+    <div id="inventory-extra" style="font-size:12px;line-height:1.6"></div>
+    <div style="color:#666;font-size:10px;margin-top:8px">Click slot then click another to swap | I Close</div>
+  </div>
+  <div id="chest-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px;border-radius:10px;border:1px solid #555;width:360px;max-height:60vh;overflow-y:auto;display:none;z-index:110">
+    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">Chest</h2>
+    <div id="chest-items" style="font-size:13px;line-height:2"></div>
+    <div style="color:#666;font-size:10px;margin-top:8px">Click item to take | Escape to close</div>
+  </div>
+  <div id="hotbar-bar" style="display:none"></div>
+  <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
+  <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>
+  <div id="instructions">
+    <div style="font-size:20px;color:#c9a84c;margin-bottom:12px">Click to Play</div>
+    <table style="text-align:left;font-size:13px;line-height:1.6;width:100%;border-collapse:collapse">
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Movement</td></tr>
+      <tr><td style="color:#aed581;width:90px;padding:1px 8px">WASD</td><td>Move</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Mouse</td><td>Look</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Space</td><td>Jump</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Shift</td><td>Sprint</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">C</td><td>Crouch</td></tr>
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Actions</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">LClick</td><td>Mine / Attack</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">RClick</td><td>Place block</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">F</td><td>Eat food</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">R</td><td>Restore site</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">T</td><td>Talk to NPC</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">G</td><td>Guard (hold)</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">X</td><td>Use relic ability</td></tr>
+      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Menus</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">E</td><td>Crafting</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">I</td><td>Inventory</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Q</td><td>Quests</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Tab</td><td>Skills</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">M</td><td>Map</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">V</td><td>Camera toggle</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">1-8 / Scroll</td><td>Hotbar slot</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">F5 / F9</td><td>Save / Load</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">F4</td><td>Creative mode</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">P</td><td>Settings</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">`</td><td>Completion tracker</td></tr>
+    </table>
+  </div>
+</body>
+</html>
