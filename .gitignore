@@ -15,6 +15,9 @@ pnpm-debug.log*
 dist/
 build/
 
+# vite cache
+.vite/
+
 # test coverage
 coverage/
 
