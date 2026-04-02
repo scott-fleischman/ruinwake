@@ -58,6 +58,22 @@ export function serializeGameState(world, player, inventory, extra = {}) {
     state.factions = extra.factions.serialize();
   }
 
+  if (extra.fastTravel) {
+    state.fastTravel = extra.fastTravel.serialize();
+  }
+
+  if (extra.fogOfWar) {
+    state.fogOfWar = extra.fogOfWar.serialize();
+  }
+
+  if (extra.loreJournal) {
+    state.loreJournal = extra.loreJournal.serialize();
+  }
+
+  if (extra.skillTree) {
+    state.skillTree = extra.skillTree.serialize();
+  }
+
   return JSON.stringify(state);
 }
 
@@ -102,6 +118,22 @@ export function deserializeGameState(json) {
 
   if (data.factions) {
     result.factionData = data.factions;
+  }
+
+  if (data.fastTravel) {
+    result.fastTravelData = data.fastTravel;
+  }
+
+  if (data.fogOfWar) {
+    result.fogOfWarData = data.fogOfWar;
+  }
+
+  if (data.loreJournal) {
+    result.loreJournalData = data.loreJournal;
+  }
+
+  if (data.skillTree) {
+    result.skillTreeData = data.skillTree;
   }
 
   return result;
