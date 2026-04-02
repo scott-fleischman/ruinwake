@@ -458,7 +458,7 @@ function startGame(config, jumpStateId) {
   let invSelectedSlot = -1;
 
   // Apply starter kit
-  const starterKit = getStarterKit(config.classId);
+  const starterKit = getStarterKit(fullClassId);
   for (const item of starterKit) inventory.add(item.type, item.count);
 
   const enemies = [];

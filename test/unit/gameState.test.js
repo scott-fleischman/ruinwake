@@ -38,9 +38,10 @@ describe('GameState initialization', () => {
 
   it('starter kit items are in inventory', () => {
     const state = createGameState(makeConfig());
-    // Ranger class starts with short_bow + knife (from playerClass starterItems)
-    expect(state.inventory.count('short_bow')).toBe(1);
+    // man_ranger gets short_bow from both playerClass (1) and starterKit (1)
+    expect(state.inventory.count('short_bow')).toBe(2);
     expect(state.inventory.count('knife')).toBe(1);
+    expect(state.inventory.count('bedroll')).toBe(1);
     expect(state.inventory.count('map_fragment')).toBe(1);
   });
 

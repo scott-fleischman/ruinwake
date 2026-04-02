@@ -168,7 +168,9 @@ export function createGameState(config) {
   }
 
   // Starter kit + map
-  // applyConfig already adds class starter items; just add the map
+  // applyConfig adds base class items; starter kit adds race-specific items
+  const starterKit = getStarterKit(fullClassId);
+  for (const item of starterKit) inventory.add(item.type, item.count);
   inventory.add('map_fragment', 1);
 
   // Enemy spawning
