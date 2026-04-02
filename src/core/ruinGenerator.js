@@ -83,8 +83,14 @@ export function placeBuilding(world, position, opts = {}) {
   }
 
   // Foundation (cobblestone, extends 1 block past walls)
+  // Fill downward to cover sloped terrain — no gaps below the floor
   for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
     for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+      for (let y = by - 1; y >= by - 8; y--) {
+        const existing = world.getBlock(bx + dx, y, bz + dz);
+        if (existing !== BlockType.AIR) break;
+        world.setBlock(bx + dx, y, bz + dz, BlockType.COBBLESTONE);
+      }
       world.setBlock(bx + dx, by - 1, bz + dz, BlockType.COBBLESTONE);
     }
   }
@@ -109,17 +115,17 @@ export function placeBuilding(world, position, opts = {}) {
           continue;
         }
 
-        // Windows at height 2 on side walls (every 3 blocks, skip corners)
-        if (dy === 2 && BlockType.GLASS) {
+        // Windows at height 2 on side walls (every 2 blocks, skip corners and door side)
+        if (dy === 2) {
           const isCorner = Math.abs(dx) === radius && Math.abs(dz) === radius;
           if (!isCorner) {
-            // Windows on X walls
-            if (Math.abs(dx) === radius && dz !== 0 && Math.abs(dz) < radius && dz % 3 === 0) {
+            // Windows on X walls (skip door side center)
+            if (Math.abs(dx) === radius && dz !== 0 && Math.abs(dz) < radius && dz % 2 === 0) {
               world.setBlock(bx + dx, by + dy, bz + dz, BlockType.GLASS);
               continue;
             }
             // Windows on Z walls
-            if (Math.abs(dz) === radius && dx !== 0 && Math.abs(dx) < radius && dx % 3 === 0) {
+            if (Math.abs(dz) === radius && dx !== 0 && Math.abs(dx) < radius && dx % 2 === 0) {
               world.setBlock(bx + dx, by + dy, bz + dz, BlockType.GLASS);
               continue;
             }
