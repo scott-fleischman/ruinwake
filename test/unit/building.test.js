@@ -54,16 +54,27 @@ describe('placeBuilding', () => {
     expect(wallBlocks).toBeGreaterThan(0);
   });
 
-  it('has a complete roof with no holes', () => {
+  it('has a complete peaked roof covering the building', () => {
     const world = makeWorld();
     placeBuilding(world, { x: 10, y: 10, z: 10 }, { radius: 4, height: 4 });
 
+    // Peaked roof: for each x column, trace upward from wall height to find
+    // a roof block. Every interior x,z position should have a roof block above it.
     for (let dx = -4; dx <= 4; dx++) {
       for (let dz = -4; dz <= 4; dz++) {
-        const block = world.getBlock(10 + dx, 14, 10 + dz);
-        expect(block, `roof at ${dx},${dz}`).not.toBe(BlockType.AIR);
+        let hasRoof = false;
+        for (let dy = 4; dy <= 12; dy++) {
+          const block = world.getBlock(10 + dx, 10 + dy, 10 + dz);
+          if (block !== BlockType.AIR) { hasRoof = true; break; }
+        }
+        expect(hasRoof, `roof coverage at ${dx},${dz}`).toBe(true);
       }
     }
+
+    // Ridge block at peak should exist (x=0 at top of roof)
+    const peakY = 10 + 4 + 4 + 1; // by + height + radius + 1
+    const ridgeBlock = world.getBlock(10, peakY, 10);
+    expect(ridgeBlock, 'ridge at peak').not.toBe(BlockType.AIR);
   });
 
   it('has a door block in the doorway', () => {
