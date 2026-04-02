@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 import { Chunk } from '../../src/core/chunk.js';
@@ -8,11 +6,8 @@ import { buildChunkGeometry, BLOCK_COLORS } from '../../src/core/geometry.js';
 import { generateColumnData } from '../../src/core/chunkWorkerLogic.js';
 import {
   Framebuffer, mat4Perspective, mat4LookAt, mat4Multiply,
-  renderGeometry, writePPM,
+  renderGeometry,
 } from './softRasterizer.js';
-
-const OUT = join(import.meta.dirname, 'screenshots');
-mkdirSync(OUT, { recursive: true });
 
 // Sky color from GAME_CONSTANTS — if sky color changes, tests adapt
 import { GAME_CONSTANTS } from '../../src/core/gameConstants.js';
@@ -76,7 +71,6 @@ describe('No magenta fallback-color pixels', () => {
       }
     }
     const fb = renderScene(world, [8, 50, -5], [8, 30, 8], 128, 128);
-    writePPM(fb, join(OUT, 'bug_no_magenta.ppm'));
 
     let magenta = 0;
     for (let y = 0; y < 128; y++) {
@@ -102,7 +96,6 @@ describe('No chunk boundary seams', () => {
 
     // Camera looking straight at the chunk boundary from the side
     const fb = renderScene(world, [16, 38, -8], [16, 30, 8], 128, 128);
-    writePPM(fb, join(OUT, 'bug_chunk_boundary.ppm'));
 
     // Vertical center column should not be all sky (seam would show as sky stripe)
     let skyInCenter = 0;
@@ -129,7 +122,6 @@ describe('Water surface renders as non-sky', () => {
     }
 
     const fb = renderScene(world, [5, 12, -2], [5, 6, 5], 128, 128);
-    writePPM(fb, join(OUT, 'bug_water_visible.ppm'));
 
     // Should see some non-sky pixels where water is (water renders as blue)
     let nonSky = 0;
@@ -204,7 +196,6 @@ describe('Vegetation is visible', () => {
     world.setBlock(5, 6, 5, BlockType.TALL_GRASS); // grass on top
 
     const fb = renderScene(world, [8, 8, 8], [5.5, 6, 5.5], 64, 64);
-    writePPM(fb, join(OUT, 'bug_tallgrass_visible.ppm'));
 
     // Center area should have some non-sky pixels (grass + ground visible)
     let nonSky = 0;
@@ -222,7 +213,6 @@ describe('Vegetation is visible', () => {
     world.setBlock(5, 6, 5, BlockType.LEAVES); // canopy
 
     const fb = renderScene(world, [8, 8, 8], [5.5, 5.5, 5.5], 64, 64);
-    writePPM(fb, join(OUT, 'bug_leaves_visible.ppm'));
 
     let nonSky = 0;
     for (let y = 16; y < 48; y++) {

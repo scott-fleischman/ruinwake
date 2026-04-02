@@ -68,8 +68,53 @@ function vertexNoise(wx, wy, wz, channel) {
   h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
   h = ((h >> 16) ^ h) * 0x45d9f3b | 0;
   h = (h >> 16) ^ h;
-  // Map to range [-0.08, +0.08] for richer texture variation
-  return ((h & 0xffff) / 0xffff - 0.5) * 0.16;
+  // Map to range [-0.12, +0.12] for visible texture variation
+  return ((h & 0xffff) / 0xffff - 0.5) * 0.24;
+}
+
+// Ambient occlusion for a single vertex on a face.
+// For each vertex, check the 3 neighboring blocks that could cast shadow:
+//   side1, side2, and the corner between them (all in the plane perpendicular to face normal).
+// Returns a brightness multiplier in [0.55, 1.0] — 4 levels of occlusion.
+function vertexAO(world, wx, wy, wz, face, vertIdx) {
+  const [dx, dy, dz] = face.dir;
+
+  // Build two tangent directions from the face normal
+  let t1, t2;
+  if (dy !== 0) {
+    // Horizontal face (top/bottom): tangents are X and Z
+    t1 = [1, 0, 0]; t2 = [0, 0, 1];
+  } else if (dx !== 0) {
+    // X face: tangents are Y and Z
+    t1 = [0, 1, 0]; t2 = [0, 0, 1];
+  } else {
+    // Z face: tangents are X and Y
+    t1 = [1, 0, 0]; t2 = [0, 1, 0];
+  }
+
+  // Each vertex of the quad is at a different corner.
+  // Determine which corner this vertex occupies using vertex position relative to block center.
+  const v = face.verts[vertIdx];
+  const s1 = (v[0] * t1[0] + v[1] * t1[1] + v[2] * t1[2]) > 0.5 ? 1 : -1;
+  const s2 = (v[0] * t2[0] + v[1] * t2[1] + v[2] * t2[2]) > 0.5 ? 1 : -1;
+
+  // Sample the 3 neighbors that affect this vertex corner
+  const side1 = isBlockSolid(world.getBlock(
+    wx + dx + t1[0] * s1, wy + dy + t1[1] * s1, wz + dz + t1[2] * s1
+  )) ? 1 : 0;
+  const side2 = isBlockSolid(world.getBlock(
+    wx + dx + t2[0] * s2, wy + dy + t2[1] * s2, wz + dz + t2[2] * s2
+  )) ? 1 : 0;
+  const corner = isBlockSolid(world.getBlock(
+    wx + dx + t1[0] * s1 + t2[0] * s2,
+    wy + dy + t1[1] * s1 + t2[1] * s2,
+    wz + dz + t1[2] * s1 + t2[2] * s2
+  )) ? 1 : 0;
+
+  // AO value: 0 (fully lit) to 3 (fully occluded)
+  const ao = (side1 && side2) ? 3 : (side1 + side2 + corner);
+  // Map to brightness: 0→1.0, 1→0.85, 2→0.70, 3→0.55
+  return 1.0 - ao * 0.15;
 }
 
 // 6 fan blades radiating outward from block center, like a real grass clump.
@@ -215,7 +260,8 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           continue;
         }
 
-        for (const face of FACES) {
+        for (let fi = 0; fi < FACES.length; fi++) {
+          const face = FACES[fi];
           const nx = wx + face.dir[0];
           const ny = wy + face.dir[1];
           const nz = wz + face.dir[2];
@@ -226,24 +272,32 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
           const vertStart = positions.length / 3;
           const color = getFaceColor(block, face.dir);
 
-          // Simple face-direction lighting (top=bright, sides=medium, bottom=dark)
+          // Face-direction lighting with sun angle bias (sun from south-east)
           const dirLight = face.dir[1] === 1 ? 1.0
-            : face.dir[1] === -1 ? 0.65
-            : (face.dir[0] !== 0 ? 0.8 : 0.75);
+            : face.dir[1] === -1 ? 0.55
+            : face.dir[0] === 1 ? 0.82       // east - lit by sun
+            : face.dir[0] === -1 ? 0.68      // west - shadow side
+            : face.dir[2] === 1 ? 0.78       // south - lit
+            : 0.65;                            // north - darkest side
 
           // Grass tops get extra noise for patchy, natural variation
-          const noiseScale = (block === BlockType.GRASS && face.dir[1] === 1) ? 2.2 : 1.0;
+          const noiseScale = (block === BlockType.GRASS && face.dir[1] === 1) ? 2.5 : 1.0;
 
-          for (const v of face.verts) {
+          for (let vi = 0; vi < face.verts.length; vi++) {
+            const v = face.verts[vi];
             const vx = wx + v[0];
             const vy = wy + v[1];
             const vz = wz + v[2];
             positions.push(vx, vy, vz);
 
+            // Compute ambient occlusion for this vertex
+            const ao = vertexAO(world, wx, wy, wz, face, vi);
+            const light = dirLight * ao;
+
             colors.push(
-              (color[0] + vertexNoise(vx, vy, vz, 0) * noiseScale) * dirLight,
-              (color[1] + vertexNoise(vx, vy, vz, 1) * noiseScale) * dirLight,
-              (color[2] + vertexNoise(vx, vy, vz, 2) * noiseScale) * dirLight
+              (color[0] + vertexNoise(vx, vy, vz, 0) * noiseScale) * light,
+              (color[1] + vertexNoise(vx, vy, vz, 1) * noiseScale) * light,
+              (color[2] + vertexNoise(vx, vy, vz, 2) * noiseScale) * light
             );
           }
 

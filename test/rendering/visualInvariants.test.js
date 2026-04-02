@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 import { Chunk } from '../../src/core/chunk.js';
@@ -8,11 +6,8 @@ import { buildChunkGeometry } from '../../src/core/geometry.js';
 import { generateColumnData } from '../../src/core/chunkWorkerLogic.js';
 import {
   Framebuffer, mat4Perspective, mat4LookAt, mat4Multiply,
-  renderGeometry, writePPM,
+  renderGeometry,
 } from './softRasterizer.js';
-
-const OUT = join(import.meta.dirname, 'screenshots');
-mkdirSync(OUT, { recursive: true });
 
 // Sky color derived from GAME_CONSTANTS — adapts if sky color changes
 import { GAME_CONSTANTS } from '../../src/core/gameConstants.js';
@@ -67,7 +62,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
 
     // Camera looking down at steep angle (not pure top-down due to rasterizer limits)
     const fb = renderScene(world, [8, 55, -10], [8, 28, 8], 128, 128);
-    writePPM(fb, join(OUT, 'invariant_topdown.ppm'));
+
 
     // Lower half of image should be mostly terrain, not sky
     let skyInLower = 0;
@@ -92,7 +87,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
 
     // Camera at ground level looking forward
     const fb = renderScene(world, [8, 35, 8], [8, 33, -10], 128, 128);
-    writePPM(fb, join(OUT, 'invariant_groundlevel.ppm'));
+
 
     // Bottom half of image (below horizon) should be mostly terrain, not sky
     let skyInBottom = 0;
@@ -117,7 +112,7 @@ describe('Visual invariant: no sky visible through solid terrain', () => {
 
     // Camera looking at terrain from low angle (where bedrock bug was visible)
     const fb = renderScene(world, [0, 30, 0], [16, 28, 16], 128, 128);
-    writePPM(fb, join(OUT, 'invariant_sideview.ppm'));
+
 
     // Bottom third should have very little sky
     let skyInBottom = 0;

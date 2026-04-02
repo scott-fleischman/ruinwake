@@ -1,7 +1,8 @@
 // Pure-JS software rasterizer for headless screenshot generation.
-// No external dependencies. Renders geometry arrays to PPM image files.
+// No external dependencies. Renders geometry arrays to PNG and PPM image files.
 
 import { writeFileSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 
 export class Framebuffer {
   constructor(width, height) {
@@ -9,6 +10,7 @@ export class Framebuffer {
     this.height = height;
     this.color = new Uint8Array(width * height * 3);
     this.depth = new Float32Array(width * height).fill(Infinity);
+    this.fogEnabled = false; // opt-in for world screenshots
   }
 
   clear(r = 135, g = 206, b = 235) {
@@ -90,6 +92,14 @@ function edgeFn(ax, ay, bx, by, cx, cy) {
   return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
 }
 
+// Fog color (sky blue) + linear depth fog parameters
+const FOG_R = 135, FOG_G = 206, FOG_B = 235;
+const FOG_NEAR_DIST = 50;  // start fog at 50 world units
+const FOG_FAR_DIST = 140;  // fully fogged at 140 world units
+// Projection params used to linearize depth (must match captureWorldScreenshot)
+const PROJ_NEAR = 0.1;
+const PROJ_FAR = 300;
+
 export function rasterizeTriangle(fb, v0, v1, v2, c0, c1, c2) {
   // Convert NDC to screen coords
   const sx0 = (v0[0] * 0.5 + 0.5) * fb.width;
@@ -119,9 +129,23 @@ export function rasterizeTriangle(fb, v0, v1, v2, c0, c1, c2) {
         const b0 = w0 / area, b1 = w1 / area, b2 = w2 / area;
         const z = b0 * v0[2] + b1 * v1[2] + b2 * v2[2];
         if (z < -1 || z > 1) continue; // clip
-        const r = (b0 * c0[0] + b1 * c1[0] + b2 * c2[0]) * 255;
-        const g = (b0 * c0[1] + b1 * c1[1] + b2 * c2[1]) * 255;
-        const b = (b0 * c0[2] + b1 * c1[2] + b2 * c2[2]) * 255;
+        let r = (b0 * c0[0] + b1 * c1[0] + b2 * c2[0]) * 255;
+        let g = (b0 * c0[1] + b1 * c1[1] + b2 * c2[1]) * 255;
+        let b = (b0 * c0[2] + b1 * c1[2] + b2 * c2[2]) * 255;
+
+        // Distance fog using linearized depth (opt-in for world views)
+        if (fb.fogEnabled) {
+          // Convert NDC z to linear world-space distance
+          const linDepth = (2 * PROJ_NEAR * PROJ_FAR) /
+            (PROJ_FAR + PROJ_NEAR - z * (PROJ_FAR - PROJ_NEAR));
+          if (linDepth > FOG_NEAR_DIST) {
+            const fogFactor = Math.min(1, (linDepth - FOG_NEAR_DIST) / (FOG_FAR_DIST - FOG_NEAR_DIST));
+            r = r + (FOG_R - r) * fogFactor;
+            g = g + (FOG_G - g) * fogFactor;
+            b = b + (FOG_B - b) * fogFactor;
+          }
+        }
+
         fb.setPixel(x, y, z, r, g, b);
       }
     }
@@ -146,4 +170,71 @@ export function writePPM(fb, filePath) {
   const headerBuf = Buffer.from(header, 'ascii');
   const buf = Buffer.concat([headerBuf, Buffer.from(fb.color)]);
   writeFileSync(filePath, buf);
+}
+
+// ── Minimal PNG encoder (no external deps) ───────────────────────────
+
+function crc32(data) {
+  let crc = 0xffffffff;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data[i];
+    for (let j = 0; j < 8; j++) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const typeBuf = Buffer.from(type, 'ascii');
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const body = Buffer.concat([typeBuf, data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([len, body, crc]);
+}
+
+export function writePNG(fb, filePath) {
+  const { width, height, color } = fb;
+
+  // PNG signature
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  // IHDR: width, height, bit depth 8, color type 2 (RGB)
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;  // bit depth
+  ihdr[9] = 2;  // color type RGB
+  ihdr[10] = 0; // compression
+  ihdr[11] = 0; // filter
+  ihdr[12] = 0; // interlace
+
+  // IDAT: raw pixel data with filter byte 0 (None) per row
+  const rawSize = height * (1 + width * 3);
+  const raw = Buffer.alloc(rawSize);
+  let offset = 0;
+  for (let y = 0; y < height; y++) {
+    raw[offset++] = 0; // filter byte: None
+    for (let x = 0; x < width; x++) {
+      const srcIdx = (y * width + x) * 3;
+      raw[offset++] = color[srcIdx];
+      raw[offset++] = color[srcIdx + 1];
+      raw[offset++] = color[srcIdx + 2];
+    }
+  }
+  const compressed = deflateSync(raw);
+
+  // IEND
+  const iend = Buffer.alloc(0);
+
+  const png = Buffer.concat([
+    sig,
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', compressed),
+    pngChunk('IEND', iend),
+  ]);
+
+  writeFileSync(filePath, png);
 }
