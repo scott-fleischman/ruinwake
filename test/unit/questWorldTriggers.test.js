@@ -49,10 +49,10 @@ describe('QuestWorldTriggers', () => {
   it('trigger positions are within expanded world bounds', () => {
     const triggers = new QuestWorldTriggers();
     for (const t of triggers.getTriggers()) {
-      expect(t.position.x).toBeGreaterThanOrEqual(-300);
-      expect(t.position.x).toBeLessThanOrEqual(600);
-      expect(t.position.z).toBeGreaterThanOrEqual(-300);
-      expect(t.position.z).toBeLessThanOrEqual(300);
+      expect(t.position.x).toBeGreaterThanOrEqual(-900);
+      expect(t.position.x).toBeLessThanOrEqual(1800);
+      expect(t.position.z).toBeGreaterThanOrEqual(-900);
+      expect(t.position.z).toBeLessThanOrEqual(900);
     }
   });
 });

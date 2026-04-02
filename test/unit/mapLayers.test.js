@@ -6,17 +6,17 @@ import { WORLD_MIN_X, WORLD_MAX_X, WORLD_MIN_Z, WORLD_MAX_Z } from '../../src/co
 
 // Deterministic height stub — returns a height based on position
 function stubHeight(x, z) {
-  // Mountains around x=270, plains elsewhere
-  const distToMtn = Math.sqrt((x - 270) ** 2 + (z - 50) ** 2);
-  if (distToMtn < 40) return 60 + Math.floor((40 - distToMtn) * 0.5);
+  // Mountains around x=810, plains elsewhere
+  const distToMtn = Math.sqrt((x - 810) ** 2 + (z - 150) ** 2);
+  if (distToMtn < 120) return 60 + Math.floor((120 - distToMtn) * 0.5);
   return 32;
 }
 
 function stubBiome(x, z) {
-  if (x < 50) return { type: 'shire', name: 'The Shire' };
-  if (x < 120) return { type: 'plains', name: 'Plains' };
-  if (x > 250 && x < 300) return { type: 'mountain', name: 'Mountains' };
-  if (x > 380) return { type: 'mirkwood', name: 'Mirkwood' };
+  if (x < 150) return { type: 'shire', name: 'The Shire' };
+  if (x < 360) return { type: 'plains', name: 'Plains' };
+  if (x > 750 && x < 900) return { type: 'mountain', name: 'Mountains' };
+  if (x > 1140) return { type: 'mirkwood', name: 'Mirkwood' };
   return { type: 'forest', name: 'Forest' };
 }
 
@@ -72,15 +72,15 @@ describe('MapLayerSystem', () => {
     const grid = layers.getPopulationGrid(worldBuildings, allNPCs, 4);
     // Sample population near Shire (0,0) vs wilderness (150, 100)
     const shireCell = layers.worldToGrid(0, 0, 4);
-    const wildCell = layers.worldToGrid(150, 100, 4);
+    const wildCell = layers.worldToGrid(450, 300, 4);
     const getVal = (col, row) => {
       if (col < 0 || col >= grid.width || row < 0 || row >= grid.height) return 0;
       return grid.data[row * grid.width + col];
     };
-    // Sum 5x5 neighborhood
+    // Sum 13x13 neighborhood (covers 52×52 blocks at resolution 4)
     let shireSum = 0, wildSum = 0;
-    for (let dr = -2; dr <= 2; dr++) {
-      for (let dc = -2; dc <= 2; dc++) {
+    for (let dr = -6; dr <= 6; dr++) {
+      for (let dc = -6; dc <= 6; dc++) {
         shireSum += getVal(shireCell.col + dc, shireCell.row + dr);
         wildSum += getVal(wildCell.col + dc, wildCell.row + dr);
       }
@@ -93,7 +93,7 @@ describe('MapLayerSystem', () => {
     const grid = layers.getSlopeGrid(4);
     expect(grid.width).toBeGreaterThan(0);
     // Mountains should have steep slopes
-    const mtnCell = layers.worldToGrid(260, 50, 4);
+    const mtnCell = layers.worldToGrid(780, 150, 4);
     const shireCell = layers.worldToGrid(0, 0, 4);
     const mtnSlope = grid.data[mtnCell.row * grid.width + mtnCell.col];
     const shireSlope = grid.data[shireCell.row * grid.width + shireCell.col];

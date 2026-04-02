@@ -175,15 +175,15 @@ describe('biome-aware terrain generation', () => {
 
   describe('mirkwood biome has dense canopy', () => {
     it('mirkwood tree density config is higher than forest', () => {
-      const mirkwood = getBiomeAt(400, 40);
-      const forest = getBiomeAt(140, 40);
+      const mirkwood = getBiomeAt(1200, 120);
+      const forest = getBiomeAt(420, 120);
       expect(mirkwood.type).toBe(BiomeType.MIRKWOOD);
       expect(forest.type).toBe(BiomeType.FOREST);
       expect(mirkwood.treeDensity).toBeGreaterThan(forest.treeDensity);
     });
 
     it('mirkwood uses mud surface (distinct from forest grass)', () => {
-      const mirkwood = getBiomeAt(400, 40);
+      const mirkwood = getBiomeAt(1200, 120);
       expect(mirkwood.surfaceBlock).toBe(BlockType.MUD);
     });
   });

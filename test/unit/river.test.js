@@ -17,19 +17,19 @@ describe('River system', () => {
   });
 
   it('getRiverAt returns river data when position is on a river', () => {
-    // The Anduin should be near (340, 60)
-    const river = getRiverAt(345, 60);
+    // The Anduin should be near (1035, 180)
+    const river = getRiverAt(1035, 180);
     expect(river).not.toBeNull();
   });
 
   it('getRiverAt returns null when position is not on a river', () => {
     // Deep in mountains, no river
-    const river = getRiverAt(270, 50);
+    const river = getRiverAt(810, 150);
     expect(river).toBeNull();
   });
 
   it('getRiverCurrent returns a push vector when in river', () => {
-    const current = getRiverCurrent(345, 60);
+    const current = getRiverCurrent(1035, 180);
     expect(current).not.toBeNull();
     // Current should have nonzero magnitude
     expect(Math.abs(current.x) + Math.abs(current.z)).toBeGreaterThan(0);
@@ -43,8 +43,8 @@ describe('River system', () => {
   it('Shire has a stream/brook', () => {
     // Check along a line in the Shire for water
     let found = false;
-    for (let z = -30; z < 30; z++) {
-      if (getRiverAt(20, z)) { found = true; break; }
+    for (let z = -90; z < 90; z++) {
+      if (getRiverAt(60, z)) { found = true; break; }
     }
     expect(found).toBe(true);
   });

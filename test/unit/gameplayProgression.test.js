@@ -39,11 +39,11 @@ describe('Region connectivity', () => {
   });
 
   it('player can walk east from Shire to Bree without cliff barriers', () => {
-    // Walk along z=10 from x=0 to x=80
-    let prevH = getHeightAt(0, 10);
+    // Walk along z=30 from x=0 to x=240
+    let prevH = getHeightAt(0, 30);
     let maxDiff = 0;
-    for (let x = 1; x <= 80; x++) {
-      const h = getHeightAt(x, 10);
+    for (let x = 1; x <= 240; x++) {
+      const h = getHeightAt(x, 30);
       const diff = Math.abs(h - prevH);
       if (diff > maxDiff) maxDiff = diff;
       prevH = h;
@@ -54,8 +54,8 @@ describe('Region connectivity', () => {
   it('Misty Mountains have steep terrain blocking easy traversal', () => {
     // Sample a wide area around the mountain core
     const heights = [];
-    for (let x = 250; x <= 300; x += 2) {
-      for (let z = 30; z <= 70; z += 2) {
+    for (let x = 750; x <= 900; x += 2) {
+      for (let z = 90; z <= 210; z += 2) {
         heights.push(getHeightAt(x, z));
       }
     }
@@ -67,7 +67,7 @@ describe('Region connectivity', () => {
 
   it('mountains have some steep slopes (movement penalty)', () => {
     const slopeGrid = layers.getSlopeGrid(4);
-    const mtnCell = layers.worldToGrid(270, 50, 4);
+    const mtnCell = layers.worldToGrid(810, 150, 4);
     const slopes = [];
     // Sample 5x5 area around mountain center
     for (let dr = -2; dr <= 2; dr++) {
@@ -232,8 +232,8 @@ describe('Population density', () => {
     // Sum population in each region's area
     const regions = {
       shire: { cx: 0, cz: 0, sum: 0 },
-      bree: { cx: 80, cz: 20, sum: 0 },
-      wilderness: { cx: 150, cz: 100, sum: 0 },
+      bree: { cx: 240, cz: 60, sum: 0 },
+      wilderness: { cx: 450, cz: 300, sum: 0 },
     };
     for (const [name, r] of Object.entries(regions)) {
       const { col, row } = layers.worldToGrid(r.cx, r.cz, 8);
@@ -256,16 +256,16 @@ describe('Quest geography', () => {
   it('restorable sites are in appropriate regions', () => {
     // starter_watchpost near Shire
     const watchpost = allRestorableSites.find(s => s.id === 'starter_watchpost');
-    expect(watchpost.position.x).toBeLessThan(60);
+    expect(watchpost.position.x).toBeLessThan(180);
 
     // mountain_workshop in mountains
     const workshop = allRestorableSites.find(s => s.id === 'mountain_workshop');
-    expect(workshop.position.x).toBeGreaterThan(240);
-    expect(workshop.position.x).toBeLessThan(310);
+    expect(workshop.position.x).toBeGreaterThan(720);
+    expect(workshop.position.x).toBeLessThan(930);
 
     // forest_beacon in Mirkwood
     const beacon = allRestorableSites.find(s => s.id === 'forest_beacon');
-    expect(beacon.position.x).toBeGreaterThan(370);
+    expect(beacon.position.x).toBeGreaterThan(1110);
   });
 
   it('quest progression flows west to east', () => {

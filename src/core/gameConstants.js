@@ -34,7 +34,7 @@ export const GAME_CONSTANTS = deepFreeze({
 
   // --- World ---
   WORLD: {
-    BOUNDARY_EXTENT: 560,
+    BOUNDARY_EXTENT: 1680,
     WATER_LEVEL: 26,
     SURFACE_Y: 32,
   },
@@ -70,8 +70,8 @@ export const GAME_CONSTANTS = deepFreeze({
 
   // --- Fog of war ---
   FOG: {
-    WIDTH: 700,
-    HEIGHT: 300,
+    WIDTH: 2100,
+    HEIGHT: 900,
     CELL_SIZE: 10,
     BASE_FAR: 56,       // hides outermost render ring (4th ring at 48-64 blocks)
     BASE_NEAR_RATIO: 0.5,
@@ -89,9 +89,9 @@ export const GAME_CONSTANTS = deepFreeze({
 
   // --- Corruption ---
   CORRUPTION: {
-    CENTER_X: 420,
-    CENTER_Z: 90,
-    RADIUS: 100,
+    CENTER_X: 1260,
+    CENTER_Z: 270,
+    RADIUS: 300,
     FOG_THRESHOLD: 0.1,
   },
 
@@ -112,10 +112,10 @@ export const GAME_CONSTANTS = deepFreeze({
   MAP: {
     CANVAS_WIDTH: 460,
     CANVAS_HEIGHT: 320,
-    WORLD_MIN_X: -100,
-    WORLD_MAX_X: 560,
-    WORLD_MIN_Z: -120,
-    WORLD_MAX_Z: 150,
+    WORLD_MIN_X: -300,
+    WORLD_MAX_X: 1680,
+    WORLD_MIN_Z: -360,
+    WORLD_MAX_Z: 450,
   },
 
   // --- Colors (hex for Three.js) ---

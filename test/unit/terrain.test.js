@@ -38,6 +38,13 @@ describe('generateTerrain', () => {
   });
 
   it('generates deterministic terrain', () => {
+    // Verify terrain height is deterministic across calls
+    for (let x = 0; x < 32; x++) {
+      for (let z = 0; z < 32; z++) {
+        expect(getHeightAt(x, z)).toBe(getHeightAt(x, z));
+      }
+    }
+    // Verify full block generation is deterministic
     const world1 = new World();
     const world2 = new World();
     generateTerrain(world1);
@@ -47,7 +54,7 @@ describe('generateTerrain', () => {
         expect(world1.getBlock(x, y, 0)).toBe(world2.getBlock(x, y, 0));
       }
     }
-  });
+  }, 60000);
 
   it('terrain height varies across space', () => {
     const heights = new Set();

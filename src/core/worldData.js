@@ -37,7 +37,7 @@ export const worldBuildings = [
   {
     name: 'Bag End',
     region: 'shire',
-    x: -5, z: -8,
+    x: -15, z: -24,
     hobbitHole: true,
     floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: true,
@@ -50,7 +50,7 @@ export const worldBuildings = [
   {
     name: "Ranger Hal's Lodge",
     region: 'shire',
-    x: 4, z: 6,
+    x: 12, z: 18,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 4, height: 4, bed: true, chest: true,
     npcId: 'ranger_hal',
@@ -62,7 +62,7 @@ export const worldBuildings = [
   {
     name: "Hamfast's Farmhouse",
     region: 'shire',
-    x: -21, z: 10,
+    x: -63, z: 30,
     wallBlock: OAK, roofBlock: THATCH, floorBlock: COBBLE,
     radius: 4, height: 3, bed: true, chest: true,
     npcId: 'shire_farmer',
@@ -74,7 +74,7 @@ export const worldBuildings = [
   {
     name: "Rosie's Shop",
     region: 'shire',
-    x: 14, z: -7,
+    x: 42, z: -21,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 4, height: 4, bed: true, chest: true,
     npcId: 'shire_merchant',
@@ -87,7 +87,7 @@ export const worldBuildings = [
   {
     name: 'Green Dragon Inn',
     region: 'shire',
-    x: 25, z: 15,
+    x: 75, z: 45,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 5, height: 5, bed: true, chest: true,
     chestItems: [
@@ -98,7 +98,7 @@ export const worldBuildings = [
   {
     name: 'Hobbit Hole – Cottons',
     region: 'shire',
-    x: -30, z: -15,
+    x: -90, z: -45,
     hobbitHole: true,
     floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: false,
@@ -106,7 +106,7 @@ export const worldBuildings = [
   {
     name: 'Hobbit Hole – Bracegirdle',
     region: 'shire',
-    x: -10, z: 25,
+    x: -30, z: 75,
     hobbitHole: true,
     floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: false,
@@ -114,7 +114,7 @@ export const worldBuildings = [
   {
     name: 'Hobbit Hole – Proudfoot',
     region: 'shire',
-    x: 35, z: -15,
+    x: 105, z: -45,
     hobbitHole: true,
     floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: false,
@@ -126,7 +126,7 @@ export const worldBuildings = [
   {
     name: 'The Prancing Pony',
     region: 'bree',
-    x: 79, z: 20,
+    x: 237, z: 60,
     wallBlock: COBBLE, roofBlock: PLANK, floorBlock: SBRICK,
     radius: 6, height: 5, bed: true, chest: true,
     npcId: 'old_tom',
@@ -139,7 +139,7 @@ export const worldBuildings = [
   {
     name: 'Bree Blacksmith',
     region: 'bree',
-    x: 66, z: 10,
+    x: 198, z: 30,
     wallBlock: COBBLE, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 4, height: 4, bed: true, chest: true,
     npcId: 'bree_blacksmith',
@@ -151,28 +151,28 @@ export const worldBuildings = [
   {
     name: 'Bree House – South',
     region: 'bree',
-    x: 90, z: 12,
+    x: 270, z: 36,
     wallBlock: COBBLE, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: false,
   },
   {
     name: 'Bree House – North',
     region: 'bree',
-    x: 72, z: 34,
+    x: 216, z: 102,
     wallBlock: COBBLE, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: false,
   },
   {
     name: 'Bree Gatehouse',
     region: 'bree',
-    x: 65, z: 20,
+    x: 195, z: 60,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 3, height: 5, bed: false, chest: false,
   },
   {
     name: 'Bree Storehouse',
     region: 'bree',
-    x: 92, z: 26,
+    x: 276, z: 78,
     wallBlock: COBBLE, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 4, height: 3, bed: false, chest: true,
     chestItems: [
@@ -188,7 +188,7 @@ export const worldBuildings = [
   {
     name: 'Ranger Outpost',
     region: 'trollshaws',
-    x: 130, z: 35,
+    x: 390, z: 105,
     wallBlock: COBBLE, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -199,7 +199,7 @@ export const worldBuildings = [
   {
     name: 'Hermit Cabin',
     region: 'trollshaws',
-    x: 150, z: 45,
+    x: 450, z: 135,
     wallBlock: OAK, roofBlock: THATCH, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -214,7 +214,7 @@ export const worldBuildings = [
   {
     name: "House of Elrond",
     region: 'rivendell',
-    x: 194, z: 33,
+    x: 582, z: 99,
     wallBlock: MARBLE, roofBlock: BIRCH, floorBlock: MARBLE,
     radius: 6, height: 5, bed: true, chest: true,
     npcId: 'elara_lorekeeper',
@@ -226,7 +226,7 @@ export const worldBuildings = [
   {
     name: "Celebrin's Healing Hall",
     region: 'rivendell',
-    x: 208, z: 18,
+    x: 624, z: 54,
     wallBlock: MARBLE, roofBlock: BIRCH, floorBlock: MARBLE,
     radius: 4, height: 4, bed: true, chest: true,
     npcId: 'rivendell_healer',
@@ -239,7 +239,7 @@ export const worldBuildings = [
   {
     name: 'Rivendell Library',
     region: 'rivendell',
-    x: 210, z: 38,
+    x: 630, z: 114,
     wallBlock: MARBLE, roofBlock: BIRCH, floorBlock: SBRICK,
     radius: 5, height: 5, bed: false, chest: true,
     chestItems: [
@@ -249,14 +249,14 @@ export const worldBuildings = [
   {
     name: 'Rivendell Guest House',
     region: 'rivendell',
-    x: 190, z: 22,
+    x: 570, z: 66,
     wallBlock: MARBLE, roofBlock: BIRCH, floorBlock: MARBLE,
     radius: 3, height: 4, bed: true, chest: false,
   },
   {
     name: 'Rivendell Watchtower',
     region: 'rivendell',
-    x: 220, z: 30,
+    x: 660, z: 90,
     wallBlock: MARBLE, roofBlock: SBRICK, floorBlock: MARBLE,
     radius: 3, height: 6, bed: false, chest: false,
   },
@@ -267,7 +267,7 @@ export const worldBuildings = [
   {
     name: "Thorin's Forge",
     region: 'misty_mountains',
-    x: 269, z: 53,
+    x: 807, z: 159,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 5, height: 4, bed: true, chest: true,
     npcId: 'thorin_smith',
@@ -279,7 +279,7 @@ export const worldBuildings = [
   {
     name: "Dwalin's Trading Post",
     region: 'misty_mountains',
-    x: 254, z: 43,
+    x: 762, z: 129,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 4, height: 4, bed: true, chest: true,
     npcId: 'mountain_trader',
@@ -291,7 +291,7 @@ export const worldBuildings = [
   {
     name: 'Mountain Shelter',
     region: 'misty_mountains',
-    x: 280, z: 60,
+    x: 840, z: 180,
     wallBlock: STONE, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -302,7 +302,7 @@ export const worldBuildings = [
   {
     name: 'Dwarven Mining Camp',
     region: 'misty_mountains',
-    x: 258, z: 65,
+    x: 774, z: 195,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: COBBLE,
     radius: 4, height: 3, bed: false, chest: true,
     chestItems: [
@@ -318,7 +318,7 @@ export const worldBuildings = [
   {
     name: "Beorn's Hall",
     region: 'anduin_vale',
-    x: 334, z: 63,
+    x: 1002, z: 189,
     wallBlock: OAK, roofBlock: THATCH, floorBlock: COBBLE,
     radius: 6, height: 5, bed: true, chest: true,
     npcId: 'beorn_jr',
@@ -330,7 +330,7 @@ export const worldBuildings = [
   {
     name: 'Vale Farmstead',
     region: 'anduin_vale',
-    x: 350, z: 55,
+    x: 1050, z: 165,
     wallBlock: OAK, roofBlock: THATCH, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -341,7 +341,7 @@ export const worldBuildings = [
   {
     name: 'Carrock Watchtower',
     region: 'anduin_vale',
-    x: 345, z: 72,
+    x: 1035, z: 216,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: SBRICK,
     radius: 3, height: 6, bed: false, chest: false,
   },
@@ -352,7 +352,7 @@ export const worldBuildings = [
   {
     name: 'Elvenking Gate Post',
     region: 'mirkwood',
-    x: 389, z: 38,
+    x: 1167, z: 114,
     wallBlock: BIRCH, roofBlock: LEAVES, floorBlock: COBBLE,
     radius: 5, height: 5, bed: true, chest: true,
     npcId: 'galawen_warden',
@@ -365,7 +365,7 @@ export const worldBuildings = [
   {
     name: 'Mirkwood Ranger Camp',
     region: 'mirkwood',
-    x: 405, z: 48,
+    x: 1215, z: 144,
     wallBlock: BIRCH, roofBlock: LEAVES, floorBlock: COBBLE,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -376,7 +376,7 @@ export const worldBuildings = [
   {
     name: 'Forest Watch Platform',
     region: 'mirkwood',
-    x: 415, z: 32,
+    x: 1245, z: 96,
     wallBlock: OAK, roofBlock: LEAVES, floorBlock: OAK,
     radius: 3, height: 6, bed: false, chest: false,
   },
@@ -387,7 +387,7 @@ export const worldBuildings = [
   {
     name: 'Dark Outpost',
     region: 'dol_guldur',
-    x: 418, z: 85,
+    x: 1254, z: 255,
     wallBlock: BlockType.DARK_STONE, roofBlock: BlockType.OBSIDIAN, floorBlock: BlockType.CORRUPTED_STONE,
     radius: 4, height: 4, bed: false, chest: true,
     chestItems: [
@@ -402,7 +402,7 @@ export const worldBuildings = [
   {
     name: 'Lake-town Hall',
     region: 'long_lake',
-    x: 465, z: 28,
+    x: 1395, z: 84,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 5, height: 4, bed: true, chest: true,
     chestItems: [
@@ -413,7 +413,7 @@ export const worldBuildings = [
   {
     name: "Fisherman's Hut",
     region: 'long_lake',
-    x: 478, z: 22,
+    x: 1434, z: 66,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: OAK,
     radius: 3, height: 3, bed: true, chest: true,
     chestItems: [
@@ -424,7 +424,7 @@ export const worldBuildings = [
   {
     name: 'Dock Warehouse',
     region: 'long_lake',
-    x: 478, z: 38,
+    x: 1434, z: 114,
     wallBlock: OAK, roofBlock: PLANK, floorBlock: COBBLE,
     radius: 4, height: 3, bed: false, chest: true,
     chestItems: [
@@ -440,7 +440,7 @@ export const worldBuildings = [
   {
     name: 'Front Gate Guardhouse',
     region: 'erebor',
-    x: 514, z: 18,
+    x: 1542, z: 54,
     wallBlock: SBRICK, roofBlock: IRON_B, floorBlock: SBRICK,
     radius: 4, height: 5, bed: true, chest: true,
     chestItems: [
@@ -451,7 +451,7 @@ export const worldBuildings = [
   {
     name: "Miriel's Observatory",
     region: 'erebor',
-    x: 494, z: 26,
+    x: 1482, z: 78,
     wallBlock: SBRICK, roofBlock: SLATE, floorBlock: MARBLE,
     radius: 5, height: 5, bed: true, chest: true,
     npcId: 'sage_miriel',
@@ -463,7 +463,7 @@ export const worldBuildings = [
   {
     name: 'Dale Marketplace',
     region: 'erebor',
-    x: 525, z: 28,
+    x: 1575, z: 84,
     wallBlock: SBRICK, roofBlock: PLANK, floorBlock: SBRICK,
     radius: 5, height: 4, bed: false, chest: true,
     chestItems: [
@@ -475,7 +475,7 @@ export const worldBuildings = [
   {
     name: 'Erebor Great Forge',
     region: 'erebor',
-    x: 530, z: 14,
+    x: 1590, z: 42,
     wallBlock: SBRICK, roofBlock: IRON_B, floorBlock: SBRICK,
     radius: 5, height: 5, bed: false, chest: true,
     chestItems: [
@@ -495,33 +495,33 @@ export const worldBuildings = [
 
 export const worldFeatures = [
   // ── Shire fences ──
-  { type: 'line', x1: -35, z1: -20, x2: -35, z2: 30, block: OAK, dy: 1, name: 'Shire west fence' },
-  { type: 'line', x1: -35, z1: -20, x2: 40, z2: -20, block: OAK, dy: 1, name: 'Shire south fence' },
-  { type: 'line', x1: 40, z1: -20, x2: 40, z2: 30, block: OAK, dy: 1, name: 'Shire east fence' },
-  { type: 'line', x1: -35, z1: 30, x2: 40, z2: 30, block: OAK, dy: 1, name: 'Shire north fence' },
+  { type: 'line', x1: -105, z1: -60, x2: -105, z2: 90, block: OAK, dy: 1, name: 'Shire west fence' },
+  { type: 'line', x1: -105, z1: -60, x2: 120, z2: -60, block: OAK, dy: 1, name: 'Shire south fence' },
+  { type: 'line', x1: 120, z1: -60, x2: 120, z2: 90, block: OAK, dy: 1, name: 'Shire east fence' },
+  { type: 'line', x1: -105, z1: 90, x2: 120, z2: 90, block: OAK, dy: 1, name: 'Shire north fence' },
 
   // ── Shire village path (cobblestone road) ──
-  { type: 'line', x1: -30, z1: 0, x2: 40, z2: 0, block: COBBLE, dy: 0, surface: true, name: 'Shire main road' },
-  { type: 'line', x1: 0, z1: -18, x2: 0, z2: 28, block: COBBLE, dy: 0, surface: true, name: 'Shire cross road' },
+  { type: 'line', x1: -90, z1: 0, x2: 120, z2: 0, block: COBBLE, dy: 0, surface: true, name: 'Shire main road' },
+  { type: 'line', x1: 0, z1: -54, x2: 0, z2: 84, block: COBBLE, dy: 0, surface: true, name: 'Shire cross road' },
 
   // ── Shire well ──
-  { type: 'well', x: 5, z: 0, name: 'Shire well' },
+  { type: 'well', x: 15, z: 0, name: 'Shire well' },
 
   // ── Bree town walls ──
-  { type: 'line', x1: 60, z1: 8, x2: 60, z2: 35, block: SBRICK, dy: 1, name: 'Bree west wall' },
-  { type: 'line', x1: 60, z1: 8, x2: 60, z2: 35, block: SBRICK, dy: 2, name: 'Bree west wall top' },
-  { type: 'line', x1: 95, z1: 8, x2: 95, z2: 35, block: SBRICK, dy: 1, name: 'Bree east wall' },
-  { type: 'line', x1: 95, z1: 8, x2: 95, z2: 35, block: SBRICK, dy: 2, name: 'Bree east wall top' },
+  { type: 'line', x1: 180, z1: 24, x2: 180, z2: 105, block: SBRICK, dy: 1, name: 'Bree west wall' },
+  { type: 'line', x1: 180, z1: 24, x2: 180, z2: 105, block: SBRICK, dy: 2, name: 'Bree west wall top' },
+  { type: 'line', x1: 285, z1: 24, x2: 285, z2: 105, block: SBRICK, dy: 1, name: 'Bree east wall' },
+  { type: 'line', x1: 285, z1: 24, x2: 285, z2: 105, block: SBRICK, dy: 2, name: 'Bree east wall top' },
 
   // ── Bree main street ──
-  { type: 'line', x1: 60, z1: 20, x2: 95, z2: 20, block: COBBLE, dy: 0, surface: true, name: 'Bree main street' },
+  { type: 'line', x1: 180, z1: 60, x2: 285, z2: 60, block: COBBLE, dy: 0, surface: true, name: 'Bree main street' },
 
   // ── Bree well ──
-  { type: 'well', x: 80, z: 20, name: 'Bree well' },
+  { type: 'well', x: 240, z: 60, name: 'Bree well' },
 
   // ── Trollshaws stone trolls (decorative stone pillars) ──
   {
-    type: 'blocks', x: 145, z: 42, name: 'Stone Trolls',
+    type: 'blocks', x: 435, z: 126, name: 'Stone Trolls',
     blocks: [
       // Troll 1
       { dx: 0, dz: 0, dy: 1, block: STONE },
@@ -539,16 +539,16 @@ export const worldFeatures = [
   },
 
   // ── Rivendell bridge (planks over valley) ──
-  { type: 'line', x1: 185, z1: 28, x2: 195, z2: 28, block: MARBLE, dy: 1, name: 'Rivendell bridge' },
-  { type: 'line', x1: 185, z1: 28, x2: 195, z2: 28, block: MARBLE, dy: 0, surface: true, name: 'Rivendell bridge deck' },
+  { type: 'line', x1: 555, z1: 84, x2: 585, z2: 84, block: MARBLE, dy: 1, name: 'Rivendell bridge' },
+  { type: 'line', x1: 555, z1: 84, x2: 585, z2: 84, block: MARBLE, dy: 0, surface: true, name: 'Rivendell bridge deck' },
 
   // ── Rivendell garden path ──
-  { type: 'line', x1: 190, z1: 25, x2: 215, z2: 25, block: MARBLE, dy: 0, surface: true, name: 'Rivendell garden path' },
-  { type: 'line', x1: 200, z1: 20, x2: 200, z2: 40, block: MARBLE, dy: 0, surface: true, name: 'Rivendell main path' },
+  { type: 'line', x1: 570, z1: 75, x2: 645, z2: 75, block: MARBLE, dy: 0, surface: true, name: 'Rivendell garden path' },
+  { type: 'line', x1: 600, z1: 60, x2: 600, z2: 120, block: MARBLE, dy: 0, surface: true, name: 'Rivendell main path' },
 
   // ── Misty Mountains stone markers ──
   {
-    type: 'blocks', x: 265, z: 48, name: 'Mountain trail markers',
+    type: 'blocks', x: 795, z: 144, name: 'Mountain trail markers',
     blocks: [
       { dx: 0, dz: 0, dy: 1, block: SBRICK },
       { dx: 0, dz: 0, dy: 2, block: BlockType.TORCH },
@@ -560,14 +560,14 @@ export const worldFeatures = [
   },
 
   // ── Anduin Vale farm fences ──
-  { type: 'line', x1: 345, z1: 50, x2: 360, z2: 50, block: OAK, dy: 1, name: 'Vale south fence' },
-  { type: 'line', x1: 345, z1: 50, x2: 345, z2: 60, block: OAK, dy: 1, name: 'Vale west fence' },
-  { type: 'line', x1: 360, z1: 50, x2: 360, z2: 60, block: OAK, dy: 1, name: 'Vale east fence' },
-  { type: 'line', x1: 345, z1: 60, x2: 360, z2: 60, block: OAK, dy: 1, name: 'Vale north fence' },
+  { type: 'line', x1: 1035, z1: 150, x2: 1080, z2: 150, block: OAK, dy: 1, name: 'Vale south fence' },
+  { type: 'line', x1: 1035, z1: 150, x2: 1035, z2: 180, block: OAK, dy: 1, name: 'Vale west fence' },
+  { type: 'line', x1: 1080, z1: 150, x2: 1080, z2: 180, block: OAK, dy: 1, name: 'Vale east fence' },
+  { type: 'line', x1: 1035, z1: 180, x2: 1080, z2: 180, block: OAK, dy: 1, name: 'Vale north fence' },
 
   // ── Mirkwood torches along path ──
   {
-    type: 'blocks', x: 385, z: 40, name: 'Mirkwood path torches',
+    type: 'blocks', x: 1155, z: 120, name: 'Mirkwood path torches',
     blocks: [
       { dx: 0, dz: 0, dy: 1, block: OAK }, { dx: 0, dz: 0, dy: 2, block: BlockType.TORCH },
       { dx: 8, dz: 2, dy: 1, block: OAK }, { dx: 8, dz: 2, dy: 2, block: BlockType.TORCH },
@@ -579,7 +579,7 @@ export const worldFeatures = [
 
   // ── Dol Guldur corrupted ring ──
   {
-    type: 'blocks', x: 420, z: 90, name: 'Dol Guldur corrupted stones',
+    type: 'blocks', x: 1260, z: 270, name: 'Dol Guldur corrupted stones',
     blocks: [
       { dx: -5, dz: 0, dy: 1, block: BlockType.CORRUPTED_STONE },
       { dx: 5, dz: 0, dy: 1, block: BlockType.CORRUPTED_STONE },
@@ -594,7 +594,7 @@ export const worldFeatures = [
 
   // ── Long Lake docks (wood platform) ──
   {
-    type: 'blocks', x: 472, z: 20, name: 'Lake-town dock',
+    type: 'blocks', x: 1416, z: 60, name: 'Lake-town dock',
     blocks: (() => {
       const b = [];
       for (let dx = 0; dx < 8; dx++) {
@@ -611,7 +611,7 @@ export const worldFeatures = [
 
   // ── Erebor stone gates ──
   {
-    type: 'blocks', x: 518, z: 15, name: 'Erebor front gate',
+    type: 'blocks', x: 1554, z: 45, name: 'Erebor front gate',
     blocks: [
       // Left pillar
       { dx: 0, dz: 0, dy: 1, block: SBRICK }, { dx: 0, dz: 0, dy: 2, block: SBRICK },
@@ -630,9 +630,9 @@ export const worldFeatures = [
   },
 
   // ── Great East Road (cobblestone from Shire to Erebor) ──
-  { type: 'line', x1: 40, z1: 0, x2: 60, z2: 8, block: COBBLE, dy: 0, surface: true, name: 'East Road – Shire to Bree' },
-  { type: 'line', x1: 95, z1: 20, x2: 130, z2: 35, block: COBBLE, dy: 0, surface: true, name: 'East Road – Bree to Trollshaws' },
-  { type: 'line', x1: 155, z1: 42, x2: 185, z2: 32, block: COBBLE, dy: 0, surface: true, name: 'East Road – Trollshaws to Rivendell' },
+  { type: 'line', x1: 120, z1: 0, x2: 180, z2: 24, block: COBBLE, dy: 0, surface: true, name: 'East Road – Shire to Bree' },
+  { type: 'line', x1: 285, z1: 60, x2: 390, z2: 105, block: COBBLE, dy: 0, surface: true, name: 'East Road – Bree to Trollshaws' },
+  { type: 'line', x1: 465, z1: 126, x2: 555, z2: 96, block: COBBLE, dy: 0, surface: true, name: 'East Road – Trollshaws to Rivendell' },
 ];
 
 
@@ -641,11 +641,11 @@ export const worldFeatures = [
 // type: 'large' = tall trunk (6) + wide canopy;  'normal' = standard 4-trunk
 
 export const worldTrees = [
-  { name: 'Party Tree', x: 0, z: 12, type: 'large' },
-  { name: 'Old Willow', x: -40, z: 5, type: 'large' },
-  { name: 'Rivendell Cedar', x: 208, z: 35, type: 'large' },
-  { name: 'Beorn Oak', x: 338, z: 70, type: 'large' },
-  { name: 'Mirkwood Ancient', x: 395, z: 35, type: 'large' },
+  { name: 'Party Tree', x: 0, z: 36, type: 'large' },
+  { name: 'Old Willow', x: -120, z: 15, type: 'large' },
+  { name: 'Rivendell Cedar', x: 624, z: 105, type: 'large' },
+  { name: 'Beorn Oak', x: 1014, z: 210, type: 'large' },
+  { name: 'Mirkwood Ancient', x: 1185, z: 105, type: 'large' },
 ];
 
 
@@ -655,26 +655,26 @@ export const worldTrees = [
 
 export const worldStations = [
   // Shire
-  { x: 0, z: -3, block: BlockType.WORKBENCH, dy: 1, name: 'Shire workbench' },
-  { x: 2, z: -3, block: BlockType.CAMPFIRE, dy: 1, name: 'Shire campfire' },
+  { x: 0, z: -9, block: BlockType.WORKBENCH, dy: 1, name: 'Shire workbench' },
+  { x: 6, z: -9, block: BlockType.CAMPFIRE, dy: 1, name: 'Shire campfire' },
   // Bree
-  { x: 75, z: 18, block: BlockType.FORGE, dy: 1, name: 'Bree forge' },
-  { x: 83, z: 18, block: BlockType.KITCHEN, dy: 1, name: 'Bree kitchen' },
+  { x: 225, z: 54, block: BlockType.FORGE, dy: 1, name: 'Bree forge' },
+  { x: 249, z: 54, block: BlockType.KITCHEN, dy: 1, name: 'Bree kitchen' },
   // Rivendell
-  { x: 205, z: 30, block: BlockType.LOOM, dy: 1, name: 'Rivendell loom' },
-  { x: 198, z: 30, block: BlockType.RUNE_TABLE, dy: 1, name: 'Rivendell rune table' },
+  { x: 615, z: 90, block: BlockType.LOOM, dy: 1, name: 'Rivendell loom' },
+  { x: 594, z: 90, block: BlockType.RUNE_TABLE, dy: 1, name: 'Rivendell rune table' },
   // Misty Mountains
-  { x: 275, z: 55, block: BlockType.FORGE, dy: 1, name: 'Mountain forge' },
-  { x: 268, z: 58, block: BlockType.WORKBENCH, dy: 1, name: 'Mountain workbench' },
+  { x: 825, z: 165, block: BlockType.FORGE, dy: 1, name: 'Mountain forge' },
+  { x: 804, z: 174, block: BlockType.WORKBENCH, dy: 1, name: 'Mountain workbench' },
   // Anduin Vale
-  { x: 340, z: 58, block: BlockType.KITCHEN, dy: 1, name: 'Vale kitchen' },
-  { x: 342, z: 58, block: BlockType.CAMPFIRE, dy: 1, name: 'Vale campfire' },
+  { x: 1020, z: 174, block: BlockType.KITCHEN, dy: 1, name: 'Vale kitchen' },
+  { x: 1026, z: 174, block: BlockType.CAMPFIRE, dy: 1, name: 'Vale campfire' },
   // Mirkwood
-  { x: 392, z: 42, block: BlockType.WORKBENCH, dy: 1, name: 'Mirkwood workbench' },
-  { x: 394, z: 42, block: BlockType.LOOM, dy: 1, name: 'Mirkwood loom' },
+  { x: 1176, z: 126, block: BlockType.WORKBENCH, dy: 1, name: 'Mirkwood workbench' },
+  { x: 1182, z: 126, block: BlockType.LOOM, dy: 1, name: 'Mirkwood loom' },
   // Erebor
-  { x: 528, z: 16, block: BlockType.FORGE, dy: 1, name: 'Erebor forge' },
-  { x: 526, z: 16, block: BlockType.WORKBENCH, dy: 1, name: 'Erebor workbench' },
+  { x: 1584, z: 48, block: BlockType.FORGE, dy: 1, name: 'Erebor forge' },
+  { x: 1578, z: 48, block: BlockType.WORKBENCH, dy: 1, name: 'Erebor workbench' },
 ];
 
 

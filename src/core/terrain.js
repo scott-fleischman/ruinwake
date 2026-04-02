@@ -9,10 +9,10 @@ const DIRT_DEPTH = 3;
 export const TERRAIN_EXTENT = 300;
 const SNOW_ELEVATION = 55;
 // Asymmetric world bounds for the Hobbit east-west corridor
-export const WORLD_MIN_X = -100;
-export const WORLD_MAX_X = 560;
-export const WORLD_MIN_Z = -120;
-export const WORLD_MAX_Z = 150;
+export const WORLD_MIN_X = -300;
+export const WORLD_MAX_X = 1680;
+export const WORLD_MIN_Z = -360;
+export const WORLD_MAX_Z = 450;
 const HEIGHT_SCALE = 0.02;
 const BIOME_SCALE = 0.02;
 
@@ -29,16 +29,16 @@ function seededRandom(seed) {
 
 // Geographic region centers matching the Hobbit corridor (spec 7.2)
 const REGION_BIOMES = [
-  { x: 0, z: 0, biome: BiomeType.SHIRE, radius: 70 },
-  { x: 80, z: 20, biome: BiomeType.PLAINS, radius: 40 },      // Bree-lands
-  { x: 140, z: 40, biome: BiomeType.FOREST, radius: 40 },      // Trollshaws
-  { x: 200, z: 30, biome: BiomeType.FOREST, radius: 40 },      // Rivendell
-  { x: 270, z: 50, biome: BiomeType.MOUNTAIN, radius: 60 },    // Misty Mountains
-  { x: 340, z: 60, biome: BiomeType.PLAINS, radius: 45 },      // Anduin Vale
-  { x: 400, z: 40, biome: BiomeType.MIRKWOOD, radius: 60 },    // Mirkwood
-  { x: 420, z: 90, biome: BiomeType.MIRKWOOD, radius: 35 },    // Dol Guldur
-  { x: 470, z: 30, biome: BiomeType.PLAINS, radius: 30 },      // Long Lake
-  { x: 520, z: 20, biome: BiomeType.MOUNTAIN, radius: 40 },    // Erebor
+  { x: 0, z: 0, biome: BiomeType.SHIRE, radius: 210 },
+  { x: 240, z: 60, biome: BiomeType.PLAINS, radius: 120 },      // Bree-lands
+  { x: 420, z: 120, biome: BiomeType.FOREST, radius: 120 },      // Trollshaws
+  { x: 600, z: 90, biome: BiomeType.FOREST, radius: 120 },      // Rivendell
+  { x: 810, z: 150, biome: BiomeType.MOUNTAIN, radius: 180 },    // Misty Mountains
+  { x: 1020, z: 180, biome: BiomeType.PLAINS, radius: 135 },      // Anduin Vale
+  { x: 1200, z: 120, biome: BiomeType.MIRKWOOD, radius: 180 },    // Mirkwood
+  { x: 1260, z: 270, biome: BiomeType.MIRKWOOD, radius: 105 },    // Dol Guldur
+  { x: 1410, z: 90, biome: BiomeType.PLAINS, radius: 90 },      // Long Lake
+  { x: 1560, z: 60, biome: BiomeType.MOUNTAIN, radius: 120 },    // Erebor
 ];
 
 /**

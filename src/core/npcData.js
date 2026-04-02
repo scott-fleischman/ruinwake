@@ -4,7 +4,7 @@ export const allNPCs = [
   new NPC({
     id: 'ranger_hal',
     name: 'Hal the Ranger',
-    position: { x: 10, y: 33, z: 8 },
+    position: { x: 30, y: 33, z: 24 },
     factionId: 'road_wardens',
     dialogueId: 'ch1_embers',
     dialogue: {
@@ -21,7 +21,7 @@ export const allNPCs = [
   new NPC({
     id: 'shire_farmer',
     name: 'Hamfast the Farmer',
-    position: { x: -15, y: 33, z: 12 },
+    position: { x: -45, y: 33, z: 36 },
     factionId: 'road_wardens',
     dialogueId: null,
     dialogue: {
@@ -35,7 +35,7 @@ export const allNPCs = [
   new NPC({
     id: 'shire_merchant',
     name: 'Rosie the Merchant',
-    position: { x: 20, y: 33, z: -5 },
+    position: { x: 60, y: 33, z: -15 },
     factionId: 'road_wardens',
     dialogueId: null,
     dialogue: {
@@ -50,7 +50,7 @@ export const allNPCs = [
   new NPC({
     id: 'elara_lorekeeper',
     name: 'Elara the Lorekeeper',
-    position: { x: 200, y: 33, z: 35 },
+    position: { x: 600, y: 33, z: 105 },
     factionId: 'rivendell_keepers',
     dialogueId: 'ch3_records',
     dialogue: {
@@ -66,7 +66,7 @@ export const allNPCs = [
   new NPC({
     id: 'rivendell_healer',
     name: 'Celebrin the Healer',
-    position: { x: 210, y: 33, z: 25 },
+    position: { x: 630, y: 33, z: 75 },
     factionId: 'rivendell_keepers',
     dialogueId: null,
     dialogue: {
@@ -80,7 +80,7 @@ export const allNPCs = [
   new NPC({
     id: 'thorin_smith',
     name: 'Thorin the Smith',
-    position: { x: 275, y: 45, z: 55 },
+    position: { x: 825, y: 45, z: 165 },
     factionId: 'dwarven_crafters',
     dialogueId: 'ch4_mountains',
     dialogue: {
@@ -98,7 +98,7 @@ export const allNPCs = [
   new NPC({
     id: 'mountain_trader',
     name: 'Dwalin the Trader',
-    position: { x: 260, y: 45, z: 45 },
+    position: { x: 780, y: 45, z: 135 },
     factionId: 'dwarven_crafters',
     dialogueId: null,
     dialogue: {
@@ -112,7 +112,7 @@ export const allNPCs = [
   new NPC({
     id: 'galawen_warden',
     name: 'Galawen the Warden',
-    position: { x: 395, y: 33, z: 40 },
+    position: { x: 1185, y: 33, z: 120 },
     factionId: 'woodland_guardians',
     dialogueId: 'ch5_darkwood',
     dialogue: {
@@ -129,7 +129,7 @@ export const allNPCs = [
   new NPC({
     id: 'beorn_jr',
     name: 'Grimbeorn the Younger',
-    position: { x: 340, y: 33, z: 65 },
+    position: { x: 1020, y: 33, z: 195 },
     factionId: 'beorning_wardens',
     dialogueId: null,
     dialogue: {
@@ -143,7 +143,7 @@ export const allNPCs = [
   new NPC({
     id: 'old_tom',
     name: 'Old Tom the Innkeeper',
-    position: { x: 85, y: 33, z: 22 },
+    position: { x: 255, y: 33, z: 66 },
     factionId: 'road_wardens',
     dialogueId: 'ch2_roads',
     dialogue: {
@@ -160,7 +160,7 @@ export const allNPCs = [
   new NPC({
     id: 'bree_blacksmith',
     name: 'Barliman the Blacksmith',
-    position: { x: 75, y: 33, z: 15 },
+    position: { x: 225, y: 33, z: 45 },
     factionId: 'road_wardens',
     dialogueId: null,
     dialogue: {
@@ -174,7 +174,7 @@ export const allNPCs = [
   new NPC({
     id: 'sage_miriel',
     name: 'Miriel the Sage',
-    position: { x: 500, y: 40, z: 28 },
+    position: { x: 1500, y: 40, z: 84 },
     factionId: 'rivendell_keepers',
     dialogueId: 'ch7_shadow',
     dialogue: {

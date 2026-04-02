@@ -8,38 +8,38 @@ describe('Geographic biome placement', () => {
     expect(biome.type).toBe(BiomeType.SHIRE);
   });
 
-  it('Misty Mountains area (270,50) is MOUNTAIN biome', () => {
-    const biome = getBiomeAt(270, 50);
+  it('Misty Mountains area (810,150) is MOUNTAIN biome', () => {
+    const biome = getBiomeAt(810, 150);
     expect(biome.type).toBe(BiomeType.MOUNTAIN);
   });
 
-  it('Mirkwood area (400,40) is MIRKWOOD biome', () => {
-    const biome = getBiomeAt(400, 40);
+  it('Mirkwood area (1200,120) is MIRKWOOD biome', () => {
+    const biome = getBiomeAt(1200, 120);
     expect(biome.type).toBe(BiomeType.MIRKWOOD);
   });
 
-  it('Erebor area (520,20) is MOUNTAIN biome', () => {
-    const biome = getBiomeAt(520, 20);
+  it('Erebor area (1560,60) is MOUNTAIN biome', () => {
+    const biome = getBiomeAt(1560, 60);
     expect(biome.type).toBe(BiomeType.MOUNTAIN);
   });
 
-  it('Plains area between Shire and Bree (40,10) is PLAINS or SHIRE', () => {
-    const biome = getBiomeAt(40, 10);
+  it('Plains area between Shire and Bree (120,30) is PLAINS or SHIRE', () => {
+    const biome = getBiomeAt(120, 30);
     expect([BiomeType.PLAINS, BiomeType.SHIRE]).toContain(biome.type);
   });
 
-  it('Rivendell area (200,30) is FOREST biome', () => {
-    const biome = getBiomeAt(200, 30);
+  it('Rivendell area (600,90) is FOREST biome', () => {
+    const biome = getBiomeAt(600, 90);
     expect(biome.type).toBe(BiomeType.FOREST);
   });
 
-  it('Anduin Vale (340,60) is PLAINS biome', () => {
-    const biome = getBiomeAt(340, 60);
+  it('Anduin Vale (1020,180) is PLAINS biome', () => {
+    const biome = getBiomeAt(1020, 180);
     expect(biome.type).toBe(BiomeType.PLAINS);
   });
 
-  it('Dol Guldur (420,90) is MIRKWOOD biome', () => {
-    const biome = getBiomeAt(420, 90);
+  it('Dol Guldur (1260,270) is MIRKWOOD biome', () => {
+    const biome = getBiomeAt(1260, 270);
     expect(biome.type).toBe(BiomeType.MIRKWOOD);
   });
 });
