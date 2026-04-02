@@ -111,6 +111,7 @@ export function createGameState(config) {
   const fearSystem = new FearSystem();
   const nightDanger = new NightDangerSystem();
   const settings = new Settings();
+  settings.tutorialEnabled = config.tutorial !== false;
   const gamePause = new GamePause();
   const unifiedMenu = new UnifiedMenu(MENU_TABS);
   const minimapState = new MinimapState();
