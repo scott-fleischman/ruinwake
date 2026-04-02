@@ -80,4 +80,35 @@ describe('UnifiedMenu', () => {
     const menu = new UnifiedMenu(TABS);
     expect(menu.tabs).toEqual(TABS);
   });
+
+  it('includes help as the last tab when provided', () => {
+    const withHelp = [...TABS, 'help'];
+    const menu = new UnifiedMenu(withHelp);
+    expect(menu.tabs).toContain('help');
+    expect(menu.tabs[menu.tabs.length - 1]).toBe('help');
+  });
+
+  it('can open directly to help tab', () => {
+    const withHelp = [...TABS, 'help'];
+    const menu = new UnifiedMenu(withHelp);
+    menu.open('help');
+    expect(menu.isOpen).toBe(true);
+    expect(menu.activeTab).toBe('help');
+  });
+
+  it('cycles through help tab via nextTab', () => {
+    const withHelp = [...TABS, 'help'];
+    const menu = new UnifiedMenu(withHelp);
+    menu.open('settings');
+    menu.nextTab();
+    expect(menu.activeTab).toBe('help');
+  });
+
+  it('cycles from help back to inventory via nextTab', () => {
+    const withHelp = [...TABS, 'help'];
+    const menu = new UnifiedMenu(withHelp);
+    menu.open('help');
+    menu.nextTab();
+    expect(menu.activeTab).toBe('inventory');
+  });
 });
