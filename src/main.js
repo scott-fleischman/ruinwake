@@ -4,7 +4,7 @@ import { generateTerrain, getHeightAt } from './core/terrain.js';
 import { applyGravity, resolveCollision } from './core/physics.js';
 import { WorldRenderer } from './render/worldRenderer.js';
 import { InputHandler } from './input.js';
-import { mineBlock, raycast } from './core/actions.js';
+import { raycast } from './core/actions.js';
 import { getEnemyDrops } from './core/enemy.js';
 import { getBiomeAt } from './core/terrain.js';
 import { BiomeType } from './core/biome.js';
@@ -39,7 +39,7 @@ import { eatBestFood } from './core/eatBestFood.js';
 import { SkillTreeSystem } from './core/skillTree.js';
 import { SkillTreeUI } from './core/skillTreeUI.js';
 import { skillTrees } from './core/skillTreeData.js';
-import { ITEM_TO_BLOCK, blockDrops, canMine } from './core/block.js';
+import { ITEM_TO_BLOCK } from './core/block.js';
 import { placeBlock } from './core/actions.js';
 import { NPC, NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
@@ -1431,21 +1431,21 @@ function startGame(config, jumpStateId) {
         } else {
           blockBreaker.startBreak(bx, by, bz, block);
           if (blockBreaker.tick(dt)) {
-            // Check equipped tool or inventory for appropriate tool
+            // Resolve tool from equipment or inventory
             const mainHand = equipment.get('main_hand');
-            let toolType = (mainHand && mainHand.toolType) || null;
-            // Also check inventory for pickaxe if no tool equipped
-            if (!toolType) {
+            let tool = mainHand || null;
+            if (!tool) {
               const pickaxeTypes = ['iron_pickaxe', 'copper_pickaxe', 'stone_pickaxe', 'pickaxe'];
               for (const pt of pickaxeTypes) {
-                if (inventory.count(pt) > 0) { toolType = 'pickaxe'; break; }
+                if (inventory.count(pt) > 0) {
+                  tool = { type: 'pickaxe', use() {}, isBroken() { return false; } };
+                  break;
+                }
               }
             }
-            if (canMine(block, toolType)) {
-              const drops = blockDrops(block);
-              world.setBlock(bx, by, bz, 0); // AIR
-              // Spawn dropped items on the ground instead of adding to inventory
-              for (const drop of drops) {
+            const mineResult = mineBlockWithTool(world, bx, by, bz, tool);
+            if (mineResult.mined) {
+              for (const drop of mineResult.drops) {
                 spawnDroppedItem({ x: bx, y: by, z: bz }, drop.type, drop.count);
               }
               worldRenderer.markDirty(bx, by, bz);
