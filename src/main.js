@@ -81,7 +81,7 @@ import { getQuestMarkers } from './core/questMarkers.js';
 import { getClassPassiveEffect } from './core/classPassives.js';
 import { getCorruptionColor, getCorruptionFogColor } from './core/corruptionVisuals.js';
 import { BlockBreaker } from './core/blockBreaker.js';
-import { toggleDoor } from './core/door.js';
+import { toggleDoor, isDoorBlock } from './core/door.js';
 import { BlockType } from './core/block.js';
 import { ChestStorage } from './core/chestStorage.js';
 import { worldBuildings, worldFeatures, worldTrees, worldStations, getBuildingForNPC } from './core/worldData.js';
@@ -766,10 +766,20 @@ function startGame(config, jumpStateId) {
       }
     }
 
-    // Menu cursor management — release pointer lock when any menu is open
-    // Close chest on Escape
-    if (openChestPos && input.consumeKeyPress('Escape')) {
-      closeChest();
+    // Escape closes any open menu and returns to gameplay
+    if (input.consumeKeyPress('Escape')) {
+      let closedSomething = false;
+      if (openChestPos) { closeChest(); closedSomething = true; }
+      if (craftingUI.isOpen) { craftingUI.toggle(); updateCraftingPanel(); closedSomething = true; }
+      if (document.getElementById('inventory-panel').style.display !== 'none') {
+        document.getElementById('inventory-panel').style.display = 'none'; closedSomething = true;
+      }
+      if (mapScreen.isOpen) { mapScreen.toggle(); closedSomething = true; }
+      if (skillTreeUI.isOpen) { skillTreeUI.toggle(); closedSomething = true; }
+      if (settings.isOpen) { settings.toggleOpen(); closedSomething = true; }
+      const ql = document.getElementById('quest-log');
+      if (ql && ql.style.display === 'block') { ql.style.display = 'none'; closedSomething = true; }
+      if (closedSomething) renderer.domElement.requestPointerLock();
     }
 
     const anyMenuOpen = shouldReleaseCursor({
@@ -1368,26 +1378,37 @@ function startGame(config, jumpStateId) {
       if (blockHit) {
         const { x: bx, y: by, z: bz } = blockHit.blockPos;
         const block = world.getBlock(bx, by, bz);
-        blockBreaker.startBreak(bx, by, bz, block);
-        if (blockBreaker.tick(dt)) {
-          // Check equipped tool or inventory for appropriate tool
-          const mainHand = equipment.get('main_hand');
-          let toolType = (mainHand && mainHand.toolType) || null;
-          // Also check inventory for pickaxe if no tool equipped
-          if (!toolType) {
-            const pickaxeTypes = ['iron_pickaxe', 'copper_pickaxe', 'stone_pickaxe', 'pickaxe'];
-            for (const pt of pickaxeTypes) {
-              if (inventory.count(pt) > 0) { toolType = 'pickaxe'; break; }
+        // Left-click on doors toggles them instead of mining
+        if (isDoorBlock(block)) {
+          if (input.consumeLeftClick()) {
+            if (toggleDoor(world, bx, by, bz)) {
+              worldRenderer.markDirty(bx, by, bz);
+              worldRenderer.markDirty(bx, by + 1, bz);
+              worldRenderer.markDirty(bx, by - 1, bz);
             }
           }
-          if (canMine(block, toolType)) {
-            const drops = blockDrops(block);
-            world.setBlock(bx, by, bz, 0); // AIR
-            // Spawn dropped items on the ground instead of adding to inventory
-            for (const drop of drops) {
-              spawnDroppedItem({ x: bx, y: by, z: bz }, drop.type, drop.count);
+        } else {
+          blockBreaker.startBreak(bx, by, bz, block);
+          if (blockBreaker.tick(dt)) {
+            // Check equipped tool or inventory for appropriate tool
+            const mainHand = equipment.get('main_hand');
+            let toolType = (mainHand && mainHand.toolType) || null;
+            // Also check inventory for pickaxe if no tool equipped
+            if (!toolType) {
+              const pickaxeTypes = ['iron_pickaxe', 'copper_pickaxe', 'stone_pickaxe', 'pickaxe'];
+              for (const pt of pickaxeTypes) {
+                if (inventory.count(pt) > 0) { toolType = 'pickaxe'; break; }
+              }
             }
-            worldRenderer.markDirty(bx, by, bz);
+            if (canMine(block, toolType)) {
+              const drops = blockDrops(block);
+              world.setBlock(bx, by, bz, 0); // AIR
+              // Spawn dropped items on the ground instead of adding to inventory
+              for (const drop of drops) {
+                spawnDroppedItem({ x: bx, y: by, z: bz }, drop.type, drop.count);
+              }
+              worldRenderer.markDirty(bx, by, bz);
+            }
           }
         }
       } else {
