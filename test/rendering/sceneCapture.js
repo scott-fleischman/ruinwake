@@ -128,7 +128,7 @@ function buildEnemyBoxes(type) {
   return mergeGeometry(geos);
 }
 
-// ── NPC model data (copied from npcRenderer to avoid THREE.js dep) ───
+// ── NPC model data ──────────────────────────────────────────────────
 const FACTION_COLORS = {
   road_wardens: { body: 0x8B6914, hat: 0x2a5a2a, skin: 0xc9a07a },
   rivendell_keepers: { body: 0xd4c5a0, hat: 0x4466bb, skin: 0xe8d8c0 },
@@ -142,21 +142,100 @@ function buildNPCBoxes(factionId) {
   const [br, bg, bb] = hexToRGB01(fc.body);
   const [hr, hg, hb] = hexToRGB01(fc.hat);
   const [sr, sg, sb] = hexToRGB01(fc.skin);
-  const [lr, lg, lb] = hexToRGB01(0x3a3020); // leg color
+  const [lr, lg, lb] = hexToRGB01(0x3a3020);
+  const [kr, kg, kb] = hexToRGB01(0x221810);
+  const [er, eg, eb] = hexToRGB01(0x4a3a20);
 
   const geos = [];
-  // Body
-  geos.push(buildBoxTriangles(0, 0.5, 0, 0.6, 1.0, 0.4, br, bg, bb));
-  // Head
-  geos.push(buildBoxTriangles(0, 1.28, 0, 0.35, 0.35, 0.35, sr, sg, sb));
-  // Hat
-  geos.push(buildBoxTriangles(0, 1.52, 0, 0.42, 0.12, 0.42, hr, hg, hb));
-  // Arms
-  geos.push(buildBoxTriangles(-0.38, 0.6, 0, 0.15, 0.8, 0.15, br * 0.9, bg * 0.9, bb * 0.9));
-  geos.push(buildBoxTriangles(0.38, 0.6, 0, 0.15, 0.8, 0.15, br * 0.9, bg * 0.9, bb * 0.9));
-  // Legs
-  geos.push(buildBoxTriangles(-0.12, -0.1, 0, 0.18, 0.6, 0.18, lr, lg, lb));
-  geos.push(buildBoxTriangles(0.12, -0.1, 0, 0.18, 0.6, 0.18, lr, lg, lb));
+
+  // ── Boots ──
+  geos.push(buildBoxTriangles(-0.13, 0.07, 0.02, 0.24, 0.14, 0.3, kr, kg, kb));
+  geos.push(buildBoxTriangles(0.13, 0.07, 0.02, 0.24, 0.14, 0.3, kr, kg, kb));
+  // ── Legs ──
+  geos.push(buildBoxTriangles(-0.13, 0.38, 0, 0.2, 0.48, 0.2, lr, lg, lb));
+  geos.push(buildBoxTriangles(0.13, 0.38, 0, 0.2, 0.48, 0.2, lr, lg, lb));
+  // ── Belt ──
+  geos.push(buildBoxTriangles(0, 0.59, 0, 0.54, 0.08, 0.35, er, eg, eb));
+  // ── Torso ──
+  geos.push(buildBoxTriangles(0, 0.93, 0, 0.5, 0.62, 0.32, br, bg, bb));
+  // ── Shoulders ──
+  geos.push(buildBoxTriangles(0, 1.28, 0, 0.62, 0.1, 0.36, br * 0.82, bg * 0.82, bb * 0.82));
+  // ── Arms ──
+  geos.push(buildBoxTriangles(-0.36, 0.92, 0, 0.16, 0.58, 0.16, br * 0.93, bg * 0.93, bb * 0.93));
+  geos.push(buildBoxTriangles(0.36, 0.92, 0, 0.16, 0.58, 0.16, br * 0.93, bg * 0.93, bb * 0.93));
+  // ── Hands ──
+  geos.push(buildBoxTriangles(-0.36, 0.53, 0, 0.12, 0.12, 0.12, sr * 0.92, sg * 0.92, sb * 0.92));
+  geos.push(buildBoxTriangles(0.36, 0.53, 0, 0.12, 0.12, 0.12, sr * 0.92, sg * 0.92, sb * 0.92));
+  // ── Neck ──
+  geos.push(buildBoxTriangles(0, 1.37, 0, 0.16, 0.08, 0.16, sr * 0.9, sg * 0.9, sb * 0.9));
+  // ── Head ──
+  geos.push(buildBoxTriangles(0, 1.61, 0, 0.4, 0.4, 0.4, sr, sg, sb));
+  // ── Nose ──
+  geos.push(buildBoxTriangles(0, 1.56, -0.22, 0.08, 0.08, 0.1, sr * 1.05, sg * 1.05, sb * 1.05));
+
+  // ── Hat (default — not for elves) ──
+  if (factionId !== 'rivendell_keepers') {
+    geos.push(buildBoxTriangles(0, 1.83, 0, 0.52, 0.04, 0.52, hr, hg, hb));
+    geos.push(buildBoxTriangles(0, 1.95, 0, 0.42, 0.16, 0.42, hr, hg, hb));
+  }
+
+  // ── Faction-specific gear ──
+  if (factionId === 'road_wardens') {
+    // Cloak flowing behind
+    geos.push(buildBoxTriangles(0, 0.85, 0.2, 0.46, 0.85, 0.06, br * 0.6, bg * 0.6, bb * 0.6));
+    // Sword at left hip
+    geos.push(buildBoxTriangles(-0.4, 0.38, 0, 0.04, 0.52, 0.04, 0.53, 0.53, 0.58));
+    geos.push(buildBoxTriangles(-0.4, 0.67, 0, 0.12, 0.04, 0.04, 0.4, 0.38, 0.25));
+    // Sword pommel
+    geos.push(buildBoxTriangles(-0.4, 0.14, 0, 0.06, 0.06, 0.06, 0.4, 0.38, 0.25));
+  } else if (factionId === 'rivendell_keepers') {
+    // Golden circlet
+    geos.push(buildBoxTriangles(0, 1.83, 0, 0.44, 0.04, 0.44, 0.75, 0.65, 0.3));
+    // Gem on circlet
+    geos.push(buildBoxTriangles(0, 1.86, -0.2, 0.06, 0.06, 0.06, 0.25, 0.35, 0.75));
+    // Flowing robe skirt
+    geos.push(buildBoxTriangles(0, 0.32, 0, 0.48, 0.32, 0.3, br, bg, bb));
+    // Robe hem
+    geos.push(buildBoxTriangles(0, 0.13, 0, 0.5, 0.04, 0.32, br * 0.85, bg * 0.85, bb * 0.85));
+    // Sash
+    geos.push(buildBoxTriangles(0.08, 0.7, -0.14, 0.04, 0.4, 0.04, 0.6, 0.5, 0.25));
+  } else if (factionId === 'dwarven_crafters') {
+    // Thick beard
+    geos.push(buildBoxTriangles(0, 1.25, -0.12, 0.24, 0.3, 0.18, 0.42, 0.28, 0.14));
+    // Helmet nose guard
+    geos.push(buildBoxTriangles(0, 1.86, -0.2, 0.06, 0.14, 0.06, hr * 0.75, hg * 0.75, hb * 0.75));
+    // Pickaxe on back — handle
+    geos.push(buildBoxTriangles(0.1, 1.15, 0.22, 0.04, 0.6, 0.04, 0.45, 0.42, 0.38));
+    // Pickaxe head
+    geos.push(buildBoxTriangles(0.1, 1.5, 0.22, 0.22, 0.08, 0.06, 0.5, 0.5, 0.55));
+    // Broader build — extra torso width
+    geos.push(buildBoxTriangles(0, 0.93, 0, 0.54, 0.55, 0.36, br * 0.95, bg * 0.95, bb * 0.95));
+  } else if (factionId === 'woodland_guardians') {
+    // Hooded cloak
+    geos.push(buildBoxTriangles(0, 0.9, 0.18, 0.44, 0.8, 0.06, 0.2, 0.35, 0.16));
+    // Hood
+    geos.push(buildBoxTriangles(0, 1.72, 0.06, 0.44, 0.26, 0.3, 0.2, 0.35, 0.16));
+    // Quiver on back
+    geos.push(buildBoxTriangles(0.14, 1.12, 0.2, 0.12, 0.42, 0.08, 0.35, 0.25, 0.12));
+    // Arrows poking out
+    geos.push(buildBoxTriangles(0.14, 1.4, 0.2, 0.02, 0.16, 0.02, 0.55, 0.5, 0.3));
+    geos.push(buildBoxTriangles(0.11, 1.38, 0.2, 0.02, 0.14, 0.02, 0.55, 0.5, 0.3));
+    // Bow at side
+    geos.push(buildBoxTriangles(-0.48, 0.95, 0, 0.04, 0.6, 0.04, 0.4, 0.28, 0.12));
+  } else if (factionId === 'beorning_wardens') {
+    // Thick fur collar/mantle
+    geos.push(buildBoxTriangles(0, 1.22, 0, 0.64, 0.16, 0.42, 0.52, 0.4, 0.22));
+    // Fur texture (lighter stripe)
+    geos.push(buildBoxTriangles(0, 1.22, -0.14, 0.5, 0.08, 0.08, 0.6, 0.5, 0.3));
+    // Battle axe — handle
+    geos.push(buildBoxTriangles(0.44, 0.68, 0, 0.04, 0.58, 0.04, 0.38, 0.32, 0.22));
+    // Axe head (double-bladed)
+    geos.push(buildBoxTriangles(0.44, 1.02, -0.07, 0.18, 0.14, 0.04, 0.5, 0.5, 0.52));
+    geos.push(buildBoxTriangles(0.44, 1.02, 0.07, 0.18, 0.14, 0.04, 0.5, 0.5, 0.52));
+    // Fur trim on boots
+    geos.push(buildBoxTriangles(-0.13, 0.16, 0, 0.26, 0.06, 0.28, 0.52, 0.42, 0.25));
+    geos.push(buildBoxTriangles(0.13, 0.16, 0, 0.26, 0.06, 0.28, 0.52, 0.42, 0.25));
+  }
 
   return mergeGeometry(geos);
 }
