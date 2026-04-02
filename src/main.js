@@ -69,6 +69,7 @@ import { getBuildingBonus } from './core/buildingStyle.js';
 import { getRaceSpeedModifier, getRaceSprintMultiplier, getRaceStealthBonus, getRestorationRewards, getCorruptedRelicCost, getCorruptionSpawnChance } from './core/raceTraits.js';
 import { Settings } from './core/settings.js';
 import { GamePause } from './core/gamePause.js';
+import { UnifiedMenu } from './core/unifiedMenu.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
 import { DeathSystem } from './core/deathSystem.js';
@@ -95,7 +96,7 @@ import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
-import { shouldReleaseCursor } from './core/menuState.js';
+// menuState.js no longer needed — unified menu handles cursor release
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -170,6 +171,8 @@ function startGame(config, jumpStateId) {
   const GC = GAME_CONSTANTS;
   const settings = new Settings();
   const gamePause = new GamePause();
+  const MENU_TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
+  const unifiedMenu = new UnifiedMenu(MENU_TABS);
 
   // --- Core state ---
   const world = new World();
@@ -550,9 +553,36 @@ function startGame(config, jumpStateId) {
     dirLight.intensity = dirLevels[phase] || 0.8;
   }
 
+  // --- Unified menu DOM ---
+  const unifiedMenuEl = document.getElementById('unified-menu');
+  const menuTabButtons = unifiedMenuEl.querySelectorAll('.menu-tab');
+
+  function syncUnifiedMenuDOM() {
+    if (unifiedMenu.isOpen) {
+      unifiedMenuEl.classList.add('open');
+      // Update tab buttons
+      menuTabButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === unifiedMenu.activeTab);
+      });
+      // Update tab content panels
+      MENU_TABS.forEach(tab => {
+        const content = document.getElementById(`tab-content-${tab}`);
+        if (content) content.classList.toggle('active', tab === unifiedMenu.activeTab);
+      });
+    } else {
+      unifiedMenuEl.classList.remove('open');
+    }
+  }
+
+  // Tab click handlers
+  menuTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      unifiedMenu.switchTab(btn.dataset.tab);
+      syncUnifiedMenuDOM();
+    });
+  });
+
   // --- Map panel rendering (canvas-based) ---
-  const mapPanel = document.getElementById('map-panel');
-  const mapTitle = document.getElementById('map-title');
   const mapCanvas2D = document.getElementById('map-canvas-2d');
   const mapExploredSpan = document.getElementById('map-explored');
   const mapLayerSystem = new MapLayerSystem(
@@ -562,9 +592,6 @@ function startGame(config, jumpStateId) {
   const mapRenderer = new MapRenderer(mapLayerSystem, mapCanvas2D);
 
   function updateMapPanel(playerPos) {
-    mapPanel.style.display = mapScreen.isOpen ? 'block' : 'none';
-    if (!mapScreen.isOpen) return;
-
     const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
     const questMarkerList = getQuestMarkers(questTriggers, activeQuestIds);
 
@@ -578,23 +605,16 @@ function startGame(config, jumpStateId) {
       questMarkers: questMarkerList,
     });
 
-    mapTitle.textContent = mapRenderer.zoom === MapZoom.OVERVIEW
-      ? 'World Map [M]'
-      : 'Detail Map [M]';
     mapExploredSpan.textContent = Math.round(mapScreen.getExploredPercentage());
   }
 
   // --- Skill tree panel rendering ---
-  const skillPanel = document.getElementById('skill-panel');
   const skillTreeNav = document.getElementById('skill-tree-nav');
   const skillTreeNodes = document.getElementById('skill-tree-nodes');
 
   function updateSkillPanel() {
-    skillPanel.style.display = skillTreeUI.isOpen ? 'block' : 'none';
-    if (!skillTreeUI.isOpen) return;
     const tree = skillTreeUI.getCurrentTree();
-    skillPanel.querySelector('h2').textContent = `Skills [Tab] — ${tree.name} (${skillTreeUI.getSkillPoints()} pts)`;
-    skillTreeNav.textContent = `← ${skillTreeUI.currentTreeIndex + 1}/${skillTrees.length} →`;
+    skillTreeNav.textContent = `${tree.name} (${skillTreeUI.getSkillPoints()} pts) — ← ${skillTreeUI.currentTreeIndex + 1}/${skillTrees.length} →`;
     const nodes = skillTreeUI.getNodes();
     skillTreeNodes.innerHTML = nodes.map((n, i) => {
       const sel = i === skillTreeUI.selectedNodeIndex ? ' selected' : '';
@@ -613,21 +633,10 @@ function startGame(config, jumpStateId) {
   }
 
   // --- Crafting and Quest panel rendering ---
-  const craftingPanel = document.getElementById('crafting-panel');
   const craftingList = document.getElementById('crafting-list');
   const questList = document.getElementById('quest-list');
 
   function updateCraftingPanel() {
-    craftingPanel.style.display = craftingUI.isOpen ? 'block' : 'none';
-    if (!craftingUI.isOpen) return;
-    // Show station name in crafting panel header
-    const stationHeader = craftingPanel.querySelector('h2');
-    if (stationHeader) {
-      const stationName = craftingUI._station
-        ? `Station: ${craftingUI._station.charAt(0).toUpperCase() + craftingUI._station.slice(1)}`
-        : 'Hand Crafting';
-      stationHeader.textContent = `Crafting [E] — ${stationName}`;
-    }
     const allRecipesList = craftingUI.getAllRecipes();
     // Clamp selectedIndex to valid range
     if (craftingUI.selectedIndex >= allRecipesList.length) {
@@ -696,10 +705,9 @@ function startGame(config, jumpStateId) {
     }
   }
 
-  // --- Progress panel rendering ---
+  // --- Progress panel rendering (inside quests tab) ---
   function updateProgressPanel() {
-    const panel = document.getElementById('progress-panel');
-    if (panel.style.display === 'none') return;
+    if (!unifiedMenu.isOpen || unifiedMenu.activeTab !== 'quests') return;
     const pct = progress.getPercentage();
     document.getElementById('progress-fill').style.width = `${pct}%`;
     document.getElementById('progress-pct').textContent = `${pct}% Complete`;
@@ -768,31 +776,24 @@ function startGame(config, jumpStateId) {
       }
     }
 
-    // Escape closes any open menu and returns to gameplay
+    // Escape toggles the unified menu (or closes chest if open)
     if (input.consumeKeyPress('Escape')) {
-      let closedSomething = false;
-      if (openChestPos) { closeChest(); closedSomething = true; }
-      if (craftingUI.isOpen) { craftingUI.toggle(); updateCraftingPanel(); closedSomething = true; }
-      if (document.getElementById('inventory-panel').style.display !== 'none') {
-        document.getElementById('inventory-panel').style.display = 'none'; closedSomething = true;
+      if (openChestPos) {
+        closeChest();
+      } else {
+        unifiedMenu.toggle();
+        syncUnifiedMenuDOM();
+        if (!unifiedMenu.isOpen) renderer.domElement.requestPointerLock();
       }
-      if (mapScreen.isOpen) { mapScreen.toggle(); closedSomething = true; }
-      if (skillTreeUI.isOpen) { skillTreeUI.toggle(); closedSomething = true; }
-      if (settings.isOpen) { settings.toggleOpen(); closedSomething = true; }
-      const ql = document.getElementById('quest-log');
-      if (ql && ql.style.display === 'block') { ql.style.display = 'none'; closedSomething = true; }
-      if (closedSomething) renderer.domElement.requestPointerLock();
     }
 
-    const anyMenuOpen = shouldReleaseCursor({
-      inventory: document.getElementById('inventory-panel').style.display !== 'none',
-      crafting: craftingUI.isOpen,
-      questLog: document.getElementById('quest-log').style.display === 'block',
-      skillTree: skillTreeUI.isOpen,
-      map: mapScreen.isOpen,
-      settings: settings.isOpen,
-      chest: !!openChestPos,
-    });
+    // Tab cycles tabs when menu is open
+    if (unifiedMenu.isOpen && input.consumeKeyPress('Tab')) {
+      unifiedMenu.nextTab();
+      syncUnifiedMenuDOM();
+    }
+
+    const anyMenuOpen = unifiedMenu.isOpen || !!openChestPos;
     input.menuOpen = anyMenuOpen;
     gamePause.setMenuOpen(anyMenuOpen);
     if (anyMenuOpen && document.pointerLockElement) {
@@ -852,159 +853,109 @@ function startGame(config, jumpStateId) {
     // Status effects tick
     statusEffects.tick(gameDt);
 
-    // Completion tracker (backtick key)
-    if (input.consumeKeyPress('Backquote')) {
-      const pp = document.getElementById('progress-panel');
-      pp.style.display = pp.style.display === 'none' ? 'block' : 'none';
-    }
-    updateProgressPanel();
+    // --- Unified menu tab content updates (only when menu is open) ---
+    if (unifiedMenu.isOpen) {
+      const activeTab = unifiedMenu.activeTab;
 
-    // Map screen (M key) — update every frame while open so player dot moves
-    if (input.consumeKeyPress('KeyM')) {
-      mapScreen.toggle();
-      if (!mapScreen.isOpen) renderer.domElement.requestPointerLock();
-    }
-    // Z key toggles map zoom while map is open
-    if (mapScreen.isOpen && input.consumeKeyPress('KeyZ')) {
-      mapRenderer.toggleZoom();
-    }
-    if (mapScreen.isOpen) {
-      updateMapPanel(player.position);
-    } else {
-      mapPanel.style.display = 'none';
-    }
+      // Crafting station proximity detection
+      const nearbyStation = detectNearbyStation(world, player.position);
+      craftingUI.setStation(nearbyStation);
 
-    // Settings panel (P key)
-    if (input.consumeKeyPress('KeyP')) {
-      settings.toggleOpen();
-      const settingsPanel = document.getElementById('settings-panel');
-      if (settingsPanel) {
-        settingsPanel.style.display = settings.isOpen ? 'block' : 'none';
-        if (settings.isOpen) {
-          settingsPanel.innerHTML = `
-            <h2>Settings [P]</h2>
-            <div style="margin:8px 0">
-              <label>Camera Sensitivity: <span id="sens-val">${settings.sensitivity.toFixed(1)}x</span></label><br>
-              <input type="range" id="sens-slider" min="0.5" max="3.0" step="0.1" value="${settings.sensitivity}" style="width:200px">
-            </div>
-            <div style="margin:8px 0">
-              <label>FOV: <span id="fov-val">${settings.fov}</span></label><br>
-              <input type="range" id="fov-slider" min="60" max="110" step="1" value="${settings.fov}" style="width:200px">
-            </div>
-            <div style="margin:8px 0">
-              <label><input type="checkbox" id="tutorial-toggle" ${settings.tutorialEnabled ? 'checked' : ''}> Tutorial</label>
-            </div>
-          `;
-          document.getElementById('sens-slider').addEventListener('input', (e) => {
-            settings.setSensitivity(parseFloat(e.target.value));
-            document.getElementById('sens-val').textContent = settings.sensitivity.toFixed(1) + 'x';
-          });
-          document.getElementById('fov-slider').addEventListener('input', (e) => {
-            settings.setFov(parseInt(e.target.value));
-            document.getElementById('fov-val').textContent = settings.fov;
-            camera.fov = settings.fov;
-            camera.updateProjectionMatrix();
-          });
-          document.getElementById('tutorial-toggle').addEventListener('change', () => {
-            settings.toggleTutorial();
-          });
+      if (activeTab === 'inventory') {
+        // Inventory grid rendering
+        const grid = document.getElementById('inventory-grid');
+        let gridHtml = '';
+        const totalSlots = inventory.size || 36;
+        for (let i = 0; i < totalSlots; i++) {
+          const slot = inventory.getSlot ? inventory.getSlot(i) : null;
+          const icon = slot ? getItemIcon(slot.type) : '';
+          const label = slot ? slot.type.replace(/_/g, ' ') : '';
+          const count = slot ? slot.count : '';
+          const selBorder = (invSelectedSlot === i) ? 'border-color:#c9a84c;background:rgba(60,60,20,0.5)' : '';
+          gridHtml += `<div data-inv-slot="${i}" style="width:56px;height:56px;background:rgba(30,30,40,0.8);border:2px solid #444;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${selBorder}">
+            <div style="font-size:20px;line-height:1">${icon}</div>
+            <div style="font-size:8px;color:#aaa;overflow:hidden;max-width:52px;text-align:center;white-space:nowrap">${label}</div>
+            <div style="font-size:9px;color:#888">${count}</div>
+          </div>`;
+        }
+        grid.innerHTML = gridHtml;
+        grid.onclick = (e) => {
+          const el = e.target.closest('[data-inv-slot]');
+          if (!el) return;
+          const idx = parseInt(el.getAttribute('data-inv-slot'));
+          if (invSelectedSlot === -1) {
+            invSelectedSlot = idx;
+          } else {
+            if (inventory.moveSlot) inventory.moveSlot(invSelectedSlot, idx);
+            invSelectedSlot = -1;
+          }
+        };
+        const factionHtml = factionSystem.getAllFactions().map(f => {
+          const rep = factionSystem.getReputation(f.id);
+          const tier = factionSystem.getTier(f.id);
+          return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
+        }).join('');
+        document.getElementById('inventory-extra').innerHTML =
+          '<div style="border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px;margin-top:4px">Factions</div>' + factionHtml;
+      }
+
+      if (activeTab === 'crafting') {
+        updateCraftingPanel();
+        // Crafting navigation
+        if (input.consumeKeyPress('ArrowDown')) { craftingUI.selectNext(); updateCraftingPanel(); }
+        if (input.consumeKeyPress('ArrowUp')) { craftingUI.selectPrev(); updateCraftingPanel(); }
+        if (input.consumeKeyPress('Enter')) {
+          if (craftingUI.craftSelected(inventory)) updateCraftingPanel();
         }
       }
-    }
 
-    // Skill tree (Tab key)
-    if (input.consumeKeyPress('Tab')) {
-      skillTreeUI.toggle();
-      updateSkillPanel();
-      if (!skillTreeUI.isOpen) renderer.domElement.requestPointerLock();
-    }
-    if (skillTreeUI.isOpen) {
-      if (input.consumeKeyPress('ArrowRight')) { skillTreeUI.nextTree(); updateSkillPanel(); }
-      if (input.consumeKeyPress('ArrowLeft')) { skillTreeUI.prevTree(); updateSkillPanel(); }
-      if (input.consumeKeyPress('ArrowDown')) { skillTreeUI.selectedNodeIndex++; updateSkillPanel(); }
-      if (input.consumeKeyPress('ArrowUp')) { skillTreeUI.selectedNodeIndex = Math.max(0, skillTreeUI.selectedNodeIndex - 1); updateSkillPanel(); }
-      if (input.consumeKeyPress('Enter')) {
-        skillTreeUI.unlockSelected();
+      if (activeTab === 'skills') {
         updateSkillPanel();
+        if (input.consumeKeyPress('ArrowRight')) { skillTreeUI.nextTree(); updateSkillPanel(); }
+        if (input.consumeKeyPress('ArrowLeft')) { skillTreeUI.prevTree(); updateSkillPanel(); }
+        if (input.consumeKeyPress('ArrowDown')) { skillTreeUI.selectedNodeIndex++; updateSkillPanel(); }
+        if (input.consumeKeyPress('ArrowUp')) { skillTreeUI.selectedNodeIndex = Math.max(0, skillTreeUI.selectedNodeIndex - 1); updateSkillPanel(); }
+        if (input.consumeKeyPress('Enter')) { skillTreeUI.unlockSelected(); updateSkillPanel(); }
       }
-    }
 
-    // Crafting station proximity detection — update station before showing crafting panel
-    const nearbyStation = detectNearbyStation(world, player.position);
-    craftingUI.setStation(nearbyStation);
-
-    // Crafting menu (E key)
-    if (input.consumeKeyPress('KeyE')) {
-      craftingUI.toggle();
-      updateCraftingPanel();
-      if (!craftingUI.isOpen) renderer.domElement.requestPointerLock();
-    }
-
-    // Inventory panel (I key) — grid-based Minecraft-style
-    if (input.consumeKeyPress('KeyI')) {
-      const invPanel = document.getElementById('inventory-panel');
-      const isShowing = invPanel.style.display !== 'none';
-      invPanel.style.display = isShowing ? 'none' : 'block';
-      if (isShowing) renderer.domElement.requestPointerLock();
-    }
-    if (document.getElementById('inventory-panel').style.display !== 'none') {
-      const grid = document.getElementById('inventory-grid');
-      let gridHtml = '';
-      const totalSlots = inventory.size || 36;
-      for (let i = 0; i < totalSlots; i++) {
-        const slot = inventory.getSlot ? inventory.getSlot(i) : null;
-        const icon = slot ? getItemIcon(slot.type) : '';
-        const label = slot ? slot.type.replace(/_/g, ' ') : '';
-        const count = slot ? slot.count : '';
-        const selBorder = (invSelectedSlot === i) ? 'border-color:#c9a84c;background:rgba(60,60,20,0.5)' : '';
-        gridHtml += `<div data-inv-slot="${i}" style="width:56px;height:56px;background:rgba(30,30,40,0.8);border:2px solid #444;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${selBorder}">
-          <div style="font-size:20px;line-height:1">${icon}</div>
-          <div style="font-size:8px;color:#aaa;overflow:hidden;max-width:52px;text-align:center;white-space:nowrap">${label}</div>
-          <div style="font-size:9px;color:#888">${count}</div>
-        </div>`;
+      if (activeTab === 'quests') {
+        updateQuestPanel();
+        updateProgressPanel();
       }
-      grid.innerHTML = gridHtml;
-      // Click handler for slot selection/swapping
-      grid.onclick = (e) => {
-        const el = e.target.closest('[data-inv-slot]');
-        if (!el) return;
-        const idx = parseInt(el.getAttribute('data-inv-slot'));
-        if (invSelectedSlot === -1) {
-          invSelectedSlot = idx;
-        } else {
-          if (inventory.moveSlot) inventory.moveSlot(invSelectedSlot, idx);
-          invSelectedSlot = -1;
-        }
-      };
-      // Faction reputation below grid
-      const factionHtml = factionSystem.getAllFactions().map(f => {
-        const rep = factionSystem.getReputation(f.id);
-        const tier = factionSystem.getTier(f.id);
-        return `<div><span style="color:#c9a84c">${f.name}</span> <span style="color:#888">${tier} (${rep})</span></div>`;
-      }).join('');
-      document.getElementById('inventory-extra').innerHTML =
-        '<div style="border-top:1px solid #444;padding-top:6px;color:#aaa;font-size:11px;margin-top:4px">Factions</div>' + factionHtml;
-    }
 
-    // Quest log (Q key) — update every frame while open so objectives update live
-    if (input.consumeKeyPress('KeyQ')) {
-      const questPanel = document.getElementById('quest-log');
-      const wasOpen = questPanel.style.display === 'block';
-      questPanel.style.display = wasOpen ? 'none' : 'block';
-      if (wasOpen) renderer.domElement.requestPointerLock();
-    }
-    if (document.getElementById('quest-log').style.display === 'block') {
-      updateQuestPanel();
-    }
+      if (activeTab === 'map') {
+        updateMapPanel(player.position);
+        if (input.consumeKeyPress('KeyZ')) mapRenderer.toggleZoom();
+      }
 
-    // Crafting navigation and crafting
-    if (craftingUI.isOpen) {
-      if (input.consumeKeyPress('ArrowDown')) { craftingUI.selectNext(); updateCraftingPanel(); }
-      if (input.consumeKeyPress('ArrowUp')) { craftingUI.selectPrev(); updateCraftingPanel(); }
-      if (input.consumeKeyPress('Enter')) {
-        if (craftingUI.craftSelected(inventory)) {
-          updateCraftingPanel();
-        }
+      if (activeTab === 'settings') {
+        const settingsContent = document.getElementById('settings-content');
+        settingsContent.innerHTML = `
+          <div style="margin:8px 0">
+            <label style="color:#aaa">Camera Sensitivity: <span id="sens-val">${settings.sensitivity.toFixed(1)}x</span></label><br>
+            <input type="range" id="sens-slider" min="0.5" max="3.0" step="0.1" value="${settings.sensitivity}" style="width:100%;margin-top:4px;accent-color:#c9a84c">
+          </div>
+          <div style="margin:12px 0">
+            <label style="color:#aaa">FOV: <span id="fov-val">${settings.fov}</span></label><br>
+            <input type="range" id="fov-slider" min="60" max="110" step="1" value="${settings.fov}" style="width:100%;margin-top:4px;accent-color:#c9a84c">
+          </div>
+          <div style="margin:12px 0">
+            <label style="color:#aaa"><input type="checkbox" id="tutorial-toggle" ${settings.tutorialEnabled ? 'checked' : ''}> Tutorial reminders</label>
+          </div>
+        `;
+        document.getElementById('sens-slider').addEventListener('input', (e) => {
+          settings.setSensitivity(parseFloat(e.target.value));
+          document.getElementById('sens-val').textContent = settings.sensitivity.toFixed(1) + 'x';
+        });
+        document.getElementById('fov-slider').addEventListener('input', (e) => {
+          settings.setFov(parseInt(e.target.value));
+          document.getElementById('fov-val').textContent = settings.fov;
+          camera.fov = settings.fov;
+          camera.updateProjectionMatrix();
+        });
+        document.getElementById('tutorial-toggle').addEventListener('change', () => {
+          settings.toggleTutorial();
+        });
       }
     }
 
