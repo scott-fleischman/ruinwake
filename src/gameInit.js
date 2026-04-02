@@ -48,6 +48,7 @@ import { ChunkManager } from './core/chunkManager.js';
 import { GameProgress } from './core/gameProgress.js';
 import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { Settings } from './core/settings.js';
+import { GamePause } from './core/gamePause.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
 import { getDifficultyModifiers } from './core/difficulty.js';
 import { getRaceStartingReputation } from './core/raceReputation.js';
@@ -107,6 +108,7 @@ export function createGameState(config) {
   const fearSystem = new FearSystem();
   const nightDanger = new NightDangerSystem();
   const settings = new Settings();
+  const gamePause = new GamePause();
 
   // Crafting
   const craftingSystem = new CraftingSystem(allRecipes);
@@ -185,7 +187,7 @@ export function createGameState(config) {
     config, world, chunkMgr, player, inventory, survivalStats, race, cls,
     difficultyMods, gameClock, combatSystem, weatherSystem, fogOfWar,
     experienceSystem, equipment, skillTreeSystem, skillTreeUI, hotbar,
-    fearSystem, nightDanger, settings, craftingSystem, craftingUI,
+    fearSystem, nightDanger, settings, gamePause, craftingSystem, craftingUI,
     statusEffects, questSystem, compass, factionSystem, npcSystem,
     mapScreen, stealthSystem, relicSystem, shelterSystem, loreJournal,
     fastTravel, discoverySystem, restSystem, freshnessTracker, blockBreaker,

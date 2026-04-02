@@ -68,6 +68,7 @@ import { FreshnessTracker } from './core/freshness.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
 import { getRaceSpeedModifier, getRaceSprintMultiplier, getRaceStealthBonus, getRestorationRewards, getCorruptedRelicCost, getCorruptionSpawnChance } from './core/raceTraits.js';
 import { Settings } from './core/settings.js';
+import { GamePause } from './core/gamePause.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
 import { DeathSystem } from './core/deathSystem.js';
@@ -168,6 +169,7 @@ document.getElementById('jump-btn').addEventListener('click', () => {
 function startGame(config, jumpStateId) {
   const GC = GAME_CONSTANTS;
   const settings = new Settings();
+  const gamePause = new GamePause();
 
   // --- Core state ---
   const world = new World();
@@ -718,7 +720,8 @@ function startGame(config, jumpStateId) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    const gameDt = dt * GC.SURVIVAL.GAME_TIME_SCALE;
+    const rawGameDt = dt * GC.SURVIVAL.GAME_TIME_SCALE;
+    const gameDt = gamePause.getEffectiveDt(rawGameDt);
     gameClock.tick(gameDt);
 
     // Death check
@@ -791,6 +794,7 @@ function startGame(config, jumpStateId) {
       chest: !!openChestPos,
     });
     input.menuOpen = anyMenuOpen;
+    gamePause.setMenuOpen(anyMenuOpen);
     if (anyMenuOpen && document.pointerLockElement) {
       document.exitPointerLock();
     }
