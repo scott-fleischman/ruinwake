@@ -71,77 +71,125 @@
       font-family: monospace; font-size: 16px; cursor: pointer;
     }
     #start-btn:hover { background: #5a8a3a; }
-    #crafting-panel {
+    /* ── Corner minimap ── */
+    #minimap-container {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(10,10,20,0.92);
-      padding: 20px 30px;
-      border-radius: 10px;
-      border: 1px solid #555;
-      width: 400px;
-      max-height: 70vh;
-      overflow-y: auto;
-      display: none;
-      z-index: 100;
+      bottom: 70px;
+      right: 10px;
+      z-index: 40;
+      pointer-events: none;
+      background: rgba(8, 8, 16, 0.8);
+      border: 1px solid #3a3526;
+      border-radius: 6px;
+      padding: 4px;
     }
-    #crafting-panel h2 { color: #c9a84c; margin-bottom: 12px; font-size: 18px; }
-    #crafting-panel .recipe {
+
+    /* ── Unified tabbed menu ── */
+    #unified-menu {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(820px, 85vw);
+      height: min(600px, 80vh);
+      background: rgba(8, 8, 16, 0.95);
+      border: 1px solid #3a3526;
+      border-radius: 6px;
+      box-shadow:
+        0 0 0 1px rgba(201, 168, 76, 0.08),
+        0 8px 32px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(201, 168, 76, 0.06);
+      display: none;
+      flex-direction: column;
+      z-index: 150;
+      overflow: hidden;
+    }
+    #unified-menu.open { display: flex; }
+    #menu-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #2a2520;
+      background: rgba(12, 12, 22, 0.6);
+      flex-shrink: 0;
+      padding: 0 8px;
+    }
+    .menu-tab {
+      padding: 12px 18px 10px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #6a6456;
+      font-family: monospace;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .menu-tab:hover { color: #a89a7a; }
+    .menu-tab.active {
+      color: #c9a84c;
+      border-bottom-color: #c9a84c;
+    }
+    #menu-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    #menu-content::-webkit-scrollbar { width: 6px; }
+    #menu-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    #menu-content::-webkit-scrollbar-thumb { background: #3a3526; border-radius: 3px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    #menu-footer {
+      padding: 8px 16px;
+      border-top: 1px solid #2a2520;
+      color: #4a4538;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    /* ── Pause overlay ── */
+    #pause-label {
+      position: absolute;
+      top: 8px; right: 16px;
+      color: #c9a84c;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 151;
+      display: none;
+    }
+    #unified-menu.open ~ #pause-label { display: block; }
+
+    /* ── Tab content styles (moved from old panels) ── */
+    .tab-content .recipe {
       padding: 6px 8px;
       margin: 2px 0;
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
     }
-    #crafting-panel .recipe.selected { background: #3a5a2f; color: #fff; }
-    #crafting-panel .recipe.unavailable { color: #666; }
-    #crafting-panel .recipe.available { color: #aed581; }
-    #crafting-panel .hint { color: #888; font-size: 11px; margin-top: 10px; }
-    #quest-log {
-      position: absolute;
-      top: 50%;
-      right: 20px;
-      transform: translateY(-50%);
-      background: rgba(10,10,20,0.88);
-      padding: 16px 20px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      width: 280px;
-      max-height: 50vh;
-      overflow-y: auto;
-      display: none;
-      z-index: 100;
-    }
-    #quest-log h2 { color: #c9a84c; margin-bottom: 10px; font-size: 16px; }
-    #quest-log .quest { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
-    #quest-log .quest-name { color: #aed581; font-weight: bold; }
-    #quest-log .objective { color: #999; margin-left: 8px; }
-    #quest-log .objective.complete { color: #6a6; text-decoration: line-through; }
-    #quest-log .hint { color: #888; font-size: 11px; margin-top: 8px; }
-    #skill-panel {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(10,10,20,0.92);
-      padding: 20px 30px;
-      border-radius: 10px;
-      border: 1px solid #555;
-      width: 440px;
-      max-height: 75vh;
-      overflow-y: auto;
-      display: none;
-      z-index: 100;
-    }
-    #skill-panel h2 { color: #c9a84c; margin-bottom: 8px; font-size: 18px; }
-    #skill-panel .tree-nav { color: #888; font-size: 12px; margin-bottom: 10px; }
-    #skill-panel .node { padding: 5px 8px; margin: 2px 0; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    #skill-panel .node.unlocked { color: #aed581; }
-    #skill-panel .node.available { color: #c9a84c; }
-    #skill-panel .node.locked { color: #555; }
-    #skill-panel .node.selected { background: #3a5a2f; }
-    #skill-panel .hint { color: #888; font-size: 11px; margin-top: 10px; }
+    .tab-content .recipe.selected { background: #3a5a2f; color: #fff; }
+    .tab-content .recipe.unavailable { color: #666; }
+    .tab-content .recipe.available { color: #aed581; }
+    .tab-content .quest { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+    .tab-content .quest-name { color: #aed581; font-weight: bold; }
+    .tab-content .objective { color: #999; margin-left: 8px; }
+    .tab-content .objective.complete { color: #6a6; text-decoration: line-through; }
+    .tab-content .tree-nav { color: #888; font-size: 12px; margin-bottom: 10px; }
+    .tab-content .node { padding: 5px 8px; margin: 2px 0; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .tab-content .node.unlocked { color: #aed581; }
+    .tab-content .node.available { color: #c9a84c; }
+    .tab-content .node.locked { color: #555; }
+    .tab-content .node.selected { background: #3a5a2f; }
+    .tab-content .hint { color: #888; font-size: 11px; margin-top: 10px; }
+    .tab-content .section-label { color: #c9a84c; font-size: 14px; margin-bottom: 10px; letter-spacing: 0.5px; }
+
+    /* ── Progress section inside quests tab ── */
+    #tab-content-quests .progress-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #2a2520; }
     #hotbar-bar {
       position: absolute;
       bottom: 10px;
@@ -189,7 +237,7 @@
       color: #888;
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-E_aW0f6R.js"></script>
+  <script type="module" crossorigin src="./assets/index-CB4ostVs.js"></script>
 </head>
 <body>
   <div id="new-game">
@@ -233,12 +281,55 @@
     <div id="loading-pct" style="color:#aaa;font-size:13px;margin-top:10px">0%</div>
   </div>
   <div id="hud"></div>
-  <div id="progress-panel" style="position:absolute;top:50%;right:20px;transform:translateY(-50%);background:rgba(10,10,20,0.92);padding:16px 20px;border-radius:8px;border:1px solid #444;width:280px;max-height:70vh;overflow-y:auto;display:none;z-index:100">
-    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:16px">Completion [` key]</h2>
-    <div id="progress-bar" style="background:#222;border-radius:4px;height:20px;margin-bottom:10px;overflow:hidden"><div id="progress-fill" style="background:#4a6e2f;height:100%;transition:width 0.3s"></div></div>
-    <div id="progress-pct" style="text-align:center;color:#c9a84c;font-size:18px;margin-bottom:10px"></div>
-    <div id="progress-list" style="font-size:12px;line-height:1.8"></div>
+  <div id="minimap-container" style="display:none">
+    <canvas id="minimap-canvas" width="160" height="120" style="width:160px;height:120px;background:#1a2a1a;border-radius:4px;image-rendering:pixelated"></canvas>
+    <div style="color:#666;font-size:9px;text-align:center;margin-top:2px">M toggle</div>
   </div>
+  <!-- Unified tabbed menu (replaces 7 separate panels) -->
+  <div id="unified-menu">
+    <div id="menu-tabs">
+      <button class="menu-tab active" data-tab="inventory">Inventory</button>
+      <button class="menu-tab" data-tab="crafting">Crafting</button>
+      <button class="menu-tab" data-tab="skills">Skills</button>
+      <button class="menu-tab" data-tab="quests">Quests</button>
+      <button class="menu-tab" data-tab="map">Map</button>
+      <button class="menu-tab" data-tab="settings">Settings</button>
+    </div>
+    <div id="menu-content">
+      <div id="tab-content-inventory" class="tab-content active">
+        <div id="inventory-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:12px"></div>
+        <div id="inventory-extra" style="font-size:12px;line-height:1.6"></div>
+        <div class="hint">Click slot then click another to swap</div>
+      </div>
+      <div id="tab-content-crafting" class="tab-content">
+        <div id="crafting-list"></div>
+        <div class="hint">Up/Down Navigate | Enter Craft</div>
+      </div>
+      <div id="tab-content-skills" class="tab-content">
+        <div id="skill-tree-nav" class="tree-nav"></div>
+        <div id="skill-tree-nodes"></div>
+        <div class="hint">Left/Right Switch tree | Up/Down Navigate | Enter Unlock</div>
+      </div>
+      <div id="tab-content-quests" class="tab-content">
+        <div id="quest-list"></div>
+        <div class="progress-section">
+          <div class="section-label">Completion</div>
+          <div id="progress-bar" style="background:#222;border-radius:4px;height:16px;margin-bottom:8px;overflow:hidden"><div id="progress-fill" style="background:#4a6e2f;height:100%;transition:width 0.3s"></div></div>
+          <div id="progress-pct" style="text-align:center;color:#c9a84c;font-size:16px;margin-bottom:8px"></div>
+          <div id="progress-list" style="font-size:12px;line-height:1.8"></div>
+        </div>
+      </div>
+      <div id="tab-content-map" class="tab-content">
+        <canvas id="map-canvas-2d" width="460" height="320" style="width:460px;height:320px;background:#1a2a1a;border-radius:4px;image-rendering:pixelated"></canvas>
+        <div style="color:#888;font-size:11px;margin-top:8px">Z Toggle zoom | Explored: <span id="map-explored">0</span>%</div>
+      </div>
+      <div id="tab-content-settings" class="tab-content">
+        <div id="settings-content"></div>
+      </div>
+    </div>
+    <div id="menu-footer">ESC close | Tab switch</div>
+  </div>
+  <div id="pause-label">PAUSED</div>
   <div id="crosshair">+</div>
   <div id="break-bar" style="position:absolute;top:calc(50% + 20px);left:50%;transform:translateX(-50%);width:60px;height:6px;background:rgba(0,0,0,0.5);border-radius:3px;display:none;pointer-events:none;z-index:10"><div id="break-fill" style="height:100%;background:#c9a84c;border-radius:3px;width:0%;transition:width 0.05s"></div></div>
   <div id="health-bar-wrap" style="position:absolute;bottom:70px;left:10px;width:160px;pointer-events:none;display:none">
@@ -257,22 +348,12 @@
     <div id="dialogue-message" style="color:#eee;font-size:14px;margin-bottom:10px"></div>
     <div id="dialogue-choices" style="font-size:13px"></div>
   </div>
-  <div id="map-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(5,15,5,0.92);padding:20px;border-radius:10px;border:1px solid #444;width:500px;height:420px;display:none;z-index:100"><h2 id="map-title" style="color:#c9a84c;margin-bottom:10px;font-size:18px">World Map [M]</h2><canvas id="map-canvas-2d" width="460" height="320" style="width:460px;height:320px;background:#1a2a1a;border-radius:4px;image-rendering:pixelated"></canvas><div style="color:#888;font-size:11px;margin-top:8px">M Close | Z Zoom | Explored: <span id="map-explored">0</span>%</div></div>
-  <div id="skill-panel"><h2>Skills [Tab]</h2><div id="skill-tree-nav" class="tree-nav"></div><div id="skill-tree-nodes"></div><div class="hint">←→ Switch tree | ↑↓ Navigate | Enter Unlock | Tab Close</div></div>
-  <div id="inventory-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px;border-radius:10px;border:1px solid #555;width:440px;max-height:80vh;overflow-y:auto;display:none;z-index:100">
-    <h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">Inventory [I]</h2>
-    <div id="inventory-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:12px"></div>
-    <div id="inventory-extra" style="font-size:12px;line-height:1.6"></div>
-    <div style="color:#666;font-size:10px;margin-top:8px">Click slot then click another to swap | I Close</div>
-  </div>
   <div id="chest-panel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,20,0.92);padding:20px;border-radius:10px;border:1px solid #555;width:360px;max-height:60vh;overflow-y:auto;display:none;z-index:110">
     <h2 style="color:#c9a84c;margin-bottom:10px;font-size:18px">Chest</h2>
     <div id="chest-items" style="font-size:13px;line-height:2"></div>
     <div style="color:#666;font-size:10px;margin-top:8px">Click item to take | Escape to close</div>
   </div>
   <div id="hotbar-bar" style="display:none"></div>
-  <div id="crafting-panel"><h2>Crafting [E]</h2><div id="crafting-list"></div><div class="hint">↑↓ Navigate | Enter Craft | E Close</div></div>
-  <div id="quest-log"><h2>Quest Log [Q]</h2><div id="quest-list"></div><div class="hint">Q Close</div></div>
   <div id="instructions">
     <div style="font-size:20px;color:#c9a84c;margin-bottom:12px">Click to Play</div>
     <table style="text-align:left;font-size:13px;line-height:1.6;width:100%;border-collapse:collapse">
@@ -291,17 +372,13 @@
       <tr><td style="color:#aed581;padding:1px 8px">G</td><td>Guard (hold)</td></tr>
       <tr><td style="color:#aed581;padding:1px 8px">X</td><td>Use relic ability</td></tr>
       <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Menus</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">E</td><td>Crafting</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">I</td><td>Inventory</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Q</td><td>Quests</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Tab</td><td>Skills</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">M</td><td>Map</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">ESC</td><td>Menu (pauses game)</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">Tab</td><td>Switch menu tab</td></tr>
+      <tr><td style="color:#aed581;padding:1px 8px">M</td><td>Toggle minimap</td></tr>
       <tr><td style="color:#aed581;padding:1px 8px">V</td><td>Camera toggle</td></tr>
       <tr><td style="color:#aed581;padding:1px 8px">1-8 / Scroll</td><td>Hotbar slot</td></tr>
       <tr><td style="color:#aed581;padding:1px 8px">F5 / F9</td><td>Save / Load</td></tr>
       <tr><td style="color:#aed581;padding:1px 8px">F4</td><td>Creative mode</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">P</td><td>Settings</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">`</td><td>Completion tracker</td></tr>
     </table>
   </div>
 </body>
