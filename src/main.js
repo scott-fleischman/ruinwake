@@ -1170,6 +1170,15 @@ function startGame(config, jumpStateId) {
       eatBestFood(inventory, survivalStats, statusEffects);
     }
 
+    // Throw item (H key)
+    if (input.consumeKeyPress('KeyH')) {
+      const hit = handleThrowInput(inventory, player.position, forward, enemies);
+      if (hit) {
+        dialogueMessage = 'Thrown!';
+        dialogueTimer = 1.5;
+      }
+    }
+
     // Use relic ability (X key)
     if (input.consumeKeyPress('KeyX')) {
       // Gap 4: Corruption/magic interaction — check if in corrupted zone
@@ -1710,6 +1719,18 @@ function startGame(config, jumpStateId) {
       hotbarHTML += `<div class="slot${sel}"><span class="num">${i + 1}</span><div style="font-size:18px">${icon}</div><span class="item-name">${itemName}</span><span class="item-count">${itemCount}</span></div>`;
     }
     hotbarBar.innerHTML = hotbarHTML;
+
+    // Show equipped tool durability below hotbar
+    const mainHandTool = equipment.get('main_hand');
+    const durabilityText = getToolDurabilityDisplay(mainHandTool);
+    let durEl = document.getElementById('tool-durability');
+    if (!durEl) {
+      durEl = document.createElement('div');
+      durEl.id = 'tool-durability';
+      durEl.style.cssText = 'color:#aaa;font-size:11px;text-align:center;margin-top:2px;font-family:monospace';
+      hotbarBar.parentNode.appendChild(durEl);
+    }
+    durEl.textContent = durabilityText;
 
     // NPC proximity hint
     const nearbyNPC = findNearestInteractableNPC(npcSystem, player.position, GC.NPC.INTERACT_RANGE);
