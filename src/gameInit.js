@@ -29,7 +29,7 @@ import { allNPCs } from './core/npcData.js';
 import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
-import { placeRuin } from './core/ruinGenerator.js';
+import { placeRuin, placeBuilding, placeHobbitHole } from './core/ruinGenerator.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
 import { ShelterSystem } from './core/shelter.js';
 import { LoreJournal } from './core/loreJournal.js';
@@ -61,6 +61,8 @@ import { getRaceStealthBonus } from './core/raceTraits.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
 import { createFactionSystem, createCombinedQuestSystem } from './core/systemWiring.js';
 import { createRng } from './core/rng.js';
+import { worldBuildings, worldFeatures, worldTrees, worldStations } from './core/worldData.js';
+import { BlockType } from './core/block.js';
 import { ChestStorage } from './core/chestStorage.js';
 
 /**
@@ -168,14 +170,122 @@ export function createGameState(config, options = {}) {
   const classPassive = getClassPassiveEffect(fullClassId);
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
 
-  // NPCs with shelters
-  for (const npc of allNPCs) {
-    const nx = Math.floor(npc.position.x);
-    const nz = Math.floor(npc.position.z);
-    const nh = getHeightAt(nx, nz);
-    placeRuin(world, { x: nx - 4, y: nh + 1, z: nz - 4 }, 'small');
-    npc.position.y = findSafeY(world, nx, nz, nh);
+  const chestStorage = new ChestStorage();
+
+  // ── Place all pre-baked world buildings ──
+  const npcById = new Map(allNPCs.map(n => [n.id, n]));
+  for (const bldg of worldBuildings) {
+    const bh = getHeightAt(bldg.x, bldg.z);
+    if (bldg.hobbitHole) {
+      placeHobbitHole(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
+        floorBlock: bldg.floorBlock,
+        radius: bldg.radius,
+        bed: bldg.bed,
+        chest: bldg.chest,
+      });
+    } else {
+      placeBuilding(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
+        wallBlock: bldg.wallBlock,
+        roofBlock: bldg.roofBlock,
+        floorBlock: bldg.floorBlock,
+        radius: bldg.radius,
+        height: bldg.height,
+        bed: bldg.bed,
+        chest: bldg.chest,
+      });
+    }
+    if (bldg.chest && bldg.chestItems) {
+      const chestX = bldg.x - bldg.radius + 1;
+      const chestY = bh + 1;
+      const chestZ = bldg.z + bldg.radius - 1;
+      for (const item of bldg.chestItems) {
+        chestStorage.addItem(chestX, chestY, chestZ, item.type, item.count);
+      }
+    }
+    if (bldg.npcId) {
+      const npc = npcById.get(bldg.npcId);
+      if (npc) {
+        npc.position.x = bldg.x + bldg.radius + 1;
+        npc.position.y = bh + 2;
+        npc.position.z = bldg.z;
+        npc.spawnPosition = { ...npc.position };
+        npcSystem.addNPC(npc);
+        npcById.delete(bldg.npcId);
+      }
+    }
+  }
+  for (const [, npc] of npcById) {
+    const nh = getHeightAt(Math.floor(npc.position.x), Math.floor(npc.position.z));
+    npc.position.y = nh + 2;
+    npc.spawnPosition = { ...npc.position };
     npcSystem.addNPC(npc);
+  }
+
+  // ── Place world features (fences, paths, wells, etc.) ──
+  for (const feat of worldFeatures) {
+    if (feat.type === 'line') {
+      const dx = feat.x2 - feat.x1;
+      const dz = feat.z2 - feat.z1;
+      const steps = Math.max(Math.abs(dx), Math.abs(dz));
+      for (let i = 0; i <= steps; i++) {
+        const t = steps === 0 ? 0 : i / steps;
+        const fx = Math.round(feat.x1 + dx * t);
+        const fz = Math.round(feat.z1 + dz * t);
+        const fh = getHeightAt(fx, fz);
+        if (feat.surface) {
+          world.setBlock(fx, fh, fz, feat.block);
+        } else {
+          world.setBlock(fx, fh + feat.dy, fz, feat.block);
+        }
+      }
+    } else if (feat.type === 'well') {
+      const wh = getHeightAt(feat.x, feat.z);
+      for (let ddx = -1; ddx <= 1; ddx++) {
+        for (let ddz = -1; ddz <= 1; ddz++) {
+          if (ddx === 0 && ddz === 0) {
+            world.setBlock(feat.x, wh + 1, feat.z, BlockType.WATER);
+          } else {
+            world.setBlock(feat.x + ddx, wh + 1, feat.z + ddz, BlockType.COBBLESTONE);
+          }
+        }
+      }
+    } else if (feat.type === 'blocks') {
+      const baseH = getHeightAt(feat.x, feat.z);
+      for (const b of feat.blocks) {
+        const bx = feat.x + b.dx;
+        const bz = feat.z + b.dz;
+        const bh = b.surface ? getHeightAt(bx, bz) : baseH;
+        world.setBlock(bx, bh + b.dy, bz, b.block);
+      }
+    }
+  }
+
+  // ── Place special trees ──
+  for (const tree of worldTrees) {
+    const th = getHeightAt(tree.x, tree.z);
+    const trunkH = tree.type === 'large' ? 6 : 4;
+    const canopyR = tree.type === 'large' ? 3 : 2;
+    for (let dy = 1; dy <= trunkH; dy++) {
+      world.setBlock(tree.x, th + dy, tree.z, BlockType.WOOD);
+    }
+    const topY = th + trunkH;
+    for (let ddx = -canopyR; ddx <= canopyR; ddx++) {
+      for (let ddz = -canopyR; ddz <= canopyR; ddz++) {
+        for (let dy = 0; dy <= 2; dy++) {
+          if (ddx === 0 && ddz === 0 && dy === 0) continue;
+          const dist = Math.sqrt(ddx * ddx + ddz * ddz) + dy * 0.7;
+          if (dist <= canopyR + 0.6) {
+            world.setBlock(tree.x + ddx, topY + dy, tree.z + ddz, BlockType.LEAVES);
+          }
+        }
+      }
+    }
+  }
+
+  // ── Place world crafting stations ──
+  for (const st of worldStations) {
+    const sh = getHeightAt(st.x, st.z);
+    world.setBlock(st.x, sh + st.dy, st.z, st.block);
   }
 
   // Starter kit + map
@@ -189,7 +299,6 @@ export function createGameState(config, options = {}) {
 
   const questTriggers = new QuestWorldTriggers();
   const progress = new GameProgress();
-  const chestStorage = new ChestStorage();
 
   return {
     config, fullClassId, world, chunkMgr, player, inventory, survivalStats, race, cls,
