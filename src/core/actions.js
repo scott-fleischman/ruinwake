@@ -1,13 +1,18 @@
 import { BlockType, isBlockSolid, isBlockMineable, blockDrops, ITEM_TO_BLOCK, canMine } from './block.js';
 import { getFood } from './food.js';
 
-export function mineBlock(world, inventory, x, y, z, tool) {
+export function breakBlock(world, x, y, z, tool) {
   const block = world.getBlock(x, y, z);
-  if (!isBlockMineable(block)) return false;
-  if (!canMine(block, tool || null)) return false;
+  if (!isBlockMineable(block)) return null;
+  if (!canMine(block, tool || null)) return null;
   world.setBlock(x, y, z, BlockType.AIR);
-  const drops = blockDrops(block);
-  for (const drop of drops) {
+  return { drops: blockDrops(block) };
+}
+
+export function mineBlock(world, inventory, x, y, z, tool) {
+  const result = breakBlock(world, x, y, z, tool);
+  if (!result) return false;
+  for (const drop of result.drops) {
     inventory.add(drop.type, drop.count);
   }
   return true;
