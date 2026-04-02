@@ -10,25 +10,20 @@ describe('Water generation', () => {
     expect(WATER_LEVEL).toBeLessThan(35);
   });
 
-  it('air blocks at or below water level are filled with water', () => {
+  it('no air blocks remain at or below water level after generation', () => {
     const world = new World();
     generateTerrain(world);
 
-    // Search across the whole world for any water block
-    let foundWater = false;
+    // After terrain generation, every column within the world should have
+    // no air at or below WATER_LEVEL — filled with solid blocks or water.
     for (let x = -90; x < 550; x += 10) {
-      if (foundWater) break;
       for (let z = -90; z < 140; z += 10) {
-        if (foundWater) break;
         for (let y = 0; y <= WATER_LEVEL; y++) {
-          if (world.getBlock(x, y, z) === BlockType.WATER) {
-            foundWater = true;
-            break;
-          }
+          const block = world.getBlock(x, y, z);
+          expect(block, `air found at (${x}, ${y}, ${z})`).not.toBe(BlockType.AIR);
         }
       }
     }
-    expect(foundWater).toBe(true);
   });
 
   it('blocks above water level are not water', () => {
