@@ -81,4 +81,38 @@ export const ItemType = Object.freeze({
   WARD_STONE: 'ward_stone',
   ELVISH_LAMP: 'elvish_lamp',
   RUNIC_BLADE: 'runic_blade',
+
+  // Throwables
+  OIL_FLASK: 'oil_flask',
+  SMOKE_BOMB: 'smoke_bomb',
+  BAIT: 'bait',
+
+  // Additional weapons
+  COPPER_SWORD: 'copper_sword',
+  WOODEN_SHIELD: 'wooden_shield',
+  IRON_SHIELD: 'iron_shield',
+  BOW: 'bow',
+  ARROW: 'arrow',
+
+  // Additional armor
+  IRON_ARMOR: 'iron_armor',
+  CHAIN_MAIL: 'chain_mail',
+  IRON_HELMET: 'iron_helmet',
+  LEATHER_BOOTS: 'leather_boots',
+
+  // Additional food
+  BREAD: 'bread',
+  HONEY: 'honey',
+  APPLE: 'apple',
+  DRIED_MEAT: 'dried_meat',
+  LEMBAS: 'lembas',
+
+  // Additional tools and utility
+  REPAIR_KIT: 'repair_kit',
+  LANTERN: 'lantern',
+  MAP_FRAGMENT: 'map_fragment',
+  FISHING_ROD: 'fishing_rod',
+  GOLD_ORE: 'gold_ore',
+  GOLD_INGOT: 'gold_ingot',
+  RUNE_TABLE: 'rune_table',
 });
