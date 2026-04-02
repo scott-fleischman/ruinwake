@@ -76,4 +76,9 @@ export const ItemType = Object.freeze({
   SLATE: 'slate',
   MARBLE: 'marble',
   CHEST: 'chest',
+
+  // Rune table outputs
+  WARD_STONE: 'ward_stone',
+  ELVISH_LAMP: 'elvish_lamp',
+  RUNIC_BLADE: 'runic_blade',
 });

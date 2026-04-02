@@ -51,6 +51,11 @@ export const allRecipes = [
   // Additional forge
   new Recipe('Iron Sword', [{ type: ItemType.IRON_INGOT, count: 2 }, { type: ItemType.STICK, count: 1 }], [{ type: ItemType.IRON_SWORD, count: 1 }], 'forge'),
   new Recipe('Iron Hammer', [{ type: ItemType.IRON_INGOT, count: 3 }, { type: ItemType.STICK, count: 2 }], [{ type: ItemType.IRON_HAMMER, count: 1 }], 'forge'),
+
+  // Rune table (magic crafting)
+  new Recipe('Ward Stone', [{ type: ItemType.RELIC_SHARD, count: 2 }, { type: ItemType.STONE, count: 4 }], [{ type: ItemType.WARD_STONE, count: 1 }], 'rune_table'),
+  new Recipe('Elvish Lamp', [{ type: ItemType.RELIC_SHARD, count: 1 }, { type: ItemType.GLASS, count: 2 }, { type: ItemType.COPPER_INGOT, count: 1 }], [{ type: ItemType.ELVISH_LAMP, count: 1 }], 'rune_table'),
+  new Recipe('Runic Blade', [{ type: ItemType.RELIC_SHARD, count: 3 }, { type: ItemType.IRON_SWORD, count: 1 }, { type: ItemType.LORE_FRAGMENT, count: 1 }], [{ type: ItemType.RUNIC_BLADE, count: 1 }], 'rune_table'),
 ];
 
 export function getRecipesByStation(station) {
