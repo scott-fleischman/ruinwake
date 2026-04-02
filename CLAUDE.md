@@ -10,14 +10,10 @@ npm run build        # Production build to dist/
 
 ## Deploy to GitHub Pages
 
-**Automatic:** A Claude Code hook (`.claude/settings.json` PostToolUse) runs
-`.claude/scripts/deploy-gh-pages.sh` after every `git commit` on main. It
-builds, copies dist/ to the gh-pages branch, commits, and switches back to main.
-
-**Manual:** If needed, deploy manually:
+After every successful test-run commit, deploy to the `gh-pages` branch:
 
 ```bash
-npm run build && \
+npm test && npm run build && \
   git checkout gh-pages && \
   git rm -rf assets index.html 2>/dev/null; \
   cp -r dist/* . && \
@@ -25,6 +21,8 @@ npm run build && \
   git commit -m "deploy: $(git log main -1 --format='%h %s')" && \
   git checkout main
 ```
+
+Or equivalently: run tests, build, copy dist/ contents to gh-pages root, commit, return to main.
 
 ## Test Organization
 

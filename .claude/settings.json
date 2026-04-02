@@ -15,24 +15,9 @@
       "Bash(git branch*)",
       "Bash(git stash*)",
       "Bash(git rm *)",
-      "Bash(cp -r *)",
       "Bash(ls *)",
       "Bash(wc *)",
       "Bash(cat *)"
-    ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "if": "Bash(git commit *)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/scripts/deploy-gh-pages.sh"
-          }
-        ]
-      }
     ]
   }
 }
