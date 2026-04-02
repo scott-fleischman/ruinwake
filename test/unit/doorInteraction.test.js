@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BlockType } from '../../src/core/block.js';
-import { toggleDoor } from '../../src/core/door.js';
+import { toggleDoor, isDoorBlock } from '../../src/core/door.js';
 
 function makeWorld() {
   const blocks = new Map();
@@ -40,6 +40,13 @@ describe('Door interaction', () => {
 
     const result = toggleDoor(world, 5, 1, 5);
     expect(result).toBe(false);
+  });
+
+  it('isDoorBlock identifies door types', () => {
+    expect(isDoorBlock(BlockType.DOOR)).toBe(true);
+    expect(isDoorBlock(BlockType.DOOR_OPEN)).toBe(true);
+    expect(isDoorBlock(BlockType.STONE)).toBe(false);
+    expect(isDoorBlock(BlockType.AIR)).toBe(false);
   });
 
   it('works when clicking the top half of the door', () => {
