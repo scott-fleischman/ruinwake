@@ -2,6 +2,7 @@ import { BlockType } from './block.js';
 import { simplex2D } from './noise.js';
 import { getBiome, getBiomeByType, BiomeType } from './biome.js';
 import { getRiverAt as _getRiverAt } from './river.js';
+import { createRng } from './rng.js';
 
 export const SURFACE_Y = 32;
 export const WATER_LEVEL = 26;
@@ -19,13 +20,7 @@ const BIOME_SCALE = 0.02;
 // Fixed world seed — the world is always the same
 const WORLD_SEED = 42;
 
-function seededRandom(seed) {
-  let s = seed;
-  return () => {
-    s = (s * 1103515245 + 12345) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
-}
+const seededRandom = createRng;
 
 // Geographic region centers matching the Hobbit corridor (spec 7.2)
 const REGION_BIOMES = [
