@@ -47,4 +47,26 @@ describe('Race/class identity wiring', () => {
       expect(state.classPassive.type).toBe('crouch_stealth');
     });
   });
+
+  describe('starter kit', () => {
+    it('man_ranger receives bedroll from race-specific kit', () => {
+      const state = createGameState(makeConfig('man', 'ranger'));
+      expect(state.inventory.count('bedroll')).toBeGreaterThan(0);
+    });
+
+    it('elf_archer receives arrows from race-specific kit', () => {
+      const state = createGameState(makeConfig('elf', 'archer'));
+      expect(state.inventory.count('arrow')).toBeGreaterThan(0);
+    });
+
+    it('dwarf_miner receives torch from race-specific kit', () => {
+      const state = createGameState(makeConfig('dwarf', 'miner'));
+      expect(state.inventory.count('torch')).toBeGreaterThan(0);
+    });
+
+    it('hobbit_cook receives pan from race-specific kit', () => {
+      const state = createGameState(makeConfig('hobbit', 'cook'));
+      expect(state.inventory.count('pan')).toBeGreaterThan(0);
+    });
+  });
 });
