@@ -36,12 +36,16 @@ describe('GameState initialization', () => {
     expect(state.player.position.y).toBeGreaterThan(20);
   });
 
-  it('starter kit items are in inventory', () => {
+  it('starter items come from a single source (starterKit only)', () => {
     const state = createGameState(makeConfig());
-    // man_ranger gets short_bow from both playerClass (1) and starterKit (1)
-    expect(state.inventory.count('short_bow')).toBe(2);
+    // man_ranger starter kit is the sole item source — no duplicates
+    expect(state.inventory.count('short_bow')).toBe(1);
     expect(state.inventory.count('knife')).toBe(1);
+    expect(state.inventory.count('dagger')).toBe(1);
+    expect(state.inventory.count('stone_pickaxe')).toBe(1);
     expect(state.inventory.count('bedroll')).toBe(1);
+    expect(state.inventory.count('raw_meat')).toBe(2);
+    expect(state.inventory.count('trail_rations')).toBe(3);
     expect(state.inventory.count('map_fragment')).toBe(1);
   });
 
