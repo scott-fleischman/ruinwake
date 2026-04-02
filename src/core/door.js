@@ -1,6 +1,13 @@
 import { BlockType } from './block.js';
 
 /**
+ * Returns true if the block type is any kind of door.
+ */
+export function isDoorBlock(blockType) {
+  return blockType === BlockType.DOOR || blockType === BlockType.DOOR_OPEN;
+}
+
+/**
  * Toggle a door between open and closed state.
  * Handles double-height doors by also toggling the block above/below.
  * Returns true if a door was toggled, false if the block isn't a door.
