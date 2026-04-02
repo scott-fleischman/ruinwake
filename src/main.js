@@ -589,6 +589,20 @@ function startGame(config, jumpStateId) {
     });
   });
 
+  // When browser releases pointer lock (e.g. user presses ESC while playing),
+  // automatically open the unified menu so one ESC press does both.
+  let intentionalPointerRelease = false;
+  input.onPointerUnlock = () => {
+    if (intentionalPointerRelease) {
+      intentionalPointerRelease = false;
+      return;
+    }
+    if (!unifiedMenu.isOpen) {
+      unifiedMenu.open();
+      syncUnifiedMenuDOM();
+    }
+  };
+
   // --- Minimap (corner) ---
   const minimapContainer = document.getElementById('minimap-container');
   const minimapCanvas = document.getElementById('minimap-canvas');
@@ -816,6 +830,7 @@ function startGame(config, jumpStateId) {
     input.menuOpen = anyMenuOpen;
     gamePause.setMenuOpen(anyMenuOpen);
     if (anyMenuOpen && document.pointerLockElement) {
+      intentionalPointerRelease = true;
       document.exitPointerLock();
     }
 

@@ -9,6 +9,7 @@ export class InputHandler {
     this.rightClick = false;
     this.scrollDelta = 0;
     this.menuOpen = false;
+    this.onPointerUnlock = null;
 
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') e.preventDefault();
@@ -36,7 +37,11 @@ export class InputHandler {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
     document.addEventListener('pointerlockchange', () => {
+      const wasLocked = this.locked;
       this.locked = document.pointerLockElement === canvas;
+      if (wasLocked && !this.locked && this.onPointerUnlock) {
+        this.onPointerUnlock();
+      }
     });
 
     document.addEventListener('mousemove', (e) => {
