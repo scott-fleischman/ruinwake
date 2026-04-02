@@ -37,13 +37,15 @@
 - Ruin structures at restorable sites and NPC locations
 - Item icons (emoji) in inventory and hotbar
 - NPC quest acceptance dialogue
-- 1407 tests across 163 files, 7 test layers
+- Crafting station proximity detection for station recipes
+- Stealth crouching reduces enemy aggro range by 50%
+- Throwable items (H key — stone, oil flask, smoke bomb, bait)
+- Tool durability wear on mining
+- Third-person camera toggle (V key)
+- Remappable key bindings in Settings
+- Rune table recipes (ward stone, elvish lamp, runic blade)
+- Reduced motion accessibility option
+- Inventory slot management (click-to-move)
 
 ### Remaining for 100%
-- Crafting station proximity detection for station recipes
-- Stealth crouching reduces enemy aggro
-- Throwable items (H key)
-- Tool durability wear
-- Front-facing third-person camera (optional per spec 29)
 - Audio (not applicable in web stack)
-- Remappable keys (accessibility)

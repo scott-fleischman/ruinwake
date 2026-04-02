@@ -93,8 +93,12 @@ npx vitest run test/rendering/screenshots.test.js
 ```
 
 Generates PPM screenshots in `test/rendering/screenshots/<timestamp>/`:
-- Block palette, individual blocks (stone, grass, wood)
-- Biome terrain views (Shire, Mountains, Mirkwood)
+- Block palette, object palette, enemy palette, NPC palette
+- Structure palette (representative buildings from all regions)
+- Vegetation and nature scenes
+- Area overviews for each region (Shire, Bree, Rivendell, etc.)
+
+A separate structure art harness (`test/rendering/structureArt.test.js`) renders individual structures from 5 camera angles (front, back, left, right, isometric) for visual iteration.
 
 View with: ImageMagick (`display`), macOS Preview, GIMP, or `convert file.ppm file.png`
 

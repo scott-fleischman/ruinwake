@@ -175,17 +175,22 @@ Each restoration gives 100 XP and +50 faction reputation.
 
 ---
 
-## All 7 NPCs
+## All 12 NPCs
 
 | NPC | Position (X, Z) | Faction | Quest |
 |-----|-----------------|---------|-------|
-| Hal the Ranger | (10, 8) | Road Wardens | Ch1: Embers in the Wild |
-| Old Tom the Innkeeper | (85, 22) | Road Wardens | Ch2: Broken Roads |
-| Elara the Lorekeeper | (200, 35) | Rivendell Keepers | Ch3: Hidden Records |
-| Thorin the Smith | (275, 55) | Dwarven Crafters | Ch4: Beneath the Mountains |
-| Grimbeorn the Younger | (340, 65) | Beorning Wardens | (no quest) |
-| Galawen the Warden | (395, 40) | Woodland Guardians | Ch5: Dark Wood Stirs |
-| Miriel the Sage | (500, 28) | Rivendell Keepers | Ch7: Rekindled Shadow |
+| Hal the Ranger | (30, 24) | Road Wardens | Ch1: Embers in the Wild |
+| Hamfast the Farmer | (-45, 36) | Road Wardens | — (trades food) |
+| Rosie the Merchant | (60, -15) | Road Wardens | — (general trader) |
+| Old Tom the Innkeeper | (255, 66) | Road Wardens | Ch2: Broken Roads |
+| Barliman the Blacksmith | (225, 45) | Road Wardens | — (weapon trader) |
+| Elara the Lorekeeper | (600, 105) | Rivendell Keepers | Ch3: Hidden Records |
+| Celebrin the Healer | (630, 75) | Rivendell Keepers | — (bandages/food) |
+| Thorin the Smith | (825, 165) | Dwarven Crafters | Ch4: Beneath the Mountains |
+| Dwalin the Trader | (780, 135) | Dwarven Crafters | — (ore trader) |
+| Grimbeorn the Younger | (1020, 195) | Beorning Wardens | — (leather trader) |
+| Galawen the Warden | (1185, 120) | Woodland Guardians | Ch5: Dark Wood Stirs |
+| Miriel the Sage | (1500, 84) | Rivendell Keepers | Ch7: Rekindled Shadow |
 
 Press T within 5 blocks to talk. Select "Accept quest" to activate their quest.
 
@@ -220,6 +225,11 @@ Press T within 5 blocks to talk. Select "Accept quest" to activate their quest.
 ### Loom
 - 5 leather + 2 rope → Leather Armor
 
+### Rune Table (magic crafting — requires relic shards)
+- 2 relic_shard + 4 stone → Ward Stone (corruption resistance)
+- 1 relic_shard + 2 glass + 1 copper_ingot → Elvish Lamp (light source)
+- 3 relic_shard + 1 iron_sword + 1 lore_fragment → Runic Blade (enhanced sword)
+
 ---
 
 ## Material Gathering Tips
@@ -240,7 +250,8 @@ Press T within 5 blocks to talk. Select "Accept quest" to activate their quest.
 
 ## Skill Tree Priorities
 
-Spend skill points (earned from leveling up) in Tab menu.
+Spend skill points (earned from leveling up) in Tab menu. There are 6 trees:
+**Survival**, **Combat**, **Craft**, **Exploration**, **Fellowship**, **Attunement**.
 
 **Essential early skills:**
 - **Survival → Hardy** — Slower hunger drain (huge quality of life)
@@ -251,6 +262,7 @@ Spend skill points (earned from leveling up) in Tab menu.
 **Mid-game priorities:**
 - **Craft → Advanced Recipes** — Unlock intermediate crafting
 - **Combat → Heavy Blow** — Stronger heavy attacks
+- **Fellowship → Barter** — Better NPC trade rates
 - **Attunement → Focus Pool** — More relic ability uses
 
 ---
@@ -274,10 +286,10 @@ Enemies spawn at dusk/night. Better shelter = fewer spawns.
 - [ ] Complete all 8 main quest chapters
 - [ ] Restore all 5 sites
 - [ ] Find all 12 discoverables
-- [ ] Talk to all 7 NPCs
+- [ ] Talk to all 12 NPCs
 - [ ] Visit all 10 landmarks
 - [ ] Unlock all 54 skill tree nodes (6 trees)
-- [ ] Craft at least one item from each station (hand, workbench, forge, campfire, kitchen, loom)
+- [ ] Craft at least one item from each station (hand, workbench, forge, campfire, kitchen, loom, rune table)
 - [ ] Kill at least one of each enemy type (15 types)
 - [ ] Reach Friendly tier with all 5 allied factions
 - [ ] Complete at least 10 side quests
