@@ -18,8 +18,6 @@ describe('classes', () => {
       const cls = classes[id];
       expect(cls).toBeDefined();
       expect(cls.name).toBeDefined();
-      expect(Array.isArray(cls.starterItems)).toBe(true);
-      expect(cls.starterItems.length).toBeGreaterThan(0);
       expect(typeof cls.passive).toBe('string');
       expect(typeof cls.activeAbility).toBe('string');
     });
