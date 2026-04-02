@@ -156,15 +156,13 @@ export function placeBuilding(world, position, opts = {}) {
     }
   }
 
-  // Chimney (cobblestone, on one corner, rises above roof peak)
+  // Chimney (cobblestone, on one corner, rises just above roof ridge)
   const chimneyX = bx + radius - 1;
   const chimneyZ = bz + radius - 1;
-  const roofTop = by + height + radius + 1;
-  for (let dy = height; dy <= roofTop + 1; dy++) {
-    world.setBlock(chimneyX, by + dy, chimneyZ, BlockType.COBBLESTONE);
+  const roofRidgeY = by + height + radius + 1;
+  for (let y = by + height; y <= roofRidgeY + 2; y++) {
+    world.setBlock(chimneyX, y, chimneyZ, BlockType.COBBLESTONE);
   }
-  // Chimney cap
-  world.setBlock(chimneyX, roofTop + 2, chimneyZ, BlockType.COBBLESTONE);
 
   // Interior: torch, bed, chest
   world.setBlock(bx, by + 2, bz - radius + 1, BlockType.TORCH);
