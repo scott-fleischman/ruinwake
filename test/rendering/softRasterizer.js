@@ -122,9 +122,7 @@ export function rasterizeTriangle(fb, v0, v1, v2, c0, c1, c2) {
         const r = (b0 * c0[0] + b1 * c1[0] + b2 * c2[0]) * 255;
         const g = (b0 * c0[1] + b1 * c1[1] + b2 * c2[1]) * 255;
         const b = (b0 * c0[2] + b1 * c1[2] + b2 * c2[2]) * 255;
-        // Simple directional light (brighter faces facing up)
-        const light = 0.6 + 0.4 * Math.max(0, b0 + b1); // approximate
-        fb.setPixel(x, y, z, r * light, g * light, b * light);
+        fb.setPixel(x, y, z, r, g, b);
       }
     }
   }

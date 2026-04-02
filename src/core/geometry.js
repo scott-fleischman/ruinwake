@@ -13,11 +13,11 @@ export const FACES = [
 
 // Richer, more atmospheric color palette inspired by Middle-earth
 export const BLOCK_COLORS = {
-  [BlockType.GRASS]: [0.28, 0.52, 0.22],      // lush green (Shire meadows)
+  [BlockType.GRASS]: [0.32, 0.60, 0.24],      // lush green (Shire meadows)
   [BlockType.DIRT]: [0.45, 0.33, 0.20],        // rich earth brown
   [BlockType.STONE]: [0.50, 0.50, 0.52],       // cool gray with slight blue
   [BlockType.WOOD]: [0.40, 0.24, 0.12],        // dark oak bark
-  [BlockType.LEAVES]: [0.15, 0.40, 0.10],      // deep forest green
+  [BlockType.LEAVES]: [0.18, 0.48, 0.13],      // deep forest green
   [BlockType.WATER]: [0.15, 0.35, 0.65],       // deep river blue
   [BlockType.SAND]: [0.82, 0.72, 0.45],        // warm golden sand
   [BlockType.CLAY]: [0.58, 0.42, 0.32],        // terracotta clay
@@ -52,7 +52,7 @@ export const BLOCK_COLORS = {
   [BlockType.MARBLE]: [0.88, 0.86, 0.82],      // warm elven marble
   [BlockType.OBSIDIAN]: [0.08, 0.06, 0.12],    // volcanic glass
   [BlockType.CRYSTAL]: [0.68, 0.78, 0.92],     // glowing crystal blue
-  [BlockType.TALL_GRASS]: [0.22, 0.48, 0.18],  // wild meadow grass
+  [BlockType.TALL_GRASS]: [0.28, 0.56, 0.20],  // wild meadow grass
 };
 
 const DEFAULT_COLOR = [1, 0, 1];
@@ -68,14 +68,17 @@ function vertexNoise(wx, wy, wz, channel) {
   return ((h & 0xffff) / 0xffff - 0.5) * 0.16;
 }
 
-// Three intersecting planes forming a 3D asterisk — looks like grass from all angles
+// 6 fan blades radiating outward from block center, like a real grass clump.
+// Each blade tilts up and outward — from any angle you see some faces and some edges,
+// creating an organic shape rather than obvious flat panels.
+// Hexagonal fan at 0°,60°,120°,180°,240°,300°; tip height 0.28, radius 0.28.
 const CROSSED_PLANES = [
-  // Plane 1: diagonal X-Z (corner to corner)
-  { verts: [[0.1, 0, 0.1], [0.1, 0.8, 0.1], [0.9, 0.8, 0.9], [0.9, 0, 0.9]] },
-  // Plane 2: other diagonal X-Z
-  { verts: [[0.9, 0, 0.1], [0.9, 0.8, 0.1], [0.1, 0.8, 0.9], [0.1, 0, 0.9]] },
-  // Plane 3: center cross along X axis
-  { verts: [[0.1, 0, 0.5], [0.1, 0.8, 0.5], [0.9, 0.8, 0.5], [0.9, 0, 0.5]] },
+  { verts: [[0.50, 0, 0.45], [0.78, 0.28, 0.44], [0.78, 0.28, 0.56], [0.50, 0, 0.55]] }, // east
+  { verts: [[0.54, 0, 0.48], [0.69, 0.28, 0.71], [0.59, 0.28, 0.77], [0.46, 0, 0.53]] }, // NE
+  { verts: [[0.54, 0, 0.53], [0.41, 0.28, 0.77], [0.31, 0.28, 0.71], [0.46, 0, 0.48]] }, // NW
+  { verts: [[0.50, 0, 0.55], [0.22, 0.28, 0.56], [0.22, 0.28, 0.44], [0.50, 0, 0.45]] }, // west
+  { verts: [[0.46, 0, 0.53], [0.31, 0.28, 0.29], [0.41, 0.28, 0.23], [0.54, 0, 0.48]] }, // SW
+  { verts: [[0.46, 0, 0.48], [0.59, 0.28, 0.23], [0.69, 0.28, 0.29], [0.54, 0, 0.53]] }, // SE
 ];
 
 // Colors for specific faces of multi-colored blocks
@@ -151,10 +154,12 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
               const vy = wy + v[1];
               const vz = wz + v[2];
               positions.push(vx, vy, vz);
+              // Tip-to-base gradient: dark at base (0.40), bright at tips (0.96 at v[1]=0.28)
+              const tipFactor = 0.40 + 2.0 * v[1];
               colors.push(
-                color[0] + vertexNoise(vx, vy, vz, 0),
-                color[1] + vertexNoise(vx, vy, vz, 1),
-                color[2] + vertexNoise(vx, vy, vz, 2)
+                (color[0] + vertexNoise(vx, vy, vz, 0)) * tipFactor,
+                (color[1] + vertexNoise(vx, vy, vz, 1)) * tipFactor,
+                (color[2] + vertexNoise(vx, vy, vz, 2)) * tipFactor
               );
             }
             // Front face
@@ -222,6 +227,9 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
             : face.dir[1] === -1 ? 0.65
             : (face.dir[0] !== 0 ? 0.8 : 0.75);
 
+          // Grass tops get extra noise for patchy, natural variation
+          const noiseScale = (block === BlockType.GRASS && face.dir[1] === 1) ? 2.2 : 1.0;
+
           for (const v of face.verts) {
             const vx = wx + v[0];
             const vy = wy + v[1];
@@ -229,9 +237,9 @@ export function buildChunkGeometry(chunk, cx, cy, cz, world) {
             positions.push(vx, vy, vz);
 
             colors.push(
-              (color[0] + vertexNoise(vx, vy, vz, 0)) * dirLight,
-              (color[1] + vertexNoise(vx, vy, vz, 1)) * dirLight,
-              (color[2] + vertexNoise(vx, vy, vz, 2)) * dirLight
+              (color[0] + vertexNoise(vx, vy, vz, 0) * noiseScale) * dirLight,
+              (color[1] + vertexNoise(vx, vy, vz, 1) * noiseScale) * dirLight,
+              (color[2] + vertexNoise(vx, vy, vz, 2) * noiseScale) * dirLight
             );
           }
 

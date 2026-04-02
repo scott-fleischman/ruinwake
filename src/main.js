@@ -1295,11 +1295,26 @@ function startGame(config, jumpStateId) {
 
     // Hide loading screen once initial chunks are ready, then build all meshes
     if (loadingScreen.style.display !== 'none' && !chunkMgr.isLoading()) {
+      // All chunks loaded — discard any premature dirty state so first
+      // worldRenderer.update() builds every mesh from scratch with complete data.
+      chunkMgr.consumeMeshDirtyChunks();
       worldRenderer.update(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
       loadingScreen.style.display = 'none';
     }
 
-    worldRenderer.update(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
+    // Invalidate meshes for chunks that received new data (e.g. tree spillover
+    // from a newly-generated neighbor column during exploration).
+    const dirtyChunks = chunkMgr.consumeMeshDirtyChunks();
+    if (dirtyChunks.size > 0) {
+      worldRenderer.invalidateChunks(dirtyChunks);
+    }
+
+    // Only build/render meshes after initial loading is complete.
+    // During async loading, chunks arrive incrementally — meshing them early
+    // produces incomplete meshes that the _attempted set prevents rebuilding.
+    if (loadingScreen.style.display === 'none') {
+      worldRenderer.update(player.position.x, player.position.z, GC.CHUNKS.RENDER_DISTANCE);
+    }
     renderer.render(scene, camera);
 
     const phase = gameClock.getPhase();

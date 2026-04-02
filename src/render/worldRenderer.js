@@ -11,6 +11,22 @@ export class WorldRenderer {
     this._attempted = new Set(); // chunks we've tried to mesh (even if null)
   }
 
+  /**
+   * Invalidate meshes for the given chunk keys so they get rebuilt on the
+   * next update(). Called when ChunkManager loads new data into existing chunks.
+   */
+  invalidateChunks(keys) {
+    for (const key of keys) {
+      if (this.meshes.has(key)) {
+        const mesh = this.meshes.get(key);
+        this.scene.remove(mesh);
+        mesh.geometry.dispose();
+        this.meshes.delete(key);
+      }
+      this._attempted.delete(key);
+    }
+  }
+
   markDirty(wx, wy, wz) {
     const cx = Math.floor(wx / CHUNK_SIZE);
     const cy = Math.floor(wy / CHUNK_SIZE);

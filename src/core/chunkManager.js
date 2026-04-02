@@ -22,6 +22,8 @@ export class ChunkManager {
     this._cache = new Map();
     // Track player-modified chunks (survive unload/reload)
     this._modified = new Map(); // chunkKey -> Uint8Array copy
+    // Chunks that received new data since last consumed by the renderer
+    this._meshDirtyChunks = new Set();
 
     this._generated = new Set();
     this._pending = new Set();
@@ -83,7 +85,19 @@ export class ChunkManager {
           if (buf[i] !== 0) chunk.blocks[i] = buf[i];
         }
       }
+      this._meshDirtyChunks.add(chunkKey);
     }
+  }
+
+  /**
+   * Return the set of chunk keys that received new block data since the
+   * last call, then clear the internal set. The renderer uses this to
+   * invalidate stale meshes.
+   */
+  consumeMeshDirtyChunks() {
+    const dirty = new Set(this._meshDirtyChunks);
+    this._meshDirtyChunks.clear();
+    return dirty;
   }
 
   // Unload a column from the live World (save modifications first)

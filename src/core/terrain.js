@@ -113,8 +113,8 @@ function placeTree(world, x, z, surfaceY) {
     for (let dz = -2; dz <= 2; dz++) {
       for (let dy = 0; dy <= 2; dy++) {
         if (dx === 0 && dz === 0 && dy === 0) continue;
-        const dist = Math.abs(dx) + Math.abs(dz) + dy;
-        if (dist <= 3) {
+        const dist = Math.sqrt(dx * dx + dz * dz) + dy * 0.7;
+        if (dist <= 2.6) {
           world.setBlock(x + dx, topY + dy, z + dz, BlockType.LEAVES);
         }
       }

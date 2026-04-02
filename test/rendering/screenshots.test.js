@@ -30,8 +30,8 @@ function makeWorldAt(cx, cz, seed = 42) {
     }
     world.chunks.set(chunkKey, chunk);
   }
-  // Generate adjacent columns for edge rendering
-  for (const [dx, dz] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+  // Generate adjacent columns (3x3 grid) for full landscape views
+  for (const [dx, dz] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
     const adj = generateColumnData(cx + dx, cz + dz, seed);
     for (const [key, arr] of Object.entries(adj.blocks)) {
       const buf = arr instanceof ArrayBuffer ? new Uint8Array(arr) : arr;
@@ -74,7 +74,8 @@ describe('Screenshot generation', () => {
   it('generates Shire biome terrain screenshot', () => {
     const world = makeWorldAt(0, 0, 42);
     const path = join(PASS_DIR, 'biome_shire.ppm');
-    captureWorldScreenshot(world, [8, 45, 8], [8, 30, -5], path);
+    // Isometric from SE corner: camera outside terrain looking NW toward center
+    captureWorldScreenshot(world, [38, 62, 38], [5, 31, 5], path);
     expect(existsSync(path)).toBe(true);
   });
 
@@ -82,7 +83,8 @@ describe('Screenshot generation', () => {
     // Chunk at Misty Mountains (~270, 50) = chunk (16, 3)
     const world = makeWorldAt(16, 3, 42);
     const path = join(PASS_DIR, 'biome_mountain.ppm');
-    captureWorldScreenshot(world, [260, 65, 55], [270, 45, 50], path);
+    // Isometric from SE: camera high above and south-east of mountain terrain
+    captureWorldScreenshot(world, [292, 92, 82], [255, 50, 48], path);
     expect(existsSync(path)).toBe(true);
   });
 
@@ -90,7 +92,8 @@ describe('Screenshot generation', () => {
     // Chunk at Mirkwood (~400, 40) = chunk (25, 2)
     const world = makeWorldAt(25, 2, 42);
     const path = join(PASS_DIR, 'biome_mirkwood.ppm');
-    captureWorldScreenshot(world, [405, 45, 45], [400, 30, 35], path);
+    // Isometric from SE: camera high above and south-east of Mirkwood
+    captureWorldScreenshot(world, [438, 68, 68], [402, 30, 35], path);
     expect(existsSync(path)).toBe(true);
   });
 });
