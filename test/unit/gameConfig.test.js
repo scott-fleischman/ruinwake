@@ -12,6 +12,20 @@ describe('createGameConfig', () => {
     expect(config.classId).toBe('miner');
     expect(config.difficulty).toBe(Difficulty.STANDARD);
   });
+
+  it('includes tutorial flag, defaulting to true', () => {
+    const config = createGameConfig({
+      raceId: 'man', classId: 'ranger', difficulty: Difficulty.STANDARD,
+    });
+    expect(config.tutorial).toBe(true);
+  });
+
+  it('respects explicit tutorial=false', () => {
+    const config = createGameConfig({
+      raceId: 'man', classId: 'ranger', difficulty: Difficulty.STANDARD, tutorial: false,
+    });
+    expect(config.tutorial).toBe(false);
+  });
 });
 
 describe('Difficulty', () => {

@@ -49,6 +49,14 @@ describe('GameState initialization', () => {
     expect(state.inventory.count('map_fragment')).toBe(1);
   });
 
+  it('tutorial config propagates to settings', () => {
+    const off = createGameState(makeConfig({ tutorial: false }));
+    expect(off.settings.tutorialEnabled).toBe(false);
+
+    const on = createGameState(makeConfig({ tutorial: true }));
+    expect(on.settings.tutorialEnabled).toBe(true);
+  });
+
   it('chapter 1 quest is activated', () => {
     const state = createGameState(makeConfig());
     expect(state.questSystem.getStatus('ch1_embers')).toBe('active');
