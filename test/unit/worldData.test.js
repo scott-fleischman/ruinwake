@@ -25,10 +25,12 @@ describe('worldData', () => {
     for (const b of worldBuildings) {
       expect(b.x).toBeDefined();
       expect(b.z).toBeDefined();
-      expect(b.wallBlock).toBeDefined();
-      expect(b.roofBlock).toBeDefined();
       expect(b.radius).toBeGreaterThan(0);
       expect(b.height).toBeGreaterThan(0);
+      if (!b.hobbitHole) {
+        expect(b.wallBlock, `${b.name} needs wallBlock`).toBeDefined();
+        expect(b.roofBlock, `${b.name} needs roofBlock`).toBeDefined();
+      }
     }
   });
 

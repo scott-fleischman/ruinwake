@@ -177,6 +177,100 @@ export function placeBuilding(world, position, opts = {}) {
 }
 
 /**
+ * Place a hobbit hole — a dwelling carved into the hillside.
+ * The interior room is at surface level, covered by existing terrain.
+ * A round door is visible on the +x face. A mound of earth covers the top.
+ */
+export function placeHobbitHole(world, position, opts = {}) {
+  const radius = opts.radius || 3;
+  const ceilingH = 3; // interior height
+  const floorBlock = opts.floorBlock || BlockType.COBBLESTONE;
+  const placeBed = opts.bed !== false;
+  const placeChest = opts.chest || false;
+
+  const bx = Math.floor(position.x);
+  const by = Math.floor(position.y); // surface Y
+  const bz = Math.floor(position.z);
+
+  // Reinforce the mound above the hole with dirt so it stays solid
+  for (let dx = -(radius + 1); dx <= radius + 1; dx++) {
+    for (let dz = -(radius + 1); dz <= radius + 1; dz++) {
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > radius + 1.5) continue;
+      const moundH = Math.max(1, Math.floor(ceilingH + 1 - dist * 0.5));
+      for (let dy = ceilingH; dy <= ceilingH + moundH; dy++) {
+        if (world.getBlock(bx + dx, by + dy, bz + dz) === BlockType.AIR) {
+          world.setBlock(bx + dx, by + dy, bz + dz, BlockType.DIRT);
+        }
+      }
+      // Put grass on top
+      const topY = by + ceilingH + moundH;
+      if (world.getBlock(bx + dx, topY + 1, bz + dz) === BlockType.AIR) {
+        world.setBlock(bx + dx, topY, bz + dz, BlockType.GRASS);
+      }
+    }
+  }
+
+  // Floor
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      world.setBlock(bx + dx, by - 1, bz + dz, floorBlock);
+    }
+  }
+
+  // Carve interior (circular room)
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > radius + 0.5) continue;
+      for (let dy = 0; dy < ceilingH; dy++) {
+        world.setBlock(bx + dx, by + dy, bz + dz, BlockType.AIR);
+      }
+    }
+  }
+
+  // Line walls with oak planks (circular perimeter)
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < radius - 0.5 || dist > radius + 0.5) continue;
+      for (let dy = 0; dy < ceilingH; dy++) {
+        world.setBlock(bx + dx, by + dy, bz + dz, BlockType.OAK_PLANKS);
+      }
+    }
+  }
+
+  // Ceiling (oak planks)
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > radius + 0.5) continue;
+      world.setBlock(bx + dx, by + ceilingH, bz + dz, BlockType.OAK_PLANKS);
+    }
+  }
+
+  // Door on +x face (2 blocks tall at surface level)
+  for (let dy = 0; dy <= 1; dy++) {
+    world.setBlock(bx + radius, by + dy, bz, BlockType.DOOR);
+  }
+  // Clear air in front of door so it's accessible
+  for (let dy = 0; dy <= 1; dy++) {
+    world.setBlock(bx + radius + 1, by + dy, bz, BlockType.AIR);
+  }
+
+  // Interior furnishings
+  world.setBlock(bx, by + 2, bz - radius + 2, BlockType.TORCH);
+
+  if (placeBed) {
+    world.setBlock(bx - radius + 2, by, bz - radius + 2, BlockType.BED);
+  }
+
+  if (placeChest) {
+    world.setBlock(bx - radius + 2, by, bz + radius - 2, BlockType.CHEST);
+  }
+}
+
+/**
  * Place a fully restored version of a ruin site.
  */
 export function placeRestoredSite(world, position, size = 'small') {

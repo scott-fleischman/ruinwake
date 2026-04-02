@@ -50,7 +50,7 @@ import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { downloadSaveFile, uploadSaveFile } from './core/saveFile.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
-import { placeRuin, placeBuilding, placeRestoredSite } from './core/ruinGenerator.js';
+import { placeRuin, placeBuilding, placeRestoredSite, placeHobbitHole } from './core/ruinGenerator.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
 import { ShelterSystem } from './core/shelter.js';
 import { LoreJournal, LoreEntry, LoreCategory } from './core/loreJournal.js';
@@ -353,15 +353,24 @@ function startGame(config, jumpStateId) {
   const npcById = new Map(allNPCs.map(n => [n.id, n]));
   for (const bldg of worldBuildings) {
     const bh = getHeightAt(bldg.x, bldg.z);
-    placeBuilding(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
-      wallBlock: bldg.wallBlock,
-      roofBlock: bldg.roofBlock,
-      floorBlock: bldg.floorBlock,
-      radius: bldg.radius,
-      height: bldg.height,
-      bed: bldg.bed,
-      chest: bldg.chest,
-    });
+    if (bldg.hobbitHole) {
+      placeHobbitHole(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
+        floorBlock: bldg.floorBlock,
+        radius: bldg.radius,
+        bed: bldg.bed,
+        chest: bldg.chest,
+      });
+    } else {
+      placeBuilding(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
+        wallBlock: bldg.wallBlock,
+        roofBlock: bldg.roofBlock,
+        floorBlock: bldg.floorBlock,
+        radius: bldg.radius,
+        height: bldg.height,
+        bed: bldg.bed,
+        chest: bldg.chest,
+      });
+    }
     // Populate chest with pre-defined items
     if (bldg.chest && bldg.chestItems) {
       const chestX = bldg.x - bldg.radius + 1;
