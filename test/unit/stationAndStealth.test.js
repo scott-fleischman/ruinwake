@@ -244,10 +244,10 @@ describe('Tool durability wiring', () => {
       getBlock(x, y, z) { return this._blocks[`${x},${y},${z}`] || BlockType.AIR; },
       setBlock(x, y, z, v) { this._blocks[`${x},${y},${z}`] = v; },
     };
-    const inventory = new Inventory(20);
 
-    const result = mineBlockWithTool(world, inventory, 5, 33, 5, tool);
+    const result = mineBlockWithTool(world, 5, 33, 5, tool);
     expect(result.mined).toBe(true);
+    expect(result.drops.length).toBeGreaterThan(0);
     expect(tool.durability).toBe(49);
     expect(tool.isBroken()).toBe(false);
   });
@@ -259,9 +259,8 @@ describe('Tool durability wiring', () => {
       getBlock(x, y, z) { return this._blocks[`${x},${y},${z}`] || BlockType.AIR; },
       setBlock(x, y, z, v) { this._blocks[`${x},${y},${z}`] = v; },
     };
-    const inventory = new Inventory(20);
 
-    const result = mineBlockWithTool(world, inventory, 5, 33, 5, tool);
+    const result = mineBlockWithTool(world, 5, 33, 5, tool);
     expect(result.mined).toBe(true);
     expect(result.broken).toBe(true);
     expect(tool.durability).toBe(0);
@@ -274,9 +273,8 @@ describe('Tool durability wiring', () => {
       getBlock() { return BlockType.AIR; },
       setBlock() {},
     };
-    const inventory = new Inventory(20);
 
-    const result = mineBlockWithTool(world, inventory, 5, 33, 5, tool);
+    const result = mineBlockWithTool(world, 5, 33, 5, tool);
     expect(result.mined).toBe(false);
     expect(tool.durability).toBe(50);
   });
@@ -300,10 +298,10 @@ describe('Tool durability wiring', () => {
       getBlock(x, y, z) { return this._blocks[`${x},${y},${z}`] || BlockType.AIR; },
       setBlock(x, y, z, v) { this._blocks[`${x},${y},${z}`] = v; },
     };
-    const inventory = new Inventory(20);
 
-    const result = mineBlockWithTool(world, inventory, 5, 33, 5, null);
+    const result = mineBlockWithTool(world, 5, 33, 5, null);
     expect(result.mined).toBe(true);
     expect(result.broken).toBe(false);
+    expect(result.drops.length).toBeGreaterThan(0);
   });
 });

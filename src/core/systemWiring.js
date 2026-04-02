@@ -7,7 +7,7 @@ import { calculateDamageReduction } from './armorReduction.js';
 import { BlockType } from './block.js';
 import { StationType } from './craftingStation.js';
 import { Throwable, ThrowableType, throwItem } from './throwable.js';
-import { mineBlock } from './actions.js';
+import { breakBlock } from './actions.js';
 
 const DEFAULT_FIST_DAMAGE = 2;
 
@@ -143,20 +143,20 @@ export function handleThrowInput(inventory, playerPos, lookDir, enemies) {
 
 /**
  * Feature 4: Mine a block with a tool, decrementing tool durability.
- * Returns { mined: boolean, broken: boolean }.
+ * Returns { mined, broken, drops }. Caller decides drop destination.
  */
-export function mineBlockWithTool(world, inventory, x, y, z, tool) {
+export function mineBlockWithTool(world, x, y, z, tool) {
   const toolType = tool ? tool.type : null;
-  const mined = mineBlock(world, inventory, x, y, z, toolType);
+  const result = breakBlock(world, x, y, z, toolType);
 
-  if (!mined) return { mined: false, broken: false };
+  if (!result) return { mined: false, broken: false, drops: [] };
 
   if (tool) {
     tool.use();
-    return { mined: true, broken: tool.isBroken() };
+    return { mined: true, broken: tool.isBroken(), drops: result.drops };
   }
 
-  return { mined: true, broken: false };
+  return { mined: true, broken: false, drops: result.drops };
 }
 
 /**
