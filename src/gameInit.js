@@ -50,6 +50,7 @@ import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { Settings } from './core/settings.js';
 import { GamePause } from './core/gamePause.js';
 import { UnifiedMenu } from './core/unifiedMenu.js';
+import { MENU_TABS } from './core/menuTabs.js';
 import { MinimapState } from './core/minimapState.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
 import { getDifficultyModifiers } from './core/difficulty.js';
@@ -111,7 +112,6 @@ export function createGameState(config) {
   const nightDanger = new NightDangerSystem();
   const settings = new Settings();
   const gamePause = new GamePause();
-  const MENU_TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
   const unifiedMenu = new UnifiedMenu(MENU_TABS);
   const minimapState = new MinimapState();
 

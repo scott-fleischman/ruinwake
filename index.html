@@ -28,23 +28,6 @@
       text-shadow: 1px 1px 2px #000;
       display: none;
     }
-    #instructions {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #ccc;
-      font-size: 14px;
-      text-align: center;
-      cursor: pointer;
-      background: rgba(0,0,0,0.85);
-      padding: 20px 24px;
-      border-radius: 8px;
-      display: none;
-      max-height: 80vh;
-      overflow-y: auto;
-      width: 380px;
-    }
     #new-game {
       position: absolute;
       top: 50%;
@@ -293,6 +276,7 @@
       <button class="menu-tab" data-tab="quests">Quests</button>
       <button class="menu-tab" data-tab="map">Map</button>
       <button class="menu-tab" data-tab="settings">Settings</button>
+      <button class="menu-tab" data-tab="help">Help</button>
     </div>
     <div id="menu-content">
       <div id="tab-content-inventory" class="tab-content active">
@@ -325,6 +309,9 @@
       <div id="tab-content-settings" class="tab-content">
         <div id="settings-content"></div>
       </div>
+      <div id="tab-content-help" class="tab-content">
+        <div id="help-content"></div>
+      </div>
     </div>
     <div id="menu-footer">ESC close | Tab switch</div>
   </div>
@@ -353,33 +340,6 @@
     <div style="color:#666;font-size:10px;margin-top:8px">Click item to take | Escape to close</div>
   </div>
   <div id="hotbar-bar" style="display:none"></div>
-  <div id="instructions">
-    <div style="font-size:20px;color:#c9a84c;margin-bottom:12px">Click to Play</div>
-    <table style="text-align:left;font-size:13px;line-height:1.6;width:100%;border-collapse:collapse">
-      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Movement</td></tr>
-      <tr><td style="color:#aed581;width:90px;padding:1px 8px">WASD</td><td>Move</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Mouse</td><td>Look</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Space</td><td>Jump</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Shift</td><td>Sprint</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">C</td><td>Crouch</td></tr>
-      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Actions</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">LClick</td><td>Mine / Attack</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">RClick</td><td>Place block</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">F</td><td>Eat food</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">R</td><td>Restore site</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">T</td><td>Talk to NPC</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">G</td><td>Guard (hold)</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">X</td><td>Use relic ability</td></tr>
-      <tr><td colspan="2" style="color:#c9a84c;padding:6px 0 2px;font-weight:bold">Menus</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">ESC</td><td>Menu (pauses game)</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">Tab</td><td>Switch menu tab</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">M</td><td>Toggle minimap</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">V</td><td>Camera toggle</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">1-8 / Scroll</td><td>Hotbar slot</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">F5 / F9</td><td>Save / Load</td></tr>
-      <tr><td style="color:#aed581;padding:1px 8px">F4</td><td>Creative mode</td></tr>
-    </table>
-  </div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

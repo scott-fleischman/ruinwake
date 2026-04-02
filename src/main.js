@@ -71,6 +71,8 @@ import { getRaceSpeedModifier, getRaceSprintMultiplier, getRaceStealthBonus, get
 import { Settings } from './core/settings.js';
 import { GamePause } from './core/gamePause.js';
 import { UnifiedMenu } from './core/unifiedMenu.js';
+import { MENU_TABS } from './core/menuTabs.js';
+import { buildHelpTabHTML } from './core/helpTabContent.js';
 import { MinimapState } from './core/minimapState.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
@@ -172,7 +174,6 @@ function startGame(config, jumpStateId) {
   const GC = GAME_CONSTANTS;
   const settings = new Settings();
   const gamePause = new GamePause();
-  const MENU_TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
   const unifiedMenu = new UnifiedMenu(MENU_TABS);
   const minimapState = new MinimapState();
 
@@ -575,6 +576,10 @@ function startGame(config, jumpStateId) {
       unifiedMenuEl.classList.remove('open');
     }
   }
+
+  // Populate help tab content
+  const helpContent = document.getElementById('help-content');
+  if (helpContent) helpContent.innerHTML = buildHelpTabHTML();
 
   // Tab click handlers
   menuTabButtons.forEach(btn => {
