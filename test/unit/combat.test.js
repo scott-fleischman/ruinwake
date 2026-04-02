@@ -83,6 +83,31 @@ describe('CombatSystem', () => {
     expect(hit).toBe(false);
   });
 
+  it('guarding reduces enemy damage by half', () => {
+    const combat = new CombatSystem();
+    const enemy = new Enemy({ x: 1, y: 33, z: 0 }, EnemyType.WOLF);
+    enemy.state = 'chase';
+    enemy.attackCooldown = 0;
+    const playerPos = { x: 0, y: 33, z: 0 };
+
+    // Take damage without guard
+    const statsNoGuard = new SurvivalStats();
+    combat.processEnemyAttacks([enemy], playerPos, statsNoGuard);
+    const damageNoGuard = 100 - statsNoGuard.health;
+
+    // Reset enemy for second attack
+    enemy.attackCooldown = 0;
+
+    // Take damage with guard
+    const statsGuard = new SurvivalStats();
+    combat.setGuard(true);
+    combat.processEnemyAttacks([enemy], playerPos, statsGuard);
+    const damageGuard = 100 - statsGuard.health;
+    combat.setGuard(false);
+
+    expect(damageGuard).toBeCloseTo(damageNoGuard * 0.5, 1);
+  });
+
   it('ranged attack misses enemies outside aim cone', () => {
     const combat = new CombatSystem();
     const enemy = new Enemy({ x: 0, y: 33, z: 10 }, EnemyType.WOLF);
