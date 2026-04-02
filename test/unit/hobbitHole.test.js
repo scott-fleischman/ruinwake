@@ -165,23 +165,23 @@ describe('placeHobbitHole', () => {
     expect(chimneyBlocks, 'hobbit hole should have a chimney').toBeGreaterThan(0);
   });
 
-  it('has no structure visible above ground except the door face', () => {
+  it('has no structure visible above ground except door face and chimney', () => {
     const world = makeWorld();
     prefillTerrain(world, 10, 10, surfaceY);
     placeHobbitHole(world, { x: 10, y: surfaceY, z: 10 }, { radius: 3 });
 
-    // Above the mound (surfaceY + 5 and up), there should be no building blocks
-    let buildingBlocksAbove = 0;
-    const buildingTypes = [BlockType.OAK_PLANKS, BlockType.PLANKS, BlockType.COBBLESTONE, BlockType.STONE_BRICK];
+    // Above the mound (surfaceY + 5 and up), only chimney cobblestone is allowed
+    let nonChimneyAbove = 0;
+    const nonChimneyTypes = [BlockType.OAK_PLANKS, BlockType.PLANKS, BlockType.STONE_BRICK];
     for (let dx = -5; dx <= 5; dx++) {
       for (let dz = -5; dz <= 5; dz++) {
         for (let dy = 5; dy <= 10; dy++) {
-          if (buildingTypes.includes(world.getBlock(10 + dx, surfaceY + dy, 10 + dz))) {
-            buildingBlocksAbove++;
+          if (nonChimneyTypes.includes(world.getBlock(10 + dx, surfaceY + dy, 10 + dz))) {
+            nonChimneyAbove++;
           }
         }
       }
     }
-    expect(buildingBlocksAbove, 'no building blocks high above ground').toBe(0);
+    expect(nonChimneyAbove, 'no non-chimney building blocks high above ground').toBe(0);
   });
 });

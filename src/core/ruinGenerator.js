@@ -264,6 +264,21 @@ export function placeHobbitHole(world, position, opts = {}) {
     world.setBlock(bx + radius + 1, by + dy, bz, BlockType.AIR);
   }
 
+  // Round windows on +x face (flanking the door, at eye level)
+  world.setBlock(bx + radius, by + 2, bz - 2, BlockType.GLASS);
+  world.setBlock(bx + radius, by + 2, bz + 2, BlockType.GLASS);
+  // Clear air outside windows so they're visible from the hillside
+  world.setBlock(bx + radius + 1, by + 2, bz - 2, BlockType.AIR);
+  world.setBlock(bx + radius + 1, by + 2, bz + 2, BlockType.AIR);
+
+  // Chimney — cobblestone column from ceiling through the mound
+  const chimneyX = bx - 1;
+  const chimneyZ = bz - 1;
+  const moundTop = by + ceilingH + Math.max(1, Math.floor(ceilingH + 1));
+  for (let y = by + ceilingH; y <= moundTop + 1; y++) {
+    world.setBlock(chimneyX, y, chimneyZ, BlockType.COBBLESTONE);
+  }
+
   // Interior furnishings
   world.setBlock(bx, by + 2, bz - radius + 2, BlockType.TORCH);
 
