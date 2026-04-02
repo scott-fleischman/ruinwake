@@ -644,9 +644,25 @@ function placeCozyCottage(world, groundY) {
   return { center: [cx, by + 2, cz], radius: 6 };
 }
 
+// ── Blueprint placer renders ────────────────────────────────────────
+import { placeHobbitHoleFromBlueprint } from '../../src/core/hobbitHolePlacer.js';
+import { HOBBIT_HOLE_BASE, HOBBIT_HOLE_BAGEND, HOBBIT_HOLE_COZY } from '../../src/core/hobbitHoleData.js';
+
+function blueprintPlacer(bp) {
+  return (world, groundY) => {
+    const pos = { x: 0, y: groundY + 1, z: 0 };
+    placeHobbitHoleFromBlueprint(world, pos, bp);
+    const mainRoom = bp.rooms[0];
+    return {
+      center: [mainRoom.cx || 0, groundY + 3, mainRoom.cz || 0],
+      radius: bp.mound.radiusX,
+    };
+  };
+}
+
 // ── Test suite ──────────────────────────────────────────────────────
 
-describe('Structure art - Hobbit Hole', () => {
+describe('Structure art - Hobbit Hole (hand-crafted)', () => {
   it('renders base hobbit hole from all angles', () => {
     const paths = captureStructureAngles('hobbit_hole_base', placeHobbitHoleArt);
     for (const p of paths) expect(existsSync(p)).toBe(true);
@@ -663,5 +679,22 @@ describe('Structure art - Hobbit Hole', () => {
     const paths = captureStructureAngles('hobbit_hole_cozy', placeCozyCottage);
     for (const p of paths) expect(existsSync(p)).toBe(true);
     expect(paths.length).toBe(5);
+  });
+});
+
+describe('Structure art - Hobbit Hole (blueprint placer)', () => {
+  it('renders base blueprint front + iso', () => {
+    const paths = captureStructureAngles('bp_base', blueprintPlacer(HOBBIT_HOLE_BASE));
+    for (const p of paths) expect(existsSync(p)).toBe(true);
+  });
+
+  it('renders bagend blueprint front + iso', () => {
+    const paths = captureStructureAngles('bp_bagend', blueprintPlacer(HOBBIT_HOLE_BAGEND));
+    for (const p of paths) expect(existsSync(p)).toBe(true);
+  });
+
+  it('renders cozy blueprint front + iso', () => {
+    const paths = captureStructureAngles('bp_cozy', blueprintPlacer(HOBBIT_HOLE_COZY));
+    for (const p of paths) expect(existsSync(p)).toBe(true);
   });
 });
