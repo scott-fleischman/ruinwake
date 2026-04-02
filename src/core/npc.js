@@ -27,20 +27,20 @@ export class NPC {
            isBlockSolid(world.getBlock(bx, by + 1, bz));
   }
 
-  updateAI(dt, getHeight, world) {
+  updateAI(dt, getHeight, world, rng = Math.random) {
     this._wanderTimer -= dt;
     if (this._wanderTimer <= 0) {
       // Pick a new random direction or idle
-      if (Math.random() < 0.4) {
+      if (rng() < 0.4) {
         // Idle
         this._wanderDirX = 0;
         this._wanderDirZ = 0;
-        this._wanderTimer = 2 + Math.random() * 3;
+        this._wanderTimer = 2 + rng() * 3;
       } else {
-        const angle = Math.random() * Math.PI * 2;
+        const angle = rng() * Math.PI * 2;
         this._wanderDirX = Math.cos(angle);
         this._wanderDirZ = Math.sin(angle);
-        this._wanderTimer = 1 + Math.random() * 2;
+        this._wanderTimer = 1 + rng() * 2;
       }
     }
 
