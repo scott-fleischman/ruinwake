@@ -24,14 +24,13 @@ export function buildInstructionsText() {
     {
       title: 'Menus',
       items: [
-        { key: 'E', desc: 'Crafting' },
-        { key: 'I', desc: 'Inventory' },
-        { key: 'Q', desc: 'Quests' },
-        { key: 'Tab', desc: 'Skills' },
-        { key: 'M', desc: 'Map' },
-        { key: '1-8 / Scroll', desc: 'Hotbar' },
-        { key: 'V', desc: 'Camera' },
-        { key: 'F5/F9', desc: 'Save/Load' },
+        { key: 'ESC', desc: 'Menu (pauses game)' },
+        { key: 'Tab', desc: 'Switch menu tab' },
+        { key: 'M', desc: 'Toggle minimap' },
+        { key: 'V', desc: 'Camera toggle' },
+        { key: '1-8 / Scroll', desc: 'Hotbar slot' },
+        { key: 'F5 / F9', desc: 'Save / Load' },
+        { key: 'F4', desc: 'Creative mode' },
       ],
     },
   ];
