@@ -88,6 +88,51 @@ describe('placeBuilding', () => {
     expect(doorTop).toBe(BlockType.DOOR);
   });
 
+  it('chimney extends at most 2 blocks above roof ridge', () => {
+    const world = makeWorld();
+    placeBuilding(world, { x: 10, y: 10, z: 10 }, { radius: 4, height: 4 });
+
+    // Roof ridge Y = by + height + radius + 1 = 10 + 4 + 4 + 1 = 19
+    const roofRidgeY = 10 + 4 + 4 + 1;
+    const maxChimneyY = roofRidgeY + 2;
+
+    // Scan for chimney blocks (cobblestone above wall height)
+    let highestChimney = 0;
+    for (let dx = -5; dx <= 5; dx++) {
+      for (let dz = -5; dz <= 5; dz++) {
+        for (let dy = roofRidgeY; dy <= roofRidgeY + 10; dy++) {
+          const block = world.getBlock(10 + dx, dy, 10 + dz);
+          if (block === BlockType.COBBLESTONE) {
+            highestChimney = Math.max(highestChimney, dy);
+          }
+        }
+      }
+    }
+    expect(highestChimney, 'chimney should not tower above roof').toBeLessThanOrEqual(maxChimneyY);
+  });
+
+  it('chimney height scales reasonably across building sizes', () => {
+    // Test multiple sizes to ensure no comically tall chimneys
+    for (const [radius, height] of [[3, 3], [4, 4], [5, 5], [6, 5], [7, 6]]) {
+      const world = makeWorld();
+      placeBuilding(world, { x: 50, y: 30, z: 50 }, { radius, height });
+
+      const roofRidgeY = 30 + height + radius + 1;
+      let highest = 0;
+      for (let dx = -(radius + 2); dx <= radius + 2; dx++) {
+        for (let dz = -(radius + 2); dz <= radius + 2; dz++) {
+          for (let dy = roofRidgeY; dy <= roofRidgeY + 10; dy++) {
+            if (world.getBlock(50 + dx, dy, 50 + dz) === BlockType.COBBLESTONE) {
+              highest = Math.max(highest, dy);
+            }
+          }
+        }
+      }
+      const overshoot = highest - roofRidgeY;
+      expect(overshoot, `radius=${radius} h=${height}: chimney overshoot`).toBeLessThanOrEqual(2);
+    }
+  });
+
   it('interior is clear (no trees or terrain)', () => {
     const world = makeWorld();
     // Pre-fill with stone to simulate terrain
