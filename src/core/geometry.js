@@ -53,6 +53,8 @@ export const BLOCK_COLORS = {
   [BlockType.OBSIDIAN]: [0.08, 0.06, 0.12],    // volcanic glass
   [BlockType.CRYSTAL]: [0.68, 0.78, 0.92],     // glowing crystal blue
   [BlockType.TALL_GRASS]: [0.28, 0.56, 0.20],  // wild meadow grass
+  [BlockType.CHEST]: [0.55, 0.38, 0.18],       // wooden chest
+  [BlockType.BED]: [0.60, 0.15, 0.12],         // red blanket bed
 };
 
 const DEFAULT_COLOR = [1, 0, 1];

@@ -18,6 +18,8 @@ const BLOCK_FACE_TEXTURES = {
   [BlockType.WATER]: { all: 'water' },
   [BlockType.MUD]: { all: 'mud' },
   [BlockType.SNOW]: { all: 'snow' },
+  [BlockType.CHEST]: { all: 'chest' },
+  [BlockType.BED]: { all: 'bed' },
 };
 
 const ATLAS_COLS = 8;

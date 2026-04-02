@@ -7,6 +7,7 @@ export const SURFACE_Y = 32;
 export const WATER_LEVEL = 26;
 const DIRT_DEPTH = 3;
 export const TERRAIN_EXTENT = 300;
+const SNOW_ELEVATION = 55;
 // Asymmetric world bounds for the Hobbit east-west corridor
 export const WORLD_MIN_X = -100;
 export const WORLD_MAX_X = 560;
@@ -93,7 +94,9 @@ function getOreType(x, y, z, seed) {
 }
 
 function fillColumn(world, x, z, surfaceY, surfaceBlock, seed) {
-  world.setBlock(x, surfaceY, z, surfaceBlock);
+  // Snow cap: blocks above snow elevation get snow surface
+  const actualSurface = surfaceY >= SNOW_ELEVATION ? BlockType.SNOW : surfaceBlock;
+  world.setBlock(x, surfaceY, z, actualSurface);
   for (let dy = 1; dy <= DIRT_DEPTH; dy++) {
     world.setBlock(x, surfaceY - dy, z, BlockType.DIRT);
   }

@@ -39,7 +39,7 @@ import { eatBestFood } from './core/eatBestFood.js';
 import { SkillTreeSystem } from './core/skillTree.js';
 import { SkillTreeUI } from './core/skillTreeUI.js';
 import { skillTrees } from './core/skillTreeData.js';
-import { ITEM_TO_BLOCK } from './core/block.js';
+import { ITEM_TO_BLOCK, blockDrops, canMine } from './core/block.js';
 import { placeBlock } from './core/actions.js';
 import { NPC, NPCSystem } from './core/npc.js';
 import { allNPCs } from './core/npcData.js';
@@ -49,7 +49,7 @@ import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
-import { placeRuin } from './core/ruinGenerator.js';
+import { placeRuin, placeBuilding, placeRestoredSite } from './core/ruinGenerator.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
 import { ShelterSystem } from './core/shelter.js';
 import { LoreJournal, LoreEntry, LoreCategory } from './core/loreJournal.js';
@@ -129,7 +129,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     raceId: raceSelect.value,
     classId: classSelect.value,
     difficulty: document.getElementById('difficulty-select').value,
-    seed: parseInt(document.getElementById('seed-input').value) || 42,
+    seed: 42,
     worldName: document.getElementById('world-name').value,
     characterName: document.getElementById('character-name').value,
   });
@@ -292,13 +292,23 @@ function startGame(config, jumpStateId) {
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
 
   for (const npc of allNPCs) {
-    // Place a small shelter for each NPC
+    // Place a proper building for each NPC (offset so NPC spawns at door)
     const nx = Math.floor(npc.position.x);
     const nz = Math.floor(npc.position.z);
     const nh = getHeightAt(nx, nz, config.seed);
-    placeRuin(world, { x: nx - 4, y: nh + 1, z: nz - 4 }, 'small');
-    // Place NPCs at safe height above terrain and structures
-    npc.position.y = findSafeY(world, nx, nz, nh);
+    const buildingX = nx - 6;
+    const buildingZ = nz - 2;
+    placeBuilding(world, { x: buildingX, y: nh + 1, z: buildingZ }, {
+      wallBlock: 32, // OAK_PLANKS
+      roofBlock: 11, // PLANKS
+      radius: 4,
+      height: 4,
+      bed: true,
+      chest: npc.hasTrades(),
+    });
+    // Place NPC at door height, outside the building
+    npc.position.y = nh + 2;
+    npc.spawnPosition = { ...npc.position };
     npcSystem.addNPC(npc);
   }
   let dialogueMessage = '';
@@ -310,6 +320,22 @@ function startGame(config, jumpStateId) {
   for (const item of starterKit) inventory.add(item.type, item.count);
 
   const enemies = [];
+  // Dropped items system: items on the ground waiting for pickup
+  const droppedItems = [];
+  let droppedItemMeshes = [];
+  const PICKUP_RANGE = 2.0;
+  const DROP_LIFETIME = 120; // seconds before despawn
+
+  function spawnDroppedItem(position, itemType, count) {
+    droppedItems.push({
+      position: { x: position.x + (Math.random() - 0.5) * 0.5, y: position.y + 0.5, z: position.z + (Math.random() - 0.5) * 0.5 },
+      type: itemType,
+      count,
+      lifetime: DROP_LIFETIME,
+      bobPhase: Math.random() * Math.PI * 2,
+    });
+  }
+
   let spawnSeed = config.seed;
   const spawnRng = () => { spawnSeed = (spawnSeed * 1103515245 + 12345) & 0x7fffffff; return spawnSeed / 0x7fffffff; };
   const spawner = new EnemySpawner(spawnRng);
@@ -389,9 +415,11 @@ function startGame(config, jumpStateId) {
     if (!mapScreen.isOpen) return;
     const data = mapScreen.getMapData(playerPos);
     const W = 460, H = 320;
-    // World coords: -64..64 mapped to 0..W, 0..H
-    const toX = (wx) => ((wx + 64) / 128) * W;
-    const toY = (wz) => ((wz + 64) / 128) * H;
+    // Full world bounds: x from -100 to 560, z from -120 to 150
+    const WORLD_X_MIN = -100, WORLD_X_MAX = 560;
+    const WORLD_Z_MIN = -120, WORLD_Z_MAX = 150;
+    const toX = (wx) => ((wx - WORLD_X_MIN) / (WORLD_X_MAX - WORLD_X_MIN)) * W;
+    const toY = (wz) => ((wz - WORLD_Z_MIN) / (WORLD_Z_MAX - WORLD_Z_MIN)) * H;
 
     let html = '';
     // Landmarks as labeled dots
@@ -819,6 +847,14 @@ function startGame(config, jumpStateId) {
         if (canAcceptQuestFromNPC(nearNPC, questSystem)) {
           choices.push({ text: 'Accept quest', response: null, action: 'accept_quest', npcId: nearNPC.id });
         }
+        // Add trade options if NPC has trades
+        if (nearNPC.trades && nearNPC.trades.length > 0) {
+          for (const trade of nearNPC.trades) {
+            const hasItems = inventory.count(trade.give.type) >= trade.give.count;
+            const label = `Trade ${trade.give.count} ${trade.give.type.replace(/_/g, ' ')} → ${trade.receive.count} ${trade.receive.type.replace(/_/g, ' ')}${hasItems ? '' : ' (need more)'}`;
+            choices.push({ text: label, response: hasItems ? `Traded! Received ${trade.receive.count} ${trade.receive.type.replace(/_/g, ' ')}.` : 'You don\'t have enough to trade.', action: hasItems ? 'trade' : null, trade });
+          }
+        }
         choices.push(...getNPCDialogueChoices(nearNPC.id, nearNPC.name));
         dialogueManager.startDialogue(`${nearNPC.name}: ${npcMsg}`, choices);
         progress.talkToNPC(nearNPC.id);
@@ -851,6 +887,14 @@ function startGame(config, jumpStateId) {
             dialogueManager.dismiss();
             dialogueMessage = 'Quest accepted!';
             dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
+          } else if (selected && selected.action === 'trade' && selected.trade) {
+            const trade = selected.trade;
+            if (inventory.remove(trade.give.type, trade.give.count)) {
+              inventory.add(trade.receive.type, trade.receive.count);
+              dialogueManager.dismiss();
+              dialogueMessage = `Traded! Received ${trade.receive.count} ${trade.receive.type.replace(/_/g, ' ')}`;
+              dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
+            }
           } else {
             dialogueManager.selectChoice(dialogueManager.selectedIndex);
           }
@@ -1141,9 +1185,23 @@ function startGame(config, jumpStateId) {
         const block = world.getBlock(bx, by, bz);
         blockBreaker.startBreak(bx, by, bz, block);
         if (blockBreaker.tick(dt)) {
+          // Check equipped tool or inventory for appropriate tool
           const mainHand = equipment.get('main_hand');
-          const equippedToolType = (mainHand && mainHand.toolType) || null;
-          if (mineBlock(world, inventory, bx, by, bz, equippedToolType)) {
+          let toolType = (mainHand && mainHand.toolType) || null;
+          // Also check inventory for pickaxe if no tool equipped
+          if (!toolType) {
+            const pickaxeTypes = ['iron_pickaxe', 'copper_pickaxe', 'stone_pickaxe', 'pickaxe'];
+            for (const pt of pickaxeTypes) {
+              if (inventory.count(pt) > 0) { toolType = 'pickaxe'; break; }
+            }
+          }
+          if (canMine(block, toolType)) {
+            const drops = blockDrops(block);
+            world.setBlock(bx, by, bz, 0); // AIR
+            // Spawn dropped items on the ground instead of adding to inventory
+            for (const drop of drops) {
+              spawnDroppedItem({ x: bx, y: by, z: bz }, drop.type, drop.count);
+            }
             worldRenderer.markDirty(bx, by, bz);
           }
         }
@@ -1151,7 +1209,25 @@ function startGame(config, jumpStateId) {
         blockBreaker.cancel();
         // Melee attack on click (not hold)
         if (input.consumeLeftClick()) {
-          const weaponDmg = getWeaponDamage(equipment);
+          // Check inventory for weapons to boost damage
+          let weaponDmg = getWeaponDamage(equipment);
+          if (weaponDmg <= 2) {
+            // No weapon equipped — check inventory for usable weapons
+            const weaponBoosts = [
+              { type: 'iron_sword', damage: 12 },
+              { type: 'iron_hammer', damage: 14 },
+              { type: 'dagger', damage: 6 },
+              { type: 'spear', damage: 10 },
+              { type: 'axe', damage: 8 },
+              { type: 'stone_axe', damage: 6 },
+              { type: 'hammer', damage: 10 },
+            ];
+            for (const w of weaponBoosts) {
+              if (inventory.count(w.type) > 0) { weaponDmg = w.damage; break; }
+            }
+            // Base fist damage increased for playability
+            if (weaponDmg <= 2) weaponDmg = 5;
+          }
           combatSystem.playerAttack(player.position, forward, enemies, weaponDmg);
         }
       }
@@ -1165,7 +1241,9 @@ function startGame(config, jumpStateId) {
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (enemies[i].isDead()) {
         const drops = getEnemyDrops(enemies[i].type);
-        for (const drop of drops) inventory.add(drop.type, drop.count);
+        for (const drop of drops) {
+          spawnDroppedItem(enemies[i].position, drop.type, drop.count);
+        }
         experienceSystem.addExperience(GC.COMBAT.XP_PER_KILL, 'combat');
         factionSystem.addReputation('road_wardens', GC.COMBAT.FACTION_REP_PER_KILL);
         progress.killEnemy(enemies[i].type);
@@ -1230,16 +1308,17 @@ function startGame(config, jumpStateId) {
             merchant.position = { ...site.position };
             const merchantNPC = new NPC(merchant);
             npcSystem.addNPC(merchantNPC);
-            // Place OAK_PLANKS roof to visually restore the ruin
-            const roofBlock = rewards.roofBlock;
-            const ruinRadius = 3;
-            const ruinHeight = 4;
+            // Replace the ruin with a proper restored building
+            const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
+            const restoreSize = sizeMap[site.id] || 'small';
+            const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z), config.seed);
+            placeRestoredSite(world, { x: site.position.x, y: sh + 1, z: site.position.z }, restoreSize);
+            // Mark all nearby chunks dirty for re-render
             const sx = Math.floor(site.position.x);
-            const sy = Math.floor(site.position.y) + 1;
             const sz = Math.floor(site.position.z);
-            for (let dx = -ruinRadius; dx <= ruinRadius; dx++) {
-              for (let dz = -ruinRadius; dz <= ruinRadius; dz++) {
-                world.setBlock(sx + dx, sy + ruinHeight, sz + dz, roofBlock);
+            for (let dx = -10; dx <= 10; dx += 8) {
+              for (let dz = -10; dz <= 10; dz += 8) {
+                worldRenderer.markDirty(sx + dx, sh + 1, sz + dz);
               }
             }
             // If it's the watch-post, advance ward quest
@@ -1253,6 +1332,51 @@ function startGame(config, jumpStateId) {
           break;
         }
       }
+    }
+
+    // Update NPC wandering AI
+    const getHeightNPC = (x, z) => getHeightAt(x, z, config.seed);
+    for (const npc of allNPCs) {
+      npc.updateAI(dt, getHeightNPC);
+    }
+
+    // Process dropped items: pickup and lifetime
+    for (let i = droppedItems.length - 1; i >= 0; i--) {
+      const item = droppedItems[i];
+      item.lifetime -= dt;
+      item.bobPhase += dt * 3;
+      if (item.lifetime <= 0) {
+        droppedItems.splice(i, 1);
+        continue;
+      }
+      // Check if player is close enough to pick up
+      const dx = player.position.x - item.position.x;
+      const dy = player.position.y - item.position.y;
+      const dz = player.position.z - item.position.z;
+      const dist2 = dx * dx + dy * dy + dz * dz;
+      if (dist2 <= PICKUP_RANGE * PICKUP_RANGE) {
+        inventory.add(item.type, item.count);
+        dialogueMessage = `Picked up ${item.count} ${item.type.replace(/_/g, ' ')}`;
+        dialogueTimer = 1.5;
+        droppedItems.splice(i, 1);
+      }
+    }
+
+    // Render dropped items as small floating cubes
+    // Remove old meshes
+    for (const mesh of droppedItemMeshes) {
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+    }
+    droppedItemMeshes = [];
+    const dropGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+    for (const item of droppedItems) {
+      const dropMat = new THREE.MeshLambertMaterial({ color: 0xc9a84c });
+      const dropMesh = new THREE.Mesh(dropGeo, dropMat);
+      dropMesh.position.set(item.position.x, item.position.y + Math.sin(item.bobPhase) * 0.15, item.position.z);
+      dropMesh.rotation.y = item.bobPhase * 0.5;
+      scene.add(dropMesh);
+      droppedItemMeshes.push(dropMesh);
     }
 
     // Render enemies and NPCs

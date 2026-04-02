@@ -249,6 +249,49 @@ const GENERATORS = {
       }
     }
   },
+
+  chest: (data) => {
+    // Wooden chest with darker bands
+    for (let y = 0; y < TEXTURE_SIZE; y++) {
+      for (let x = 0; x < TEXTURE_SIZE; x++) {
+        const n = pixHash(x, y, 150);
+        const isBand = y === 3 || y === 12 || x === 0 || x === TEXTURE_SIZE - 1;
+        if (isBand) {
+          setPixel(data, x, y, 60, 40, 20);
+        } else {
+          setPixel(data, x, y, 140 + (n % 15), 95 + (n % 12), 45 + (n % 10));
+        }
+      }
+    }
+    // Metal clasp in center
+    for (let x = 6; x <= 9; x++) {
+      for (let y = 6; y <= 9; y++) {
+        setPixel(data, x, y, 180, 160, 80);
+      }
+    }
+  },
+
+  bed: (data) => {
+    // Red blanket on top with wooden frame at bottom
+    for (let y = 0; y < TEXTURE_SIZE; y++) {
+      for (let x = 0; x < TEXTURE_SIZE; x++) {
+        const n = pixHash(x, y, 160);
+        if (y < 4) {
+          // Wooden frame
+          setPixel(data, x, y, 100 + (n % 15), 65 + (n % 10), 35 + (n % 8));
+        } else {
+          // Red blanket
+          setPixel(data, x, y, 140 + (n % 20), 30 + (n % 12), 25 + (n % 10));
+        }
+      }
+    }
+    // Pillow area
+    for (let x = 2; x <= 13; x++) {
+      for (let y = 4; y <= 7; y++) {
+        setPixel(data, x, y, 220, 215, 200);
+      }
+    }
+  },
 };
 
 export function generateBlockTexture(blockId) {

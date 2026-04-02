@@ -75,4 +75,5 @@ export const ItemType = Object.freeze({
   BIRCH_WOOD: 'birch_wood',
   SLATE: 'slate',
   MARBLE: 'marble',
+  CHEST: 'chest',
 });

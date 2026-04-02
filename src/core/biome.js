@@ -42,7 +42,7 @@ const BIOMES = {
     surfaceBlock: BlockType.STONE,
     treeDensity: 0.005,
     minHeight: 35,
-    maxHeight: 60,
+    maxHeight: 85,
   }),
   [BiomeType.MIRKWOOD]: new Biome({
     type: BiomeType.MIRKWOOD,

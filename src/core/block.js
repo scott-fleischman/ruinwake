@@ -48,9 +48,11 @@ export const BlockType = Object.freeze({
   OBSIDIAN: 38,
   CRYSTAL: 39,
   TALL_GRASS: 40,
+  CHEST: 41,
+  BED: 42,
 });
 
-const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS, BlockType.LEAVES]);
+const NON_SOLID = new Set([BlockType.AIR, BlockType.WATER, BlockType.TORCH, BlockType.TALL_GRASS, BlockType.LEAVES, BlockType.BED]);
 
 export function isBlockSolid(blockType) {
   return !NON_SOLID.has(blockType);
@@ -87,6 +89,12 @@ const DROP_TABLE = {
   [BlockType.SLATE]: [{ type: ItemType.SLATE, count: 1 }],
   [BlockType.MARBLE]: [{ type: ItemType.MARBLE, count: 1 }],
   [BlockType.TALL_GRASS]: [{ type: ItemType.FIBER, count: 1 }],
+  [BlockType.WORKBENCH]: [{ type: ItemType.WORKBENCH, count: 1 }],
+  [BlockType.CAMPFIRE]: [{ type: ItemType.CAMPFIRE, count: 1 }],
+  [BlockType.FORGE]: [{ type: ItemType.FORGE, count: 1 }],
+  [BlockType.KITCHEN]: [{ type: ItemType.KITCHEN, count: 1 }],
+  [BlockType.LOOM]: [{ type: ItemType.LOOM, count: 1 }],
+  [BlockType.CHEST]: [{ type: ItemType.CHEST, count: 1 }],
 };
 
 export function blockDrops(blockType) {
@@ -133,6 +141,8 @@ export const HARDNESS = Object.freeze({
   [BlockType.LOOM]: 'hand',
   [BlockType.RUNE_TABLE]: 'pickaxe',
   [BlockType.TORCH]: 'hand',
+  [BlockType.CHEST]: 'hand',
+  [BlockType.BED]: 'hand',
 });
 
 export function canMine(blockType, toolType) {
@@ -165,4 +175,5 @@ export const ITEM_TO_BLOCK = Object.freeze({
   [ItemType.FORGE]: BlockType.FORGE,
   [ItemType.KITCHEN]: BlockType.KITCHEN,
   [ItemType.LOOM]: BlockType.LOOM,
+  [ItemType.CHEST]: BlockType.CHEST,
 });

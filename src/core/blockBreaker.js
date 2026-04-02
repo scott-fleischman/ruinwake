@@ -25,6 +25,12 @@ const BREAK_TIMES = {
   [BlockType.COAL_ORE]: 1.5,
   [BlockType.GLASS]: 0.3,
   [BlockType.TORCH]: 0.1,
+  [BlockType.CAMPFIRE]: 0.5,
+  [BlockType.WORKBENCH]: 0.8,
+  [BlockType.FORGE]: 2.0,
+  [BlockType.KITCHEN]: 0.6,
+  [BlockType.LOOM]: 0.5,
+  [BlockType.RUNE_TABLE]: 1.5,
 };
 
 const DEFAULT_BREAK_TIME = 1.0;

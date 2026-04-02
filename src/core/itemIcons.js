@@ -83,6 +83,22 @@ const ICONS = {
   marble: '\u{26AA}',     // white circle
   thatch: '\u{1F7E1}',    // yellow circle
   stone_brick: '\u{1F532}', // black square button
+  chest: '\u{1F5C4}',       // file cabinet (chest-like)
+  workbench: '\u{1F6E0}',   // hammer and wrench
+  campfire: '\u{1F525}',    // fire
+  forge: '\u{2692}',        // hammer and pick
+  kitchen: '\u{1F373}',     // cooking pan
+  loom: '\u{1F9F5}',        // thread
+  gravel: '\u{25AB}',       // small square
+  raw_berries: '\u{1FAD0}', // blueberries
+  raw_mushroom: '\u{1F344}', // mushroom
+  herb_salad: '\u{1F957}',  // salad
+  iron_ingot: '\u{1F4A0}',  // diamond shape
+  copper_ingot: '\u{1F7E0}', // orange circle
+  raw_fish: '\u{1F41F}',    // fish
+  cooked_fish: '\u{1F41F}', // fish
+  slate: '\u{25FD}',        // medium square
+  birch_wood: '\u{1FAB5}',  // wood
 };
 
 const DEFAULT_ICON = '\u{1F4E6}'; // package
