@@ -31,17 +31,9 @@ Location: `test/solvability/`
 Collision, reachability, spawn validity, checkpoint validity, voxel completeness, stuck-state prevention.
 Location: `test/spatial/`
 
-### 7. Human-capacity tests
-Timing windows, reaction budgets, input cadence, precision requirements.
-Location: `test/human-capacity/`
-
-### 8. Rendering tests
+### 7. Rendering tests
 Scene assembly, asset loading, geometry smoke checks, semantic UI visibility.
 Location: `test/rendering/`
-
-### 9. Performance tests
-Simulation cost, loading cost, memory ceilings, frame/render budgets.
-Location: `test/performance/`
 
 ## Local verification gate
 Before stopping work, all tests in layers 1-3 must pass:

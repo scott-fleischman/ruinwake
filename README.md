@@ -103,6 +103,6 @@ View with: ImageMagick (`display`), macOS Preview, GIMP, or `convert file.ppm fi
 - **`src/core/`** — Headless gameplay modules (no rendering deps)
 - **`src/render/`** — Three.js adapters
 - **`src/worker/`** — Web Worker for background terrain generation
-- **`test/`** — 9 test layers (unit, contract, integration, property, solvability, spatial, human-capacity, rendering, performance)
+- **`test/`** — 7 test layers (unit, contract, integration, property, solvability, spatial, rendering)
 
 See also: [AGENTS.md](AGENTS.md) (dev rules), [TESTING.md](TESTING.md) (test conventions), [PLANS.md](PLANS.md) (roadmap), [CHEAT_SHEET.md](CHEAT_SHEET.md) (walkthrough), [spec.md](spec.md) (full spec)

@@ -37,7 +37,7 @@
 - Ruin structures at restorable sites and NPC locations
 - Item icons (emoji) in inventory and hotbar
 - NPC quest acceptance dialogue
-- 972 tests across 109 files, 6 test layers
+- 1407 tests across 163 files, 7 test layers
 
 ### Remaining for 100%
 - Crafting station proximity detection for station recipes

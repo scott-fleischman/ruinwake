@@ -34,9 +34,7 @@
 4. Property/fuzz tests for invariants and edge cases.
 5. Mission and quest solvability tests.
 6. Spatial tests for collision, reachability, spawn validity, checkpoint validity, voxel/world completeness, and stuck-state prevention.
-7. Human-capacity tests for timing windows, reaction budgets, input cadence, and precision requirements.
-8. Rendering tests for scene assembly, asset loading, geometry smoke checks, semantic UI visibility, deterministic visual baselines, and target-specific runtime errors.
-9. Performance tests for simulation cost, loading cost, memory ceilings, and frame/render budgets where relevant.
+7. Rendering tests for scene assembly, asset loading, geometry smoke checks, semantic UI visibility, deterministic visual baselines, and target-specific runtime errors.
 
 See `TESTING.md` for the operational definition of each test layer, required local verification gates, and command conventions.
 
