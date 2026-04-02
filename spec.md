@@ -908,15 +908,24 @@ Harsh
 
 24. Technical Implementation Guidance
 
-24.1 Recommended Technology Stack
+24.1 Technology Stack
 
-Preferred prototype engine: Godot 4.x
+Web-first stack: Three.js + Vite + Vitest + vanilla JavaScript
+
+Stack:
+	•	Three.js for 3D rendering (voxel meshing, lighting, cameras)
+	•	Vite for dev server and production builds
+	•	Vitest for testing (unit, contract, integration, property, spatial, rendering)
+	•	Web Workers for off-thread chunk meshing and world generation
+	•	Vanilla JS modules — no framework, no TypeScript, minimal dependencies
+	•	GitHub Pages for deployment
 
 Reasoning:
-	•	approachable for AI-assisted development
-	•	faster iteration for single-player gameplay
-	•	manageable project structure
-	•	good support for first-person and third-person cameras, UI, quests, saves, and world interaction
+	•	zero install — runs in any modern browser
+	•	AI-assisted TDD workflow with fast headless test feedback
+	•	simple module system with no build-tool complexity
+	•	good enough 3D via Three.js for stylized voxel presentation
+	•	Web Workers keep the main thread responsive during chunk generation
 
 24.2 Architecture Principles
 
@@ -938,9 +947,11 @@ Build the game in modular systems:
 
 Use a chunked voxel world with:
 	•	fixed world bounds
-	•	chunk streaming around the player
+	•	chunk streaming around the player via Web Worker
+	•	greedy-mesh geometry built per chunk with vertex colors and ambient occlusion
 	•	block metadata for durability, variant, and interactable state
 	•	separate authored landmark layers for major structures and dungeons
+	•	deterministic seeded noise for terrain (no randomness at runtime)
 
 24.4 Data-Driven Content
 
@@ -957,6 +968,8 @@ Whenever possible, define content in external data files or resources:
 This allows AI agents to add content without rewriting core code.
 
 24.5 Save System
+
+Uses browser localStorage (or IndexedDB for large worlds) serialized as JSON.
 
 Must save:
 	•	world modifications
