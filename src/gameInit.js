@@ -154,7 +154,7 @@ export function createGameState(config) {
   const creativeMode = new CreativeMode();
   const dialogueManager = new DialogueManager();
   const spawnPos = { x: 0, y: spawnHeight + 2, z: 0 };
-  const classPassive = getClassPassiveEffect(fullClassId) || getClassPassiveEffect(config.classId);
+  const classPassive = getClassPassiveEffect(fullClassId);
   const racialStyle = { man: 'man', elf: 'elf', dwarf: 'dwarf', hobbit: 'hobbit' }[config.raceId] || 'man';
 
   // NPCs with shelters
