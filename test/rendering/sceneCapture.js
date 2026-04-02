@@ -70,7 +70,7 @@ function mergeGeometry(geos) {
   };
 }
 
-// ── Enemy model data (copied from enemyRenderer to avoid THREE.js dep) ──
+// ── Enemy model data — type-specific anatomy ────────────────────────
 const ENEMY_COLORS = {
   wolf: 0x6a6a6a, goblin: 0x4a7a3a, spider: 0x2a1a0a, troll: 0x7a6a5a,
   wight: 0x6644aa, guardian: 0xbb8844, construct: 0x5555aa, orc: 0x5a6a3a,
@@ -90,42 +90,346 @@ const ENEMY_SCALES = {
   wraith: { w: 0.6, h: 2.0, d: 0.6 },
 };
 
-const BEAST_TYPES = new Set(['wolf', 'spider', 'giant_spider', 'corrupted_bear']);
-
-function buildEnemyBoxes(type) {
-  const scale = ENEMY_SCALES[type] || { w: 0.6, h: 1, d: 0.6 };
-  const [r, g, b] = hexToRGB01(ENEMY_COLORS[type] || 0xff0000);
+function buildWolfBoxes(r, g, b) {
   const geos = [];
+  // Body
+  geos.push(buildBoxTriangles(0, 0.48, 0, 0.4, 0.32, 0.7, r, g, b));
+  // Chest (front broader)
+  geos.push(buildBoxTriangles(0, 0.5, -0.22, 0.44, 0.28, 0.2, r * 1.05, g * 1.05, b * 1.05));
+  // Head
+  geos.push(buildBoxTriangles(0, 0.58, -0.48, 0.3, 0.26, 0.28, r * 1.08, g * 1.08, b * 1.08));
+  // Snout
+  geos.push(buildBoxTriangles(0, 0.5, -0.68, 0.16, 0.12, 0.2, r * 0.88, g * 0.88, b * 0.88));
+  // Nose tip
+  geos.push(buildBoxTriangles(0, 0.52, -0.78, 0.06, 0.06, 0.04, 0.08, 0.06, 0.06));
+  // Ears
+  geos.push(buildBoxTriangles(-0.1, 0.74, -0.42, 0.07, 0.14, 0.06, r * 0.8, g * 0.8, b * 0.8));
+  geos.push(buildBoxTriangles(0.1, 0.74, -0.42, 0.07, 0.14, 0.06, r * 0.8, g * 0.8, b * 0.8));
+  // Tail (bushy, angled up)
+  geos.push(buildBoxTriangles(0, 0.6, 0.48, 0.08, 0.1, 0.3, r * 0.9, g * 0.9, b * 0.9));
+  geos.push(buildBoxTriangles(0, 0.68, 0.62, 0.06, 0.08, 0.14, r * 0.85, g * 0.85, b * 0.85));
+  // Front legs
+  geos.push(buildBoxTriangles(-0.14, 0.16, -0.22, 0.09, 0.32, 0.09, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.14, 0.16, -0.22, 0.09, 0.32, 0.09, r * 0.82, g * 0.82, b * 0.82));
+  // Hind legs (slightly thicker)
+  geos.push(buildBoxTriangles(-0.14, 0.16, 0.22, 0.1, 0.32, 0.1, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.14, 0.16, 0.22, 0.1, 0.32, 0.1, r * 0.82, g * 0.82, b * 0.82));
+  // Paws
+  for (const [px, pz] of [[-0.14, -0.22], [0.14, -0.22], [-0.14, 0.22], [0.14, 0.22]]) {
+    geos.push(buildBoxTriangles(px, 0.03, pz, 0.11, 0.06, 0.12, r * 0.7, g * 0.7, b * 0.7));
+  }
+  return mergeGeometry(geos);
+}
 
-  if (BEAST_TYPES.has(type)) {
-    const legH = scale.h * 0.4;
-    const legW = scale.w * 0.15;
-    const bodyH = scale.h * 0.6;
-    // Body
-    geos.push(buildBoxTriangles(0, legH + bodyH / 2, 0, scale.w, bodyH, scale.d, r, g, b));
-    // 4 legs
-    const offsets = [[-1,-1],[1,-1],[-1,1],[1,1]];
-    for (const [sx, sz] of offsets) {
+function buildSpiderBoxes(r, g, b, s) {
+  const geos = [];
+  // Cephalothorax (front body)
+  geos.push(buildBoxTriangles(0, 0.3 * s, -0.12 * s, 0.4 * s, 0.22 * s, 0.32 * s, r * 1.1, g * 1.1, b * 1.1));
+  // Abdomen (rear, larger)
+  geos.push(buildBoxTriangles(0, 0.35 * s, 0.28 * s, 0.5 * s, 0.3 * s, 0.48 * s, r, g, b));
+  // Abdomen stripe
+  geos.push(buildBoxTriangles(0, 0.42 * s, 0.28 * s, 0.12 * s, 0.12 * s, 0.4 * s, r * 0.6, g * 0.6, b * 0.6));
+  // Eyes (cluster of red dots)
+  geos.push(buildBoxTriangles(-0.06 * s, 0.38 * s, -0.28 * s, 0.05 * s, 0.04 * s, 0.04 * s, 0.6, 0.05, 0.02));
+  geos.push(buildBoxTriangles(0.06 * s, 0.38 * s, -0.28 * s, 0.05 * s, 0.04 * s, 0.04 * s, 0.6, 0.05, 0.02));
+  // Mandibles
+  geos.push(buildBoxTriangles(-0.08 * s, 0.22 * s, -0.32 * s, 0.05 * s, 0.1 * s, 0.12 * s, r * 0.7, g * 0.7, b * 0.7));
+  geos.push(buildBoxTriangles(0.08 * s, 0.22 * s, -0.32 * s, 0.05 * s, 0.1 * s, 0.12 * s, r * 0.7, g * 0.7, b * 0.7));
+  // 8 legs — 4 pairs spread out, each a vertical post
+  const legPairs = [
+    { z: -0.2, xSpread: 0.32, h: 0.28 },
+    { z: -0.06, xSpread: 0.38, h: 0.3 },
+    { z: 0.08, xSpread: 0.38, h: 0.3 },
+    { z: 0.22, xSpread: 0.32, h: 0.26 },
+  ];
+  for (const lp of legPairs) {
+    for (const sx of [-1, 1]) {
       geos.push(buildBoxTriangles(
-        sx * (scale.w / 2 - legW / 2), legH / 2, sz * (scale.d / 2 - legW / 2),
-        legW, legH, legW, r * 0.85, g * 0.85, b * 0.85
+        sx * lp.xSpread * s, lp.h * 0.5 * s, lp.z * s,
+        0.04 * s, lp.h * s, 0.04 * s, r * 0.75, g * 0.75, b * 0.75
+      ));
+      // Foot
+      geos.push(buildBoxTriangles(
+        sx * (lp.xSpread + 0.02) * s, 0.02 * s, lp.z * s,
+        0.06 * s, 0.04 * s, 0.06 * s, r * 0.6, g * 0.6, b * 0.6
       ));
     }
-  } else {
-    const bodyH = scale.h * 0.6;
-    const headSize = scale.w * 0.5;
-    const armW = scale.w * 0.2;
-    const armH = bodyH * 0.7;
-    // Body
-    geos.push(buildBoxTriangles(0, bodyH / 2, 0, scale.w, bodyH, scale.d, r, g, b));
-    // Head
-    geos.push(buildBoxTriangles(0, bodyH + headSize / 2, 0, headSize, headSize, headSize, r * 1.1, g * 1.1, b * 1.1));
-    // Arms
-    geos.push(buildBoxTriangles(-(scale.w / 2 + armW / 2), bodyH * 0.6, 0, armW, armH, armW, r * 0.9, g * 0.9, b * 0.9));
-    geos.push(buildBoxTriangles((scale.w / 2 + armW / 2), bodyH * 0.6, 0, armW, armH, armW, r * 0.9, g * 0.9, b * 0.9));
   }
-
   return mergeGeometry(geos);
+}
+
+function buildBearBoxes(r, g, b) {
+  const geos = [];
+  // Body
+  geos.push(buildBoxTriangles(0, 0.72, 0, 0.9, 0.58, 1.2, r, g, b));
+  // Shoulder hump
+  geos.push(buildBoxTriangles(0, 1.08, -0.15, 0.65, 0.2, 0.45, r * 1.06, g * 1.06, b * 1.06));
+  // Head
+  geos.push(buildBoxTriangles(0, 0.92, -0.7, 0.45, 0.38, 0.42, r * 1.08, g * 1.08, b * 1.08));
+  // Snout
+  geos.push(buildBoxTriangles(0, 0.82, -0.98, 0.22, 0.16, 0.22, r * 0.9, g * 0.9, b * 0.9));
+  // Nose
+  geos.push(buildBoxTriangles(0, 0.85, -1.08, 0.08, 0.06, 0.04, 0.06, 0.04, 0.04));
+  // Ears
+  geos.push(buildBoxTriangles(-0.16, 1.14, -0.64, 0.1, 0.1, 0.08, r * 0.85, g * 0.85, b * 0.85));
+  geos.push(buildBoxTriangles(0.16, 1.14, -0.64, 0.1, 0.1, 0.08, r * 0.85, g * 0.85, b * 0.85));
+  // Front legs (thick)
+  geos.push(buildBoxTriangles(-0.28, 0.22, -0.35, 0.18, 0.44, 0.18, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.28, 0.22, -0.35, 0.18, 0.44, 0.18, r * 0.82, g * 0.82, b * 0.82));
+  // Hind legs
+  geos.push(buildBoxTriangles(-0.3, 0.22, 0.35, 0.2, 0.44, 0.2, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.3, 0.22, 0.35, 0.2, 0.44, 0.2, r * 0.82, g * 0.82, b * 0.82));
+  // Claws (front paws)
+  geos.push(buildBoxTriangles(-0.28, 0.03, -0.48, 0.2, 0.06, 0.1, r * 0.6, g * 0.6, b * 0.6));
+  geos.push(buildBoxTriangles(0.28, 0.03, -0.48, 0.2, 0.06, 0.1, r * 0.6, g * 0.6, b * 0.6));
+  // Short tail
+  geos.push(buildBoxTriangles(0, 0.88, 0.62, 0.1, 0.1, 0.12, r * 0.9, g * 0.9, b * 0.9));
+  return mergeGeometry(geos);
+}
+
+function buildGoblinBoxes(r, g, b, isArcher) {
+  const geos = [];
+  // Legs (short, bowed)
+  geos.push(buildBoxTriangles(-0.1, 0.14, 0, 0.14, 0.28, 0.14, r * 0.75, g * 0.75, b * 0.75));
+  geos.push(buildBoxTriangles(0.1, 0.14, 0, 0.14, 0.28, 0.14, r * 0.75, g * 0.75, b * 0.75));
+  // Feet (big)
+  geos.push(buildBoxTriangles(-0.1, 0.03, -0.04, 0.18, 0.06, 0.2, r * 0.6, g * 0.6, b * 0.6));
+  geos.push(buildBoxTriangles(0.1, 0.03, -0.04, 0.18, 0.06, 0.2, r * 0.6, g * 0.6, b * 0.6));
+  // Body (hunched, wider at shoulders)
+  geos.push(buildBoxTriangles(0, 0.48, 0.02, 0.42, 0.42, 0.3, r, g, b));
+  // Loincloth
+  geos.push(buildBoxTriangles(0, 0.3, -0.02, 0.3, 0.08, 0.2, 0.35, 0.28, 0.18));
+  // Head (large relative to body)
+  geos.push(buildBoxTriangles(0, 0.82, -0.02, 0.32, 0.28, 0.28, r * 1.1, g * 1.1, b * 1.1));
+  // Big pointed ears
+  geos.push(buildBoxTriangles(-0.22, 0.86, 0, 0.14, 0.08, 0.06, r * 0.85, g * 0.85, b * 0.85));
+  geos.push(buildBoxTriangles(0.22, 0.86, 0, 0.14, 0.08, 0.06, r * 0.85, g * 0.85, b * 0.85));
+  // Beady eyes
+  geos.push(buildBoxTriangles(-0.08, 0.86, -0.14, 0.05, 0.04, 0.04, 0.6, 0.55, 0.1));
+  geos.push(buildBoxTriangles(0.08, 0.86, -0.14, 0.05, 0.04, 0.04, 0.6, 0.55, 0.1));
+  // Nose (pointy)
+  geos.push(buildBoxTriangles(0, 0.78, -0.16, 0.06, 0.08, 0.08, r * 0.9, g * 0.9, b * 0.9));
+  // Arms (long, scrawny)
+  geos.push(buildBoxTriangles(-0.28, 0.48, 0, 0.1, 0.42, 0.1, r * 0.88, g * 0.88, b * 0.88));
+  geos.push(buildBoxTriangles(0.28, 0.48, 0, 0.1, 0.42, 0.1, r * 0.88, g * 0.88, b * 0.88));
+  if (isArcher) {
+    // Bow in left hand
+    geos.push(buildBoxTriangles(-0.35, 0.5, 0, 0.04, 0.45, 0.04, 0.4, 0.28, 0.12));
+    // Quiver on back
+    geos.push(buildBoxTriangles(0.08, 0.65, 0.16, 0.1, 0.3, 0.06, 0.35, 0.25, 0.12));
+  } else {
+    // Crude sword in right hand
+    geos.push(buildBoxTriangles(0.32, 0.48, 0, 0.04, 0.35, 0.04, 0.4, 0.38, 0.32));
+  }
+  return mergeGeometry(geos);
+}
+
+function buildOrcBoxes(r, g, b) {
+  const geos = [];
+  // Boots
+  geos.push(buildBoxTriangles(-0.14, 0.06, 0.02, 0.24, 0.12, 0.3, 0.2, 0.18, 0.12));
+  geos.push(buildBoxTriangles(0.14, 0.06, 0.02, 0.24, 0.12, 0.3, 0.2, 0.18, 0.12));
+  // Legs
+  geos.push(buildBoxTriangles(-0.14, 0.3, 0, 0.2, 0.38, 0.2, r * 0.75, g * 0.75, b * 0.75));
+  geos.push(buildBoxTriangles(0.14, 0.3, 0, 0.2, 0.38, 0.2, r * 0.75, g * 0.75, b * 0.75));
+  // Body (bulky)
+  geos.push(buildBoxTriangles(0, 0.72, 0, 0.55, 0.58, 0.38, r, g, b));
+  // Armor plate (chest)
+  geos.push(buildBoxTriangles(0, 0.78, -0.16, 0.4, 0.3, 0.06, 0.3, 0.28, 0.22));
+  // Pauldrons (spiked shoulder armor)
+  geos.push(buildBoxTriangles(-0.34, 1.02, 0, 0.18, 0.14, 0.22, 0.3, 0.28, 0.22));
+  geos.push(buildBoxTriangles(0.34, 1.02, 0, 0.18, 0.14, 0.22, 0.3, 0.28, 0.22));
+  // Pauldron spikes
+  geos.push(buildBoxTriangles(-0.34, 1.14, 0, 0.06, 0.1, 0.06, 0.35, 0.32, 0.25));
+  geos.push(buildBoxTriangles(0.34, 1.14, 0, 0.06, 0.1, 0.06, 0.35, 0.32, 0.25));
+  // Head (brutish)
+  geos.push(buildBoxTriangles(0, 1.18, 0, 0.35, 0.3, 0.32, r * 1.05, g * 1.05, b * 1.05));
+  // Jaw (protruding)
+  geos.push(buildBoxTriangles(0, 1.0, -0.14, 0.28, 0.1, 0.12, r * 0.9, g * 0.9, b * 0.9));
+  // Tusks
+  geos.push(buildBoxTriangles(-0.1, 1.02, -0.18, 0.04, 0.08, 0.04, 0.85, 0.82, 0.7));
+  geos.push(buildBoxTriangles(0.1, 1.02, -0.18, 0.04, 0.08, 0.04, 0.85, 0.82, 0.7));
+  // Arms
+  geos.push(buildBoxTriangles(-0.38, 0.7, 0, 0.16, 0.52, 0.16, r * 0.88, g * 0.88, b * 0.88));
+  geos.push(buildBoxTriangles(0.38, 0.7, 0, 0.16, 0.52, 0.16, r * 0.88, g * 0.88, b * 0.88));
+  // Battle axe
+  geos.push(buildBoxTriangles(0.5, 0.65, 0, 0.04, 0.65, 0.04, 0.35, 0.3, 0.2));
+  geos.push(buildBoxTriangles(0.5, 1.02, -0.06, 0.18, 0.14, 0.04, 0.45, 0.42, 0.4));
+  return mergeGeometry(geos);
+}
+
+function buildTrollBoxes(r, g, b) {
+  const geos = [];
+  // Feet (massive)
+  geos.push(buildBoxTriangles(-0.22, 0.07, 0.04, 0.36, 0.14, 0.42, r * 0.7, g * 0.7, b * 0.7));
+  geos.push(buildBoxTriangles(0.22, 0.07, 0.04, 0.36, 0.14, 0.42, r * 0.7, g * 0.7, b * 0.7));
+  // Legs (thick, short relative to body)
+  geos.push(buildBoxTriangles(-0.22, 0.42, 0, 0.28, 0.58, 0.32, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.22, 0.42, 0, 0.28, 0.58, 0.32, r * 0.82, g * 0.82, b * 0.82));
+  // Body (massive barrel chest)
+  geos.push(buildBoxTriangles(0, 1.2, 0, 0.9, 1.05, 0.72, r, g, b));
+  // Belly
+  geos.push(buildBoxTriangles(0, 1.0, -0.2, 0.7, 0.5, 0.2, r * 1.05, g * 1.05, b * 1.05));
+  // Shoulders (very wide, hunched)
+  geos.push(buildBoxTriangles(0, 1.82, 0.04, 1.1, 0.22, 0.78, r * 0.92, g * 0.92, b * 0.92));
+  // Head (small, sunken between shoulders)
+  geos.push(buildBoxTriangles(0, 2.08, -0.04, 0.42, 0.32, 0.38, r * 1.1, g * 1.1, b * 1.1));
+  // Brow ridge
+  geos.push(buildBoxTriangles(0, 2.18, -0.18, 0.38, 0.06, 0.08, r * 0.85, g * 0.85, b * 0.85));
+  // Jaw
+  geos.push(buildBoxTriangles(0, 1.88, -0.14, 0.34, 0.1, 0.14, r * 0.9, g * 0.9, b * 0.9));
+  // Arms (very long, reaching below knees)
+  geos.push(buildBoxTriangles(-0.62, 1.1, 0, 0.22, 1.1, 0.22, r * 0.88, g * 0.88, b * 0.88));
+  geos.push(buildBoxTriangles(0.62, 1.1, 0, 0.22, 1.1, 0.22, r * 0.88, g * 0.88, b * 0.88));
+  // Fists (huge)
+  geos.push(buildBoxTriangles(-0.62, 0.42, 0, 0.28, 0.24, 0.22, r * 0.78, g * 0.78, b * 0.78));
+  geos.push(buildBoxTriangles(0.62, 0.42, 0, 0.28, 0.24, 0.22, r * 0.78, g * 0.78, b * 0.78));
+  // Club in right hand
+  geos.push(buildBoxTriangles(0.72, 0.8, 0, 0.12, 0.85, 0.12, 0.35, 0.28, 0.18));
+  geos.push(buildBoxTriangles(0.72, 1.3, 0, 0.2, 0.25, 0.2, 0.3, 0.24, 0.15));
+  return mergeGeometry(geos);
+}
+
+function buildWightBoxes(r, g, b, s) {
+  const geos = [];
+  // Robe skirt (hides legs)
+  geos.push(buildBoxTriangles(0, 0.28 * s, 0, 0.5 * s, 0.56 * s, 0.4 * s, r * 0.75, g * 0.75, b * 0.75));
+  // Robe hem (flared)
+  geos.push(buildBoxTriangles(0, 0.05 * s, 0, 0.56 * s, 0.1 * s, 0.44 * s, r * 0.65, g * 0.65, b * 0.65));
+  // Body / robes
+  geos.push(buildBoxTriangles(0, 0.75 * s, 0, 0.42 * s, 0.65 * s, 0.32 * s, r * 0.85, g * 0.85, b * 0.85));
+  // Cloak (outer flowing layer)
+  geos.push(buildBoxTriangles(0, 0.6 * s, 0.08 * s, 0.48 * s, 0.9 * s, 0.06 * s, r * 0.7, g * 0.7, b * 0.7));
+  // Hood
+  geos.push(buildBoxTriangles(0, 1.25 * s, 0.02 * s, 0.38 * s, 0.32 * s, 0.34 * s, r * 0.72, g * 0.72, b * 0.72));
+  // Face (barely visible, dark hollow)
+  geos.push(buildBoxTriangles(0, 1.2 * s, -0.12 * s, 0.2 * s, 0.15 * s, 0.06 * s, r * 0.3, g * 0.3, b * 0.3));
+  // Glowing eyes
+  geos.push(buildBoxTriangles(-0.05 * s, 1.22 * s, -0.16 * s, 0.04 * s, 0.03 * s, 0.03 * s, 0.5, 0.6, 0.8));
+  geos.push(buildBoxTriangles(0.05 * s, 1.22 * s, -0.16 * s, 0.04 * s, 0.03 * s, 0.03 * s, 0.5, 0.6, 0.8));
+  // Arms (skeletal, emerging from robes)
+  geos.push(buildBoxTriangles(-0.3 * s, 0.7 * s, 0, 0.1 * s, 0.55 * s, 0.1 * s, r * 0.9, g * 0.9, b * 0.9));
+  geos.push(buildBoxTriangles(0.3 * s, 0.7 * s, 0, 0.1 * s, 0.55 * s, 0.1 * s, r * 0.9, g * 0.9, b * 0.9));
+  // Bony hands
+  geos.push(buildBoxTriangles(-0.3 * s, 0.35 * s, 0, 0.08 * s, 0.1 * s, 0.04 * s, 0.65, 0.6, 0.55));
+  geos.push(buildBoxTriangles(0.3 * s, 0.35 * s, 0, 0.08 * s, 0.1 * s, 0.04 * s, 0.65, 0.6, 0.55));
+  return mergeGeometry(geos);
+}
+
+function buildWraithBoxes(r, g, b) {
+  // Build on wight base but taller and with crown + sword
+  const base = buildWightBoxes(r, g, b, 1.15);
+  const geos2 = [base];
+  // Crown (iron, spiked)
+  geos2.push(buildBoxTriangles(0, 1.62, 0, 0.36, 0.06, 0.36, 0.25, 0.22, 0.2));
+  geos2.push(buildBoxTriangles(-0.12, 1.7, 0, 0.04, 0.1, 0.04, 0.25, 0.22, 0.2));
+  geos2.push(buildBoxTriangles(0.12, 1.7, 0, 0.04, 0.1, 0.04, 0.25, 0.22, 0.2));
+  geos2.push(buildBoxTriangles(0, 1.7, -0.12, 0.04, 0.1, 0.04, 0.25, 0.22, 0.2));
+  // Morgul blade
+  geos2.push(buildBoxTriangles(0.38, 0.5, 0, 0.04, 0.6, 0.04, 0.35, 0.35, 0.42));
+  geos2.push(buildBoxTriangles(0.38, 0.82, 0, 0.1, 0.04, 0.04, 0.3, 0.3, 0.35));
+  return mergeGeometry(geos2);
+}
+
+function buildGuardianBoxes(r, g, b) {
+  const geos = [];
+  // Feet
+  geos.push(buildBoxTriangles(-0.25, 0.08, 0.02, 0.4, 0.16, 0.46, r * 0.7, g * 0.7, b * 0.7));
+  geos.push(buildBoxTriangles(0.25, 0.08, 0.02, 0.4, 0.16, 0.46, r * 0.7, g * 0.7, b * 0.7));
+  // Legs (massive pillars)
+  geos.push(buildBoxTriangles(-0.25, 0.5, 0, 0.32, 0.7, 0.32, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.25, 0.5, 0, 0.32, 0.7, 0.32, r * 0.82, g * 0.82, b * 0.82));
+  // Body (imposing)
+  geos.push(buildBoxTriangles(0, 1.35, 0, 1.0, 1.3, 0.8, r, g, b));
+  // Chest emblem
+  geos.push(buildBoxTriangles(0, 1.5, -0.38, 0.3, 0.3, 0.06, r * 1.2, g * 1.2, b * 1.2));
+  // Shoulders
+  geos.push(buildBoxTriangles(0, 2.1, 0, 1.25, 0.22, 0.9, r * 0.88, g * 0.88, b * 0.88));
+  // Head (helmet)
+  geos.push(buildBoxTriangles(0, 2.48, 0, 0.48, 0.42, 0.44, r * 1.1, g * 1.1, b * 1.1));
+  // Visor
+  geos.push(buildBoxTriangles(0, 2.42, -0.22, 0.4, 0.12, 0.08, r * 0.6, g * 0.6, b * 0.6));
+  // Helmet crest
+  geos.push(buildBoxTriangles(0, 2.78, 0, 0.06, 0.16, 0.3, r * 1.15, g * 1.15, b * 1.15));
+  // Arms
+  geos.push(buildBoxTriangles(-0.68, 1.35, 0, 0.26, 1.1, 0.26, r * 0.88, g * 0.88, b * 0.88));
+  geos.push(buildBoxTriangles(0.68, 1.35, 0, 0.26, 1.1, 0.26, r * 0.88, g * 0.88, b * 0.88));
+  // Fists
+  geos.push(buildBoxTriangles(-0.68, 0.68, 0, 0.3, 0.26, 0.24, r * 0.75, g * 0.75, b * 0.75));
+  geos.push(buildBoxTriangles(0.68, 0.68, 0, 0.3, 0.26, 0.24, r * 0.75, g * 0.75, b * 0.75));
+  // Shield (left arm)
+  geos.push(buildBoxTriangles(-0.88, 1.4, 0, 0.06, 0.7, 0.5, r * 0.8, g * 0.8, b * 0.8));
+  // Shield boss
+  geos.push(buildBoxTriangles(-0.92, 1.4, 0, 0.06, 0.15, 0.15, r * 1.3, g * 1.3, b * 1.3));
+  return mergeGeometry(geos);
+}
+
+function buildConstructBoxes(r, g, b, s) {
+  const geos = [];
+  // Feet
+  geos.push(buildBoxTriangles(-0.18 * s, 0.06 * s, 0.02, 0.28 * s, 0.12 * s, 0.32 * s, r * 0.7, g * 0.7, b * 0.7));
+  geos.push(buildBoxTriangles(0.18 * s, 0.06 * s, 0.02, 0.28 * s, 0.12 * s, 0.32 * s, r * 0.7, g * 0.7, b * 0.7));
+  // Legs
+  geos.push(buildBoxTriangles(-0.18 * s, 0.38 * s, 0, 0.22 * s, 0.52 * s, 0.24 * s, r * 0.82, g * 0.82, b * 0.82));
+  geos.push(buildBoxTriangles(0.18 * s, 0.38 * s, 0, 0.22 * s, 0.52 * s, 0.24 * s, r * 0.82, g * 0.82, b * 0.82));
+  // Body (mechanical)
+  geos.push(buildBoxTriangles(0, 0.95 * s, 0, 0.7 * s, 0.8 * s, 0.6 * s, r, g, b));
+  // Chest plate
+  geos.push(buildBoxTriangles(0, 1.05 * s, -0.28 * s, 0.5 * s, 0.4 * s, 0.06 * s, r * 1.15, g * 1.15, b * 1.15));
+  // Core (glowing)
+  geos.push(buildBoxTriangles(0, 1.0 * s, -0.32 * s, 0.12 * s, 0.12 * s, 0.04 * s, 0.5, 0.6, 0.85));
+  // Head
+  geos.push(buildBoxTriangles(0, 1.52 * s, 0, 0.36 * s, 0.3 * s, 0.32 * s, r * 1.05, g * 1.05, b * 1.05));
+  // Visor
+  geos.push(buildBoxTriangles(0, 1.48 * s, -0.15 * s, 0.3 * s, 0.08 * s, 0.06 * s, 0.3, 0.35, 0.5));
+  // Arms
+  geos.push(buildBoxTriangles(-0.44 * s, 0.9 * s, 0, 0.18 * s, 0.7 * s, 0.18 * s, r * 0.88, g * 0.88, b * 0.88));
+  geos.push(buildBoxTriangles(0.44 * s, 0.9 * s, 0, 0.18 * s, 0.7 * s, 0.18 * s, r * 0.88, g * 0.88, b * 0.88));
+  // Gauntlets
+  geos.push(buildBoxTriangles(-0.44 * s, 0.45 * s, 0, 0.22 * s, 0.2 * s, 0.2 * s, r * 0.75, g * 0.75, b * 0.75));
+  geos.push(buildBoxTriangles(0.44 * s, 0.45 * s, 0, 0.22 * s, 0.2 * s, 0.2 * s, r * 0.75, g * 0.75, b * 0.75));
+  return mergeGeometry(geos);
+}
+
+function buildShadowBoxes(r, g, b) {
+  const geos = [];
+  // Amorphous lower form (wispy)
+  geos.push(buildBoxTriangles(0, 0.2, 0, 0.4, 0.4, 0.35, r, g, b));
+  geos.push(buildBoxTriangles(0, 0.5, 0, 0.35, 0.35, 0.3, r * 1.1, g * 1.1, b * 1.1));
+  geos.push(buildBoxTriangles(0, 0.75, 0, 0.28, 0.28, 0.25, r * 1.2, g * 1.2, b * 1.2));
+  // Head region
+  geos.push(buildBoxTriangles(0, 0.98, 0, 0.22, 0.2, 0.22, r * 1.3, g * 1.3, b * 1.3));
+  // Eyes (faint glow)
+  geos.push(buildBoxTriangles(-0.05, 1.0, -0.1, 0.04, 0.03, 0.03, 0.2, 0.15, 0.3));
+  geos.push(buildBoxTriangles(0.05, 1.0, -0.1, 0.04, 0.03, 0.03, 0.2, 0.15, 0.3));
+  // Wisps extending out (tendrils)
+  geos.push(buildBoxTriangles(-0.25, 0.6, 0, 0.06, 0.3, 0.04, r * 0.8, g * 0.8, b * 0.8));
+  geos.push(buildBoxTriangles(0.25, 0.6, 0, 0.06, 0.3, 0.04, r * 0.8, g * 0.8, b * 0.8));
+  geos.push(buildBoxTriangles(0, 0.5, -0.2, 0.04, 0.25, 0.06, r * 0.8, g * 0.8, b * 0.8));
+  geos.push(buildBoxTriangles(0, 0.5, 0.2, 0.04, 0.2, 0.06, r * 0.8, g * 0.8, b * 0.8));
+  return mergeGeometry(geos);
+}
+
+function buildEnemyBoxes(type) {
+  const [r, g, b] = hexToRGB01(ENEMY_COLORS[type] || 0xff0000);
+  switch (type) {
+    case 'wolf': return buildWolfBoxes(r, g, b);
+    case 'spider': return buildSpiderBoxes(r, g, b, 1.0);
+    case 'giant_spider': return buildSpiderBoxes(r, g, b, 1.4);
+    case 'corrupted_bear': return buildBearBoxes(r, g, b);
+    case 'goblin': return buildGoblinBoxes(r, g, b, false);
+    case 'goblin_archer': return buildGoblinBoxes(r, g, b, true);
+    case 'orc': return buildOrcBoxes(r, g, b);
+    case 'troll': return buildTrollBoxes(r, g, b);
+    case 'wight': return buildWightBoxes(r, g, b, 1.0);
+    case 'barrow_wight': return buildWightBoxes(r, g, b, 1.15);
+    case 'wraith': return buildWraithBoxes(r, g, b);
+    case 'guardian': return buildGuardianBoxes(r, g, b);
+    case 'construct': return buildConstructBoxes(r, g, b, 1.0);
+    case 'dark_construct': return buildConstructBoxes(r, g, b, 1.2);
+    case 'shadow': return buildShadowBoxes(r, g, b);
+    default: return buildGoblinBoxes(r, g, b, false);
+  }
 }
 
 // ── NPC model data ──────────────────────────────────────────────────
