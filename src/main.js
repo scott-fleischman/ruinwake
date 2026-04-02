@@ -70,6 +70,7 @@ import { getRaceSpeedModifier, getRaceSprintMultiplier, getRaceStealthBonus, get
 import { Settings } from './core/settings.js';
 import { GamePause } from './core/gamePause.js';
 import { UnifiedMenu } from './core/unifiedMenu.js';
+import { MinimapState } from './core/minimapState.js';
 import { getEquipmentDisplayData, getEquippableWeapons } from './core/equipmentUI.js';
 import { EquipSlot } from './core/equipment.js';
 import { DeathSystem } from './core/deathSystem.js';
@@ -173,6 +174,7 @@ function startGame(config, jumpStateId) {
   const gamePause = new GamePause();
   const MENU_TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
   const unifiedMenu = new UnifiedMenu(MENU_TABS);
+  const minimapState = new MinimapState();
 
   // --- Core state ---
   const world = new World();
@@ -582,6 +584,10 @@ function startGame(config, jumpStateId) {
     });
   });
 
+  // --- Minimap (corner) ---
+  const minimapContainer = document.getElementById('minimap-container');
+  const minimapCanvas = document.getElementById('minimap-canvas');
+
   // --- Map panel rendering (canvas-based) ---
   const mapCanvas2D = document.getElementById('map-canvas-2d');
   const mapExploredSpan = document.getElementById('map-explored');
@@ -590,6 +596,9 @@ function startGame(config, jumpStateId) {
     (x, z) => getBiomeAt(x, z),
   );
   const mapRenderer = new MapRenderer(mapLayerSystem, mapCanvas2D);
+  const minimapRenderer = new MapRenderer(mapLayerSystem, minimapCanvas);
+  // Minimap always uses overview zoom
+  minimapRenderer.zoom = MapZoom.OVERVIEW;
 
   function updateMapPanel(playerPos) {
     const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
@@ -793,6 +802,11 @@ function startGame(config, jumpStateId) {
       syncUnifiedMenuDOM();
     }
 
+    // M toggles corner minimap (not inside menu)
+    if (!unifiedMenu.isOpen && input.consumeKeyPress('KeyM')) {
+      minimapState.toggle();
+    }
+
     const anyMenuOpen = unifiedMenu.isOpen || !!openChestPos;
     input.menuOpen = anyMenuOpen;
     gamePause.setMenuOpen(anyMenuOpen);
@@ -957,6 +971,25 @@ function startGame(config, jumpStateId) {
           settings.toggleTutorial();
         });
       }
+    }
+
+    // Corner minimap rendering (always-on when visible, hidden when full map tab is active)
+    const fullMapActive = unifiedMenu.isOpen && unifiedMenu.activeTab === 'map';
+    if (minimapState.shouldRender(fullMapActive)) {
+      minimapContainer.style.display = 'block';
+      const activeQuestIds = questSystem.getActiveQuests().map(q => q.id);
+      const questMarkerList = getQuestMarkers(questTriggers, activeQuestIds);
+      minimapRenderer.draw({
+        playerPos: player.position,
+        fogOfWar,
+        buildings: worldBuildings,
+        npcs: npcSystem.getAllNPCs(),
+        stations: worldStations,
+        landmarks: allLandmarks,
+        questMarkers: questMarkerList,
+      });
+    } else {
+      minimapContainer.style.display = 'none';
     }
 
     // NPC interaction (T key) — opens dialogue with choices

@@ -71,6 +71,19 @@
       font-family: monospace; font-size: 16px; cursor: pointer;
     }
     #start-btn:hover { background: #5a8a3a; }
+    /* ── Corner minimap ── */
+    #minimap-container {
+      position: absolute;
+      bottom: 70px;
+      right: 10px;
+      z-index: 40;
+      pointer-events: none;
+      background: rgba(8, 8, 16, 0.8);
+      border: 1px solid #3a3526;
+      border-radius: 6px;
+      padding: 4px;
+    }
+
     /* ── Unified tabbed menu ── */
     #unified-menu {
       position: absolute;
@@ -267,6 +280,10 @@
     <div id="loading-pct" style="color:#aaa;font-size:13px;margin-top:10px">0%</div>
   </div>
   <div id="hud"></div>
+  <div id="minimap-container" style="display:none">
+    <canvas id="minimap-canvas" width="160" height="120" style="width:160px;height:120px;background:#1a2a1a;border-radius:4px;image-rendering:pixelated"></canvas>
+    <div style="color:#666;font-size:9px;text-align:center;margin-top:2px">M toggle</div>
+  </div>
   <!-- Unified tabbed menu (replaces 7 separate panels) -->
   <div id="unified-menu">
     <div id="menu-tabs">
