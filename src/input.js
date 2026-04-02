@@ -1,103 +1,68 @@
+import { InputState } from './inputState.js';
+
+/**
+ * InputHandler — backward-compatible facade that composes:
+ *   InputState (pure, testable) + DOM event wiring (adapter).
+ *
+ * main.js continues to use `new InputHandler(canvas)` and call the
+ * same methods. All pure logic lives in InputState.
+ */
 export class InputHandler {
   constructor(canvas) {
-    this.keys = {};
-    this._justPressed = {};
-    this.mouseDx = 0;
-    this.mouseDy = 0;
-    this.locked = false;
-    this.leftClick = false;
-    this.rightClick = false;
-    this.scrollDelta = 0;
-    this.menuOpen = false;
-    this.onPointerUnlock = null;
+    this._state = new InputState();
 
+    // --- DOM adapter wiring ---
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') e.preventDefault();
-      if (!this.keys[e.code]) this._justPressed[e.code] = true;
-      this.keys[e.code] = true;
+      this._state.keyDown(e.code);
     });
-    document.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+    document.addEventListener('keyup', (e) => {
+      this._state.keyUp(e.code);
+    });
 
     canvas.addEventListener('click', () => {
-      if (!this.locked) {
+      if (!this._state.locked) {
         canvas.requestPointerLock();
       }
     });
 
     document.addEventListener('mousedown', (e) => {
-      if (!this.locked) return;
-      if (e.button === 0) { this.leftClick = true; this.keys['mouseLeft'] = true; }
-      if (e.button === 2) this.rightClick = true;
+      this._state.mouseButtonDown(e.button);
     });
 
     document.addEventListener('mouseup', (e) => {
-      if (e.button === 0) this.keys['mouseLeft'] = false;
+      this._state.mouseButtonUp(e.button);
     });
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
     document.addEventListener('pointerlockchange', () => {
-      const wasLocked = this.locked;
-      this.locked = document.pointerLockElement === canvas;
-      if (wasLocked && !this.locked && this.onPointerUnlock) {
-        this.onPointerUnlock();
-      }
+      this._state.setLocked(document.pointerLockElement === canvas);
     });
 
     document.addEventListener('mousemove', (e) => {
-      if (!this.locked) return;
-      this.mouseDx += e.movementX;
-      this.mouseDy += e.movementY;
+      this._state.mouseMove(e.movementX, e.movementY);
     });
 
     document.addEventListener('wheel', (e) => {
-      if (!this.locked) return;
-      this.scrollDelta += Math.sign(e.deltaY);
+      this._state.wheel(e.deltaY);
     });
   }
 
-  getMovementInput() {
-    return {
-      forward: !!this.keys['KeyW'],
-      back: !!this.keys['KeyS'],
-      left: !!this.keys['KeyA'],
-      right: !!this.keys['KeyD'],
-    };
-  }
+  // --- Proxy properties ---
+  get keys() { return this._state.keys; }
+  get locked() { return this._state.locked; }
+  get menuOpen() { return this._state.menuOpen; }
+  set menuOpen(v) { this._state.menuOpen = v; }
+  get onPointerUnlock() { return this._state.onPointerUnlock; }
+  set onPointerUnlock(fn) { this._state.onPointerUnlock = fn; }
 
-  getJump() {
-    return !!this.keys['Space'];
-  }
-
-  consumeMouse() {
-    const dx = this.mouseDx;
-    const dy = this.mouseDy;
-    this.mouseDx = 0;
-    this.mouseDy = 0;
-    return { dx, dy };
-  }
-
-  consumeLeftClick() {
-    const v = this.leftClick;
-    this.leftClick = false;
-    return v;
-  }
-
-  consumeRightClick() {
-    const v = this.rightClick;
-    this.rightClick = false;
-    return v;
-  }
-
-  consumeKeyPress(code) {
-    const v = !!this._justPressed[code];
-    this._justPressed[code] = false;
-    return v;
-  }
-
-  consumeScroll() {
-    const v = this.scrollDelta;
-    this.scrollDelta = 0;
-    return v;
-  }
+  // --- Proxy methods ---
+  getMovementInput() { return this._state.getMovementInput(); }
+  getJump() { return this._state.getJump(); }
+  consumeMouse() { return this._state.consumeMouse(); }
+  consumeLeftClick() { return this._state.consumeLeftClick(); }
+  consumeRightClick() { return this._state.consumeRightClick(); }
+  consumeKeyPress(code) { return this._state.consumeKeyPress(code); }
+  consumeScroll() { return this._state.consumeScroll(); }
 }
