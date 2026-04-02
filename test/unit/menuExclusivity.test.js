@@ -1,57 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import { MenuManager } from '../../src/core/menuManager.js';
+import { UnifiedMenu } from '../../src/core/unifiedMenu.js';
 
-describe('MenuManager — mutual exclusivity', () => {
-  it('opening a menu closes the previously open menu', () => {
-    const mm = new MenuManager();
-    mm.open('inventory');
-    expect(mm.isOpen('inventory')).toBe(true);
+describe('UnifiedMenu — mutual exclusivity', () => {
+  const TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
 
-    mm.open('crafting');
-    expect(mm.isOpen('crafting')).toBe(true);
-    expect(mm.isOpen('inventory')).toBe(false);
+  it('only one tab active at a time', () => {
+    const menu = new UnifiedMenu(TABS);
+    menu.open('inventory');
+    expect(menu.activeTab).toBe('inventory');
+
+    menu.switchTab('crafting');
+    expect(menu.activeTab).toBe('crafting');
   });
 
-  it('toggle opens when nothing is open', () => {
-    const mm = new MenuManager();
-    mm.toggle('inventory');
-    expect(mm.isOpen('inventory')).toBe(true);
+  it('toggle opens when closed', () => {
+    const menu = new UnifiedMenu(TABS);
+    menu.toggle();
+    expect(menu.isOpen).toBe(true);
   });
 
-  it('toggle closes when already open', () => {
-    const mm = new MenuManager();
-    mm.toggle('inventory');
-    mm.toggle('inventory');
-    expect(mm.isOpen('inventory')).toBe(false);
-    expect(mm.getOpen()).toBeNull();
+  it('toggle closes when open', () => {
+    const menu = new UnifiedMenu(TABS);
+    menu.toggle();
+    menu.toggle();
+    expect(menu.isOpen).toBe(false);
+    expect(menu.activeTab).toBeNull();
   });
 
-  it('toggle switches from one menu to another', () => {
-    const mm = new MenuManager();
-    mm.toggle('inventory');
-    mm.toggle('crafting');
-    expect(mm.isOpen('crafting')).toBe(true);
-    expect(mm.isOpen('inventory')).toBe(false);
-  });
-
-  it('getOpen returns the current menu or null', () => {
-    const mm = new MenuManager();
-    expect(mm.getOpen()).toBeNull();
-    mm.toggle('skills');
-    expect(mm.getOpen()).toBe('skills');
-  });
-
-  it('closeAll closes everything', () => {
-    const mm = new MenuManager();
-    mm.open('map');
-    mm.closeAll();
-    expect(mm.getOpen()).toBeNull();
-  });
-
-  it('anyOpen returns true when a menu is open', () => {
-    const mm = new MenuManager();
-    expect(mm.anyOpen()).toBe(false);
-    mm.open('quests');
-    expect(mm.anyOpen()).toBe(true);
+  it('close clears active tab', () => {
+    const menu = new UnifiedMenu(TABS);
+    menu.open('map');
+    menu.close();
+    expect(menu.activeTab).toBeNull();
+    expect(menu.isOpen).toBe(false);
   });
 });

@@ -97,7 +97,6 @@ import { getRiverCurrent } from './core/river.js';
 import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { GameProgress, JUMP_STATES } from './core/gameProgress.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
-// menuState.js no longer needed — unified menu handles cursor release
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');

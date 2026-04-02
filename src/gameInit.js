@@ -49,6 +49,8 @@ import { GameProgress } from './core/gameProgress.js';
 import { QuestWorldTriggers } from './core/questWorldTriggers.js';
 import { Settings } from './core/settings.js';
 import { GamePause } from './core/gamePause.js';
+import { UnifiedMenu } from './core/unifiedMenu.js';
+import { MinimapState } from './core/minimapState.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
 import { getDifficultyModifiers } from './core/difficulty.js';
 import { getRaceStartingReputation } from './core/raceReputation.js';
@@ -109,6 +111,9 @@ export function createGameState(config) {
   const nightDanger = new NightDangerSystem();
   const settings = new Settings();
   const gamePause = new GamePause();
+  const MENU_TABS = ['inventory', 'crafting', 'skills', 'quests', 'map', 'settings'];
+  const unifiedMenu = new UnifiedMenu(MENU_TABS);
+  const minimapState = new MinimapState();
 
   // Crafting
   const craftingSystem = new CraftingSystem(allRecipes);
@@ -187,7 +192,8 @@ export function createGameState(config) {
     config, world, chunkMgr, player, inventory, survivalStats, race, cls,
     difficultyMods, gameClock, combatSystem, weatherSystem, fogOfWar,
     experienceSystem, equipment, skillTreeSystem, skillTreeUI, hotbar,
-    fearSystem, nightDanger, settings, gamePause, craftingSystem, craftingUI,
+    fearSystem, nightDanger, settings, gamePause, unifiedMenu, minimapState,
+    craftingSystem, craftingUI,
     statusEffects, questSystem, compass, factionSystem, npcSystem,
     mapScreen, stealthSystem, relicSystem, shelterSystem, loreJournal,
     fastTravel, discoverySystem, restSystem, freshnessTracker, blockBreaker,
