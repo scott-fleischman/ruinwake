@@ -23,16 +23,15 @@ describe('Difficulty', () => {
 });
 
 describe('applyConfig', () => {
-  it('gives player starter items from class', () => {
+  it('creates an empty inventory (starter items granted by starterKit)', () => {
     const config = createGameConfig({
       raceId: 'dwarf',
       classId: 'miner',
       difficulty: Difficulty.STANDARD,
-
     });
     const result = applyConfig(config);
-    expect(result.inventory.count('pickaxe')).toBe(1);
-    expect(result.inventory.count('stick')).toBe(5);
+    expect(result.inventory).toBeDefined();
+    expect(result.inventory.count('pickaxe')).toBe(0);
   });
 
   it('applies race stat modifiers to survival stats', () => {

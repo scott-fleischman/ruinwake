@@ -33,9 +33,7 @@ export function applyConfig(config) {
   const cls = getClass(config.classId);
 
   const inventory = new Inventory(36);
-  for (const item of cls.starterItems) {
-    inventory.add(item.type, item.count);
-  }
+  // Starter items are granted exclusively by starterKit.js in gameInit.js
 
   const healthScale = DIFFICULTY_HEALTH_SCALE[config.difficulty] || 1.0;
 
