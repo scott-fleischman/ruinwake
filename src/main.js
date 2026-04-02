@@ -220,6 +220,7 @@ function startGame(config, jumpStateId) {
   }
 
   const { player, inventory, survivalStats, race, cls } = applyConfig(config);
+  const fullClassId = `${config.raceId}_${config.classId}`;
 
   // Gap 1: Get difficulty modifiers for use in game loop
   const difficultyMods = getDifficultyModifiers(config.difficulty);
@@ -272,7 +273,7 @@ function startGame(config, jumpStateId) {
   // Newly wired systems
   const relicSystem = new RelicSystem();
   // Give player a starting relic if their class has one
-  if (config.classId === 'man_scholar' || config.classId === 'elf_warden') {
+  if (fullClassId === 'man_scholar' || fullClassId === 'elf_warden') {
     relicSystem.equipRelic(new Relic({ id: 'ward_light', name: 'Ward Light Stone', ability: RelicAbility.WARD_LIGHT, focusCost: 10 }));
   }
   const shelterSystem = new ShelterSystem();
