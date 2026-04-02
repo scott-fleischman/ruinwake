@@ -10,7 +10,9 @@ import { World } from '../../src/core/world.js';
 import { BlockType } from '../../src/core/block.js';
 import { generateColumnData } from '../../src/core/chunkWorkerLogic.js';
 import { Chunk, CHUNK_SIZE } from '../../src/core/chunk.js';
-import { placeBuilding } from '../../src/core/ruinGenerator.js';
+import { placeBuilding, placeHobbitHole } from '../../src/core/ruinGenerator.js';
+import { placeHobbitHoleFromBlueprint } from '../../src/core/hobbitHolePlacer.js';
+import { HOBBIT_HOLE_BASE, HOBBIT_HOLE_BAGEND, HOBBIT_HOLE_COZY } from '../../src/core/hobbitHoleData.js';
 import { worldBuildings, worldFeatures, worldTrees } from '../../src/core/worldData.js';
 import { allNPCs } from '../../src/core/npcData.js';
 
@@ -55,10 +57,19 @@ function getHeightAt(world, x, z) {
   return 32;
 }
 
+const BP_VARIANTS = { base: HOBBIT_HOLE_BASE, bagend: HOBBIT_HOLE_BAGEND, cozy: HOBBIT_HOLE_COZY };
+
 function placeBuildingsInWorld(world, buildings) {
   for (const b of buildings) {
     const by = getHeightAt(world, b.x, b.z) + 1;
-    placeBuilding(world, { x: b.x, y: by, z: b.z }, b);
+    if (b.hobbitHole && b.hobbitHoleVariant) {
+      const bp = BP_VARIANTS[b.hobbitHoleVariant] || HOBBIT_HOLE_BASE;
+      placeHobbitHoleFromBlueprint(world, { x: b.x, y: by, z: b.z }, bp);
+    } else if (b.hobbitHole) {
+      placeHobbitHole(world, { x: b.x, y: by, z: b.z }, b);
+    } else {
+      placeBuilding(world, { x: b.x, y: by, z: b.z }, b);
+    }
   }
 }
 

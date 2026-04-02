@@ -30,6 +30,8 @@ import { MapScreen } from './core/mapScreen.js';
 import { allLandmarks } from './core/landmarkData.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
 import { placeRuin, placeBuilding, placeHobbitHole } from './core/ruinGenerator.js';
+import { placeHobbitHoleFromBlueprint } from './core/hobbitHolePlacer.js';
+import { HOBBIT_HOLE_BASE, HOBBIT_HOLE_BAGEND, HOBBIT_HOLE_COZY } from './core/hobbitHoleData.js';
 import { RelicSystem, Relic, RelicAbility } from './core/relic.js';
 import { ShelterSystem } from './core/shelter.js';
 import { LoreJournal } from './core/loreJournal.js';
@@ -176,7 +178,11 @@ export function createGameState(config, options = {}) {
   const npcById = new Map(allNPCs.map(n => [n.id, n]));
   for (const bldg of worldBuildings) {
     const bh = getHeightAt(bldg.x, bldg.z);
-    if (bldg.hobbitHole) {
+    if (bldg.hobbitHole && bldg.hobbitHoleVariant) {
+      const variants = { base: HOBBIT_HOLE_BASE, bagend: HOBBIT_HOLE_BAGEND, cozy: HOBBIT_HOLE_COZY };
+      const bp = variants[bldg.hobbitHoleVariant] || HOBBIT_HOLE_BASE;
+      placeHobbitHoleFromBlueprint(world, { x: bldg.x, y: bh + 1, z: bldg.z }, bp);
+    } else if (bldg.hobbitHole) {
       placeHobbitHole(world, { x: bldg.x, y: bh + 1, z: bldg.z }, {
         floorBlock: bldg.floorBlock,
         radius: bldg.radius,
