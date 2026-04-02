@@ -36,6 +36,7 @@ export class Settings {
     this.sensitivity = 1.0;
     this.fov = 75;
     this.tutorialEnabled = true;
+    this.reducedMotion = false;
     this.isOpen = false;
     this.keyBindings = { ...DEFAULT_KEY_BINDINGS };
   }
@@ -54,6 +55,10 @@ export class Settings {
 
   getMouseSensitivity(baseSensitivity) {
     return baseSensitivity * this.sensitivity;
+  }
+
+  toggleReducedMotion() {
+    this.reducedMotion = !this.reducedMotion;
   }
 
   setKeyBinding(action, keyCode) {
