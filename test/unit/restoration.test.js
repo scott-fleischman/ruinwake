@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { RestorableSite, RestorationSystem } from '../../src/core/restoration.js';
+import { RestorableSite, RestorationSystem, RESTORATION_STAGES } from '../../src/core/restoration.js';
 import { Inventory } from '../../src/core/inventory.js';
 
 describe('RestorableSite', () => {
@@ -119,6 +119,42 @@ describe('RestorableSite', () => {
     expect(site.restored).toBe(false);
     expect(inv.count('stone')).toBe(3);
     expect(inv.count('wood')).toBe(10);
+  });
+
+  it('has a currentStage property that starts at ruins', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+    });
+    expect(site.currentStage).toBe('ruins');
+  });
+
+  it('getStage returns the current stage name', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+    });
+    expect(site.getStage()).toBe('ruins');
+  });
+
+  it('restored is true only when currentStage is complete', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+    });
+    expect(site.restored).toBe(false);
+    site.currentStage = 'complete';
+    expect(site.restored).toBe(true);
+  });
+
+  it('RESTORATION_STAGES defines the progression order', () => {
+    expect(RESTORATION_STAGES).toEqual(['ruins', 'cleared', 'foundation', 'walls', 'complete']);
   });
 
   it('restore fails if site is already restored', () => {
