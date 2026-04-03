@@ -10,6 +10,12 @@ export const allRestorableSites = [
       { type: 'wood', count: 15 },
       { type: 'stone', count: 10 },
     ],
+    stageRequirements: {
+      cleared: [{ type: 'wood', count: 5 }],
+      foundation: [{ type: 'stone', count: 5 }],
+      walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 3 }],
+      complete: [{ type: 'wood', count: 5 }, { type: 'stone', count: 2 }],
+    },
   }),
   new RestorableSite({
     id: 'roadside_hall',
@@ -21,6 +27,12 @@ export const allRestorableSites = [
       { type: 'stone', count: 15 },
       { type: 'iron_ore', count: 5 },
     ],
+    stageRequirements: {
+      cleared: [{ type: 'wood', count: 5 }],
+      foundation: [{ type: 'stone', count: 8 }, { type: 'wood', count: 5 }],
+      walls: [{ type: 'stone', count: 7 }, { type: 'wood', count: 5 }],
+      complete: [{ type: 'wood', count: 5 }, { type: 'iron_ore', count: 5 }],
+    },
   }),
   new RestorableSite({
     id: 'mountain_workshop',
@@ -32,6 +44,12 @@ export const allRestorableSites = [
       { type: 'iron_ore', count: 15 },
       { type: 'copper_ore', count: 10 },
     ],
+    stageRequirements: {
+      cleared: [{ type: 'stone', count: 10 }],
+      foundation: [{ type: 'stone', count: 10 }, { type: 'iron_ore', count: 5 }],
+      walls: [{ type: 'stone', count: 10 }, { type: 'iron_ore', count: 5 }],
+      complete: [{ type: 'iron_ore', count: 5 }, { type: 'copper_ore', count: 10 }],
+    },
   }),
   new RestorableSite({
     id: 'forest_beacon',
@@ -43,6 +61,12 @@ export const allRestorableSites = [
       { type: 'relic_shard', count: 5 },
       { type: 'fiber', count: 15 },
     ],
+    stageRequirements: {
+      cleared: [{ type: 'wood', count: 10 }],
+      foundation: [{ type: 'wood', count: 8 }, { type: 'fiber', count: 5 }],
+      walls: [{ type: 'wood', count: 7 }, { type: 'fiber', count: 5 }],
+      complete: [{ type: 'relic_shard', count: 5 }, { type: 'fiber', count: 5 }],
+    },
   }),
   new RestorableSite({
     id: 'ward_bastion',
@@ -55,6 +79,12 @@ export const allRestorableSites = [
       { type: 'relic_shard', count: 10 },
       { type: 'lore_fragment', count: 5 },
     ],
+    stageRequirements: {
+      cleared: [{ type: 'stone', count: 15 }],
+      foundation: [{ type: 'stone', count: 15 }, { type: 'iron_ore', count: 10 }],
+      walls: [{ type: 'stone', count: 10 }, { type: 'iron_ore', count: 10 }],
+      complete: [{ type: 'relic_shard', count: 10 }, { type: 'lore_fragment', count: 5 }],
+    },
   }),
 ];
 
