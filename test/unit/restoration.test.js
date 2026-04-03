@@ -354,6 +354,43 @@ describe('RestorationSystem', () => {
     expect(reduction).toBeGreaterThan(0);
   });
 
+  it('corruption reduction is zero at ruins stage', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+    expect(tower.currentStage).toBe('ruins');
+    const reduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+    expect(reduction).toBe(0);
+  });
+
+  it('partially restored site gives partial corruption reduction', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+
+    // Advance to walls stage (not complete)
+    tower.currentStage = 'walls';
+    const partialReduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+
+    // Now complete it
+    tower.currentStage = 'complete';
+    const fullReduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+
+    expect(partialReduction).toBeGreaterThan(0);
+    expect(partialReduction).toBeLessThan(fullReduction);
+  });
+
+  it('cleared stage gives less reduction than foundation', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+
+    tower.currentStage = 'cleared';
+    const clearedReduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+
+    tower.currentStage = 'foundation';
+    const foundationReduction = system.getCorruptionReduction({ x: 20, y: 33, z: 20 });
+
+    expect(clearedReduction).toBeLessThan(foundationReduction);
+  });
+
   it('corruption reduction is 0 far from any restored site', () => {
     const system = makeSystem();
 
