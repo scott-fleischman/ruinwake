@@ -405,6 +405,31 @@ describe('RestorationSystem', () => {
     expect(reduction).toBe(0);
   });
 
+  it('getSaferTravelRadius returns 0 at ruins', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+    expect(system.getSaferTravelRadius(tower)).toBe(0);
+  });
+
+  it('getSaferTravelRadius grows with stage progression', () => {
+    const system = makeSystem();
+    const tower = system.getSite('old_watchtower');
+
+    tower.currentStage = 'cleared';
+    const clearedR = system.getSaferTravelRadius(tower);
+
+    tower.currentStage = 'walls';
+    const wallsR = system.getSaferTravelRadius(tower);
+
+    tower.currentStage = 'complete';
+    const completeR = system.getSaferTravelRadius(tower);
+
+    expect(clearedR).toBeGreaterThan(0);
+    expect(wallsR).toBeGreaterThan(clearedR);
+    expect(completeR).toBeGreaterThan(wallsR);
+    expect(completeR).toBe(30); // RESTORATION_RADIUS
+  });
+
   it('multiple restored sites stack corruption reduction', () => {
     const system = makeSystem();
 
