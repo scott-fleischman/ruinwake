@@ -34,7 +34,8 @@ import { applyArmorReduction, getWeaponDamage, detectNearbyStation, getEffective
 import { getItemIcon } from './core/itemIcons.js';
 import { canAcceptQuestFromNPC, acceptQuestFromNPC } from './core/npcQuestAccept.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
-import { getRaceSpeedModifier, getRaceSprintMultiplier, getRestorationRewards, getCorruptedRelicCost, getCorruptionSpawnChance } from './core/raceTraits.js';
+import { getRaceSpeedModifier, getRaceSprintMultiplier, getCorruptedRelicCost, getCorruptionSpawnChance } from './core/raceTraits.js';
+import { getRestorationRewards } from './core/restoration.js';
 import { MENU_TABS } from './core/menuTabs.js';
 import { buildHelpTabHTML } from './core/helpTabContent.js';
 import { applyDifficultyToHungerDt, applyDifficultyToEnemyDamage } from './core/difficultyApply.js';

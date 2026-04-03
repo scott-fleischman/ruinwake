@@ -1,5 +1,4 @@
 import { BiomeType } from './biome.js';
-import { BlockType } from './block.js';
 
 // ─── Gap 1: Race movement traits (Sec 9.2-9.5) ────────────────────────────
 
@@ -51,38 +50,6 @@ const RACE_SIZES = {
  */
 export function getRacePhysicalSize(raceId) {
   return RACE_SIZES[raceId] || RACE_SIZES.man;
-}
-
-// ─── Gap 3: Restoration site rewards (Sec 13.5, 20) ───────────────────────
-
-const SITE_NAMES = {
-  starter_watchpost: 'Watch-Post',
-  roadside_hall: 'Ranger Hall',
-  mountain_workshop: 'Mountain Workshop',
-  forest_beacon: 'Forest Beacon',
-  ward_bastion: 'Ward Bastion',
-};
-
-/**
- * Returns a structured rewards object for restoring a given site.
- * Includes: fast travel flag, merchant NPC definition, message, roof block.
- */
-export function getRestorationRewards(siteId) {
-  const siteName = SITE_NAMES[siteId] || siteId;
-  return {
-    fastTravel: true,
-    merchant: {
-      id: `${siteId}_merchant`,
-      name: `${siteName} Merchant`,
-      position: null, // caller sets position from site
-      factionId: null,
-      dialogue: {
-        default: `Welcome to the restored ${siteName}. What would you like to trade?`,
-      },
-    },
-    message: `Site Restored! Benefits: fast travel, merchant, safe bed, storage.`,
-    roofBlock: BlockType.OAK_PLANKS,
-  };
 }
 
 // ─── Gap 4: Corruption/magic interaction (Sec 16.5) ───────────────────────

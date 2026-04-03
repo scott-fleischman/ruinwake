@@ -1,4 +1,5 @@
 import { dist } from './math3d.js';
+import { BlockType } from './block.js';
 
 const RESTORATION_RADIUS = 30;
 
@@ -126,4 +127,32 @@ export class RestorationSystem {
     }
     return total;
   }
+}
+
+// ─── Restoration site rewards ─────────────────────────────────────────────
+
+const SITE_NAMES = {
+  starter_watchpost: 'Watch-Post',
+  roadside_hall: 'Ranger Hall',
+  mountain_workshop: 'Mountain Workshop',
+  forest_beacon: 'Forest Beacon',
+  ward_bastion: 'Ward Bastion',
+};
+
+export function getRestorationRewards(siteId) {
+  const siteName = SITE_NAMES[siteId] || siteId;
+  return {
+    fastTravel: true,
+    merchant: {
+      id: `${siteId}_merchant`,
+      name: `${siteName} Merchant`,
+      position: null,
+      factionId: null,
+      dialogue: {
+        default: `Welcome to the restored ${siteName}. What would you like to trade?`,
+      },
+    },
+    message: `Site Restored! Benefits: fast travel, merchant, safe bed, storage.`,
+    roofBlock: BlockType.OAK_PLANKS,
+  };
 }

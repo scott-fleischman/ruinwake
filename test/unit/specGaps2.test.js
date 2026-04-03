@@ -8,7 +8,7 @@ import { BiomeType } from '../../src/core/biome.js';
 import { SurvivalStats } from '../../src/core/survival.js';
 
 // Gap 3: Restoration site rewards (Sec 13.5, 20)
-import { getRestorationRewards } from '../../src/core/raceTraits.js';
+import { getRestorationRewards } from '../../src/core/restoration.js';
 
 // Gap 4: Corruption/magic interaction (Sec 16.5)
 import { getCorruptedRelicCost, getCorruptionSpawnChance } from '../../src/core/raceTraits.js';
