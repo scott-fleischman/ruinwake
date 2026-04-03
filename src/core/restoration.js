@@ -2,6 +2,8 @@ import { dist } from './math3d.js';
 
 const RESTORATION_RADIUS = 30;
 
+export const RESTORATION_STAGES = ['ruins', 'cleared', 'foundation', 'walls', 'complete'];
+
 export class RestorableSite {
   constructor({ id, name, description, position, requirements }) {
     this.id = id;
@@ -9,7 +11,20 @@ export class RestorableSite {
     this.description = description;
     this.position = position || { x: 0, y: 0, z: 0 };
     this.requirements = requirements;
-    this.restored = false;
+    this.currentStage = 'ruins';
+  }
+
+  get restored() {
+    return this.currentStage === 'complete';
+  }
+
+  set restored(val) {
+    if (val) this.currentStage = 'complete';
+    else if (this.currentStage === 'complete') this.currentStage = 'ruins';
+  }
+
+  getStage() {
+    return this.currentStage;
   }
 
   canRestore(inventory) {
