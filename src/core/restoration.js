@@ -5,6 +5,14 @@ const RESTORATION_RADIUS = 30;
 
 export const RESTORATION_STAGES = ['ruins', 'cleared', 'foundation', 'walls', 'complete'];
 
+const STAGE_CORRUPTION_WEIGHTS = {
+  ruins: 0,
+  cleared: 0.1,
+  foundation: 0.3,
+  walls: 0.6,
+  complete: 1.0,
+};
+
 export const STAGE_UNLOCKS = {
   cleared: { bed: true },
   foundation: { storage: true },
@@ -119,10 +127,11 @@ export class RestorationSystem {
   getCorruptionReduction(position) {
     let total = 0;
     for (const site of this._sites) {
-      if (!site.restored) continue;
+      const stageWeight = STAGE_CORRUPTION_WEIGHTS[site.currentStage] || 0;
+      if (stageWeight === 0) continue;
       const d = dist(position, site.position);
       if (d <= RESTORATION_RADIUS) {
-        total += 1 - (d / RESTORATION_RADIUS);
+        total += stageWeight * (1 - (d / RESTORATION_RADIUS));
       }
     }
     return total;
