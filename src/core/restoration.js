@@ -4,6 +4,13 @@ const RESTORATION_RADIUS = 30;
 
 export const RESTORATION_STAGES = ['ruins', 'cleared', 'foundation', 'walls', 'complete'];
 
+export const STAGE_UNLOCKS = {
+  cleared: { bed: true },
+  foundation: { storage: true },
+  walls: { merchant: true, recipes: true },
+  complete: { fastTravel: true, patrol: true, corruptionReduction: true },
+};
+
 export class RestorableSite {
   constructor({ id, name, description, position, requirements, stageRequirements }) {
     this.id = id;
@@ -26,6 +33,18 @@ export class RestorableSite {
 
   getStage() {
     return this.currentStage;
+  }
+
+  getUnlockedServices() {
+    const idx = RESTORATION_STAGES.indexOf(this.currentStage);
+    if (idx <= 0) return {};
+    const services = {};
+    for (let i = 1; i <= idx; i++) {
+      const stage = RESTORATION_STAGES[i];
+      const unlocks = STAGE_UNLOCKS[stage];
+      if (unlocks) Object.assign(services, unlocks);
+    }
+    return services;
   }
 
   _nextStage() {
