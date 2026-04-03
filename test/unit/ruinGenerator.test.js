@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeRuin } from '../../src/core/ruinGenerator.js';
+import { placeRuin, placeStagedSite } from '../../src/core/ruinGenerator.js';
 import { World } from '../../src/core/world.js';
 import { BlockType, isBlockSolid } from '../../src/core/block.js';
 
@@ -61,5 +61,55 @@ describe('placeRuin', () => {
       }
     }
     expect(hasAirGap).toBe(true);
+  });
+});
+
+describe('placeStagedSite', () => {
+  const pos = { x: 50, y: 33, z: 50 };
+
+  it('cleared stage places floor but no walls above', () => {
+    const world = new World();
+    placeStagedSite(world, pos, 'cleared', 'small');
+
+    // Floor should exist
+    expect(world.getBlock(50, 32, 50)).not.toBe(BlockType.AIR);
+    // No walls at wall height (dy=2)
+    const radius = 4;
+    expect(world.getBlock(50 + radius, 35, 50)).toBe(BlockType.AIR);
+  });
+
+  it('foundation stage places floor and lower walls', () => {
+    const world = new World();
+    placeStagedSite(world, pos, 'foundation', 'small');
+
+    // Floor should exist
+    expect(world.getBlock(50, 32, 50)).not.toBe(BlockType.AIR);
+    // Lower wall (dy=0) on corner should exist
+    const radius = 4;
+    expect(world.getBlock(50 + radius, 33, 50 + radius)).not.toBe(BlockType.AIR);
+    // Upper wall (dy=3) should not exist
+    expect(world.getBlock(50 + radius, 36, 50 + radius)).toBe(BlockType.AIR);
+  });
+
+  it('walls stage places full walls but no roof', () => {
+    const world = new World();
+    placeStagedSite(world, pos, 'walls', 'small');
+
+    const radius = 4;
+    const height = 4;
+    // Corner pillar at full height
+    expect(world.getBlock(50 - radius, 33 + height - 1, 50 - radius)).not.toBe(BlockType.AIR);
+    // No roof above center
+    expect(world.getBlock(50, 33 + height + 1, 50)).toBe(BlockType.AIR);
+  });
+
+  it('complete stage places full building with roof', () => {
+    const world = new World();
+    placeStagedSite(world, pos, 'complete', 'small');
+
+    const radius = 4;
+    const height = 4;
+    // Roof edge should exist
+    expect(world.getBlock(50 - radius - 1, 33 + height, 50)).not.toBe(BlockType.AIR);
   });
 });
