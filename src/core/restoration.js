@@ -5,12 +5,13 @@ const RESTORATION_RADIUS = 30;
 export const RESTORATION_STAGES = ['ruins', 'cleared', 'foundation', 'walls', 'complete'];
 
 export class RestorableSite {
-  constructor({ id, name, description, position, requirements }) {
+  constructor({ id, name, description, position, requirements, stageRequirements }) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.position = position || { x: 0, y: 0, z: 0 };
     this.requirements = requirements;
+    this.stageRequirements = stageRequirements || null;
     this.currentStage = 'ruins';
   }
 
@@ -25,6 +26,35 @@ export class RestorableSite {
 
   getStage() {
     return this.currentStage;
+  }
+
+  _nextStage() {
+    const idx = RESTORATION_STAGES.indexOf(this.currentStage);
+    if (idx < 0 || idx >= RESTORATION_STAGES.length - 1) return null;
+    return RESTORATION_STAGES[idx + 1];
+  }
+
+  canAdvanceStage(inventory) {
+    const next = this._nextStage();
+    if (!next) return false;
+    const reqs = this.stageRequirements && this.stageRequirements[next];
+    if (!reqs) return false;
+    for (const req of reqs) {
+      if (inventory.count(req.type) < req.count) return false;
+    }
+    return true;
+  }
+
+  advanceStage(inventory) {
+    const next = this._nextStage();
+    if (!next) return false;
+    if (!this.canAdvanceStage(inventory)) return false;
+    const reqs = this.stageRequirements[next];
+    for (const req of reqs) {
+      inventory.remove(req.type, req.count);
+    }
+    this.currentStage = next;
+    return true;
   }
 
   canRestore(inventory) {
