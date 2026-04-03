@@ -292,6 +292,61 @@ export function placeHobbitHole(world, position, opts = {}) {
 }
 
 /**
+ * Place a site at a given restoration stage.
+ * cleared = floor only, foundation = floor + low walls, walls = full walls no roof, complete = full building.
+ */
+export function placeStagedSite(world, position, stage, size = 'small') {
+  if (stage === 'complete') {
+    return placeRestoredSite(world, position, size);
+  }
+
+  const configs = {
+    small: { radius: 4, height: 4, wallBlock: BlockType.STONE_BRICK, floorBlock: BlockType.COBBLESTONE },
+    medium: { radius: 6, height: 5, wallBlock: BlockType.STONE_BRICK, floorBlock: BlockType.COBBLESTONE },
+    large: { radius: 8, height: 6, wallBlock: BlockType.STONE_BRICK, floorBlock: BlockType.COBBLESTONE },
+  };
+  const cfg = configs[size] || configs.small;
+  const { radius, height, wallBlock, floorBlock } = cfg;
+
+  const bx = Math.floor(position.x);
+  const by = Math.floor(position.y);
+  const bz = Math.floor(position.z);
+
+  // All stages get a floor
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      world.setBlock(bx + dx, by - 1, bz + dz, floorBlock);
+    }
+  }
+
+  if (stage === 'cleared') return;
+
+  // Foundation: low walls (1 block high perimeter)
+  const wallHeight = stage === 'foundation' ? 1 : height;
+  for (let dy = 0; dy < wallHeight; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dz = -radius; dz <= radius; dz++) {
+        const onEdge = Math.abs(dx) === radius || Math.abs(dz) === radius;
+        if (!onEdge) continue;
+        // Leave doorway on +x side
+        if (dx === radius && Math.abs(dz) <= 1 && dy < 3) continue;
+        world.setBlock(bx + dx, by + dy, bz + dz, wallBlock);
+      }
+    }
+  }
+
+  // Corner pillars at full requested height
+  const corners = [[-radius, -radius], [-radius, radius], [radius, -radius], [radius, radius]];
+  for (const [cx, cz] of corners) {
+    for (let dy = 0; dy < wallHeight; dy++) {
+      world.setBlock(bx + cx, by + dy, bz + cz, BlockType.STONE);
+    }
+  }
+
+  // Walls stage stops here — no roof
+}
+
+/**
  * Place a fully restored version of a ruin site.
  */
 export function placeRestoredSite(world, position, size = 'small') {
