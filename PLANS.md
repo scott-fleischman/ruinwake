@@ -41,7 +41,7 @@
 - Stealth crouching reduces enemy aggro range by 50%
 - Throwable items (H key — stone, oil flask, smoke bomb, bait)
 - Tool durability wear on mining
-- Third-person camera toggle (V key)
+- Third-person behind camera toggle (V key) — front mode deferred
 - Remappable key bindings in Settings
 - Rune table recipes (ward stone, elvish lamp, runic blade)
 - Reduced motion accessibility option
@@ -49,3 +49,19 @@
 
 ### Remaining for 100%
 - Audio (not applicable in web stack)
+- Third-person front camera mode (spec Section 8.2)
+
+## Rendering Pipeline Direction
+
+### Current State
+- Vertex-color rendering active via `chunkMesher.js` (MeshLambertMaterial, vertexColors)
+- Procedural texture system ready in `src/render/blockTextures.js` (16x16 pixel-art)
+- Texture atlas infrastructure ready in `src/render/textureAtlas.js` (UV mapping, atlas builder)
+- Textures NOT yet UV-synced into chunk mesh geometry
+
+### Decision
+Stay with stylized vertex-color rendering as the primary art direction. The current
+atmospheric palette (per-face lighting, ambient occlusion, fog, day/night) is coherent
+and regionally varied. Push lighting, fog, structure silhouettes, and vegetation harder
+rather than switching mid-development to texture UVs. The texture atlas system remains
+available as a future enhancement for close-up material richness if needed.
