@@ -27,7 +27,7 @@ import { allLandmarks } from './core/landmarkData.js';
 import { serializeGameState, deserializeGameState } from './core/save.js';
 import { downloadSaveFile, uploadSaveFile } from './core/saveFile.js';
 import { allRestorableSites } from './core/restorableSiteData.js';
-import { placeRestoredSite } from './core/ruinGenerator.js';
+import { placeRestoredSite, placeStagedSite } from './core/ruinGenerator.js';
 import { RelicAbility } from './core/relic.js';
 import { LoreEntry, LoreCategory } from './core/loreJournal.js';
 import { applyArmorReduction, getWeaponDamage, detectNearbyStation, getEffectiveAggroRange, handleThrowInput, mineBlockWithTool, getToolDurabilityDisplay, processRestorationInput } from './core/systemWiring.js';
@@ -1276,13 +1276,11 @@ function startGame(config, jumpStateId) {
                 questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
               }
             }
-            // Update building visuals — place restored site at complete, re-mesh chunks
-            if (site.restored) {
-              const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
-              const restoreSize = sizeMap[site.id] || 'small';
-              const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z));
-              placeRestoredSite(world, { x: site.position.x, y: sh + 1, z: site.position.z }, restoreSize);
-            }
+            // Update building visuals per stage
+            const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
+            const restoreSize = sizeMap[site.id] || 'small';
+            const sh2 = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z));
+            placeStagedSite(world, { x: site.position.x, y: sh2 + 1, z: site.position.z }, site.currentStage, restoreSize);
             // Mark all nearby chunks dirty for re-render
             const sx = Math.floor(site.position.x);
             const sh = getHeightAt(sx, Math.floor(site.position.z));
