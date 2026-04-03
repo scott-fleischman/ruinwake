@@ -74,6 +74,14 @@ export function serializeGameState(world, player, inventory, extra = {}) {
     state.skillTree = extra.skillTree.serialize();
   }
 
+  if (extra.restorationSites) {
+    const stages = {};
+    for (const site of extra.restorationSites) {
+      stages[site.id] = site.currentStage;
+    }
+    state.restorationSites = stages;
+  }
+
   return JSON.stringify(state);
 }
 
@@ -134,6 +142,10 @@ export function deserializeGameState(json) {
 
   if (data.skillTree) {
     result.skillTreeData = data.skillTree;
+  }
+
+  if (data.restorationSites) {
+    result.restorationSiteData = data.restorationSites;
   }
 
   return result;
