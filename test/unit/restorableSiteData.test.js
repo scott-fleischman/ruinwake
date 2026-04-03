@@ -48,4 +48,24 @@ describe('restorableSiteData', () => {
       expect(site.restored).toBe(false);
     }
   });
+
+  it('all sites have stageRequirements for cleared, foundation, walls, complete', () => {
+    for (const site of allRestorableSites) {
+      expect(site.stageRequirements).toBeDefined();
+      for (const stage of ['cleared', 'foundation', 'walls', 'complete']) {
+        expect(site.stageRequirements[stage]).toBeDefined();
+        expect(Array.isArray(site.stageRequirements[stage])).toBe(true);
+      }
+    }
+  });
+
+  it('starter_watchpost stage requirements have valid resource types', () => {
+    const site = getRestorableSiteById('starter_watchpost');
+    for (const stage of ['cleared', 'foundation', 'walls', 'complete']) {
+      for (const req of site.stageRequirements[stage]) {
+        expect(req.type).toBeTruthy();
+        expect(req.count).toBeGreaterThan(0);
+      }
+    }
+  });
 });
