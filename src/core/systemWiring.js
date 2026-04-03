@@ -167,3 +167,17 @@ export function getToolDurabilityDisplay(tool) {
   if (!tool) return '';
   return `${tool.type} ${tool.durability}/${tool.maxDurability}`;
 }
+
+/**
+ * Attempt to advance a restoration site by one stage.
+ * Returns { advanced, stage, message }.
+ */
+export function processRestorationInput(site, inventory) {
+  if (site.restored) {
+    return { advanced: false, stage: site.currentStage, message: `${site.name} is already fully restored.` };
+  }
+  if (site.advanceStage(inventory)) {
+    return { advanced: true, stage: site.currentStage, message: `${site.name} advanced to ${site.currentStage}.` };
+  }
+  return { advanced: false, stage: site.currentStage, message: `Need materials to advance ${site.name}.` };
+}
