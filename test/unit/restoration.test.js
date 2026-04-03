@@ -157,6 +157,103 @@ describe('RestorableSite', () => {
     expect(RESTORATION_STAGES).toEqual(['ruins', 'cleared', 'foundation', 'walls', 'complete']);
   });
 
+  it('canAdvanceStage returns true when inventory has next stage requirements', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+      stageRequirements: {
+        cleared: [{ type: 'wood', count: 3 }],
+        foundation: [{ type: 'stone', count: 5 }],
+        walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 5 }],
+        complete: [{ type: 'iron_ore', count: 2 }],
+      },
+    });
+    const inv = new Inventory(20);
+    inv.add('wood', 10);
+    expect(site.canAdvanceStage(inv)).toBe(true);
+  });
+
+  it('canAdvanceStage returns false when inventory insufficient for next stage', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+      stageRequirements: {
+        cleared: [{ type: 'wood', count: 3 }],
+        foundation: [{ type: 'stone', count: 5 }],
+        walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 5 }],
+        complete: [{ type: 'iron_ore', count: 2 }],
+      },
+    });
+    const inv = new Inventory(20);
+    inv.add('wood', 1);
+    expect(site.canAdvanceStage(inv)).toBe(false);
+  });
+
+  it('advanceStage consumes resources and moves to next stage', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+      stageRequirements: {
+        cleared: [{ type: 'wood', count: 3 }],
+        foundation: [{ type: 'stone', count: 5 }],
+        walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 5 }],
+        complete: [{ type: 'iron_ore', count: 2 }],
+      },
+    });
+    const inv = new Inventory(20);
+    inv.add('wood', 10);
+    const result = site.advanceStage(inv);
+    expect(result).toBe(true);
+    expect(site.currentStage).toBe('cleared');
+    expect(inv.count('wood')).toBe(7);
+  });
+
+  it('advanceStage fails if already at complete', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+      stageRequirements: {
+        cleared: [{ type: 'wood', count: 3 }],
+        foundation: [{ type: 'stone', count: 5 }],
+        walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 5 }],
+        complete: [{ type: 'iron_ore', count: 2 }],
+      },
+    });
+    site.currentStage = 'complete';
+    const inv = new Inventory(20);
+    inv.add('wood', 10);
+    expect(site.advanceStage(inv)).toBe(false);
+  });
+
+  it('advanceStage fails without consuming if inventory insufficient', () => {
+    const site = new RestorableSite({
+      id: 'test',
+      name: 'Test',
+      description: 'Test site',
+      requirements: [{ type: 'stone', count: 5 }],
+      stageRequirements: {
+        cleared: [{ type: 'wood', count: 3 }],
+        foundation: [{ type: 'stone', count: 5 }],
+        walls: [{ type: 'wood', count: 5 }, { type: 'stone', count: 5 }],
+        complete: [{ type: 'iron_ore', count: 2 }],
+      },
+    });
+    const inv = new Inventory(20);
+    inv.add('wood', 1);
+    const result = site.advanceStage(inv);
+    expect(result).toBe(false);
+    expect(site.currentStage).toBe('ruins');
+    expect(inv.count('wood')).toBe(1);
+  });
+
   it('restore fails if site is already restored', () => {
     const site = new RestorableSite({
       id: 'old_watchtower',
