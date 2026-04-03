@@ -124,6 +124,11 @@ export class RestorationSystem {
     return this._sites.find(s => s.id === id);
   }
 
+  getSaferTravelRadius(site) {
+    const weight = STAGE_CORRUPTION_WEIGHTS[site.currentStage] || 0;
+    return weight * RESTORATION_RADIUS;
+  }
+
   getCorruptionReduction(position) {
     let total = 0;
     for (const site of this._sites) {
