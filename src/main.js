@@ -30,7 +30,7 @@ import { allRestorableSites } from './core/restorableSiteData.js';
 import { placeRestoredSite } from './core/ruinGenerator.js';
 import { RelicAbility } from './core/relic.js';
 import { LoreEntry, LoreCategory } from './core/loreJournal.js';
-import { applyArmorReduction, getWeaponDamage, detectNearbyStation, getEffectiveAggroRange, handleThrowInput, mineBlockWithTool, getToolDurabilityDisplay } from './core/systemWiring.js';
+import { applyArmorReduction, getWeaponDamage, detectNearbyStation, getEffectiveAggroRange, handleThrowInput, mineBlockWithTool, getToolDurabilityDisplay, processRestorationInput } from './core/systemWiring.js';
 import { getItemIcon } from './core/itemIcons.js';
 import { canAcceptQuestFromNPC, acceptQuestFromNPC } from './core/npcQuestAccept.js';
 import { getBuildingBonus } from './core/buildingStyle.js';
@@ -1248,47 +1248,52 @@ function startGame(config, jumpStateId) {
       for (const site of allRestorableSites) {
         if (site.restored) continue;
         if (checkProximityTrigger(player.position, site.position, GC.RESTORATION.INTERACT_RANGE)) {
-          if (site.restore(inventory)) {
-            // Get structured restoration rewards
-            const rewards = getRestorationRewards(site.id);
-            dialogueMessage = rewards.message;
+          const result = processRestorationInput(site, inventory);
+          if (result.advanced) {
+            dialogueMessage = result.message;
             dialogueTimer = GC.DIALOGUE.DISPLAY_DURATION;
             experienceSystem.addExperience(GC.QUESTS.XP_RESTORATION, 'restoration');
-            progress.restoreSite(site.id);
-            // Grant +50 reputation to relevant faction
-            const siteFactionMap = {
-              starter_watchpost: 'road_wardens',
-              roadside_hall: 'road_wardens',
-              mountain_workshop: 'dwarven_crafters',
-              forest_beacon: 'woodland_guardians',
-              ward_bastion: 'rivendell_keepers',
-            };
-            const siteFaction = siteFactionMap[site.id];
-            if (siteFaction) factionSystem.addReputation(siteFaction, 50);
-            // Add merchant NPC at restored site
-            const merchant = rewards.merchant;
-            merchant.position = { ...site.position };
-            const merchantNPC = new NPC(merchant);
-            npcSystem.addNPC(merchantNPC);
-            // Replace the ruin with a proper restored building
-            const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
-            const restoreSize = sizeMap[site.id] || 'small';
-            const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z));
-            placeRestoredSite(world, { x: site.position.x, y: sh + 1, z: site.position.z }, restoreSize);
+            // Grant faction rep and full-completion rewards only at 'complete'
+            if (site.restored) {
+              progress.restoreSite(site.id);
+              const siteFactionMap = {
+                starter_watchpost: 'road_wardens',
+                roadside_hall: 'road_wardens',
+                mountain_workshop: 'dwarven_crafters',
+                forest_beacon: 'woodland_guardians',
+                ward_bastion: 'rivendell_keepers',
+              };
+              const siteFaction = siteFactionMap[site.id];
+              if (siteFaction) factionSystem.addReputation(siteFaction, GC.RESTORATION.FACTION_REP_REWARD);
+              // Add merchant NPC at restored site
+              const rewards = getRestorationRewards(site.id);
+              const merchant = rewards.merchant;
+              merchant.position = { ...site.position };
+              const merchantNPC = new NPC(merchant);
+              npcSystem.addNPC(merchantNPC);
+              // If it's the watch-post, advance ward quest
+              if (site.id === 'starter_watchpost') {
+                questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
+              }
+            }
+            // Update building visuals — place restored site at complete, re-mesh chunks
+            if (site.restored) {
+              const sizeMap = { starter_watchpost: 'small', roadside_hall: 'medium', mountain_workshop: 'medium', forest_beacon: 'small', ward_bastion: 'large' };
+              const restoreSize = sizeMap[site.id] || 'small';
+              const sh = getHeightAt(Math.floor(site.position.x), Math.floor(site.position.z));
+              placeRestoredSite(world, { x: site.position.x, y: sh + 1, z: site.position.z }, restoreSize);
+            }
             // Mark all nearby chunks dirty for re-render
             const sx = Math.floor(site.position.x);
+            const sh = getHeightAt(sx, Math.floor(site.position.z));
             const sz = Math.floor(site.position.z);
             for (let dx = -10; dx <= 10; dx += 8) {
               for (let dz = -10; dz <= 10; dz += 8) {
                 worldRenderer.markDirty(sx + dx, sh + 1, sz + dz);
               }
             }
-            // If it's the watch-post, advance ward quest
-            if (site.id === 'starter_watchpost') {
-              questSystem.advanceObjective('ch1_embers', 'ch1_activate_ward', 1);
-            }
           } else {
-            dialogueMessage = `Need materials to restore ${site.name}`;
+            dialogueMessage = result.message;
             dialogueTimer = GC.DIALOGUE.SHORT_DURATION;
           }
           break;
