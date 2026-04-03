@@ -68,12 +68,21 @@ export class RestorableSite {
 
   restore(inventory) {
     if (this.restored) return false;
+    // If site has staged requirements, advance through all stages at once
+    if (this.stageRequirements) {
+      let advanced = false;
+      while (this.currentStage !== 'complete') {
+        if (!this.advanceStage(inventory)) return advanced;
+        advanced = true;
+      }
+      return advanced;
+    }
+    // Legacy path: flat requirements, single jump to complete
     if (!this.canRestore(inventory)) return false;
-
     for (const req of this.requirements) {
       inventory.remove(req.type, req.count);
     }
-    this.restored = true;
+    this.currentStage = 'complete';
     return true;
   }
 }
