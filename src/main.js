@@ -52,6 +52,7 @@ import { getNPCDialogueChoices } from './core/npcDialogueChoices.js';
 import { JUMP_STATES } from './core/gameProgress.js';
 import { GAME_CONSTANTS } from './core/gameConstants.js';
 import { createRng } from './core/rng.js';
+import { buildHotbarHTML, buildSiteHintHTML, buildStatusEffectsHTML } from './ui/hudRenderer.js';
 
 // --- New game UI ---
 const raceSelect = document.getElementById('race-select');
@@ -1429,16 +1430,7 @@ function startGame(config, jumpStateId) {
     const fearLvl = hudData.fearLevel;
     // Update visual hotbar bar
     const hotbarBar = document.getElementById('hotbar-bar');
-    let hotbarHTML = '';
-    for (let i = 0; i < 8; i++) {
-      const item = hotbar.getSlot(i);
-      const sel = i === hotbar.selectedSlot ? ' selected' : '';
-      const icon = item ? getItemIcon(item.type) : '';
-      const itemName = item ? item.type.replace(/_/g, ' ') : '';
-      const itemCount = item ? item.count : '';
-      hotbarHTML += `<div class="slot${sel}"><span class="num">${i + 1}</span><div style="font-size:18px">${icon}</div><span class="item-name">${itemName}</span><span class="item-count">${itemCount}</span></div>`;
-    }
-    hotbarBar.innerHTML = hotbarHTML;
+    hotbarBar.innerHTML = buildHotbarHTML(hotbar, getItemIcon);
 
     // Show equipped tool durability below hotbar
     const mainHandTool = equipment.get('main_hand');
@@ -1458,19 +1450,10 @@ function startGame(config, jumpStateId) {
     const dialogueLine = dialogueMessage ? `<div style="color:#eee;background:rgba(0,0,0,0.6);padding:6px 10px;margin-top:6px;border-radius:4px;max-width:400px">${dialogueMessage}</div>` : '';
 
     // Restorable site hint
-    let siteHint = '';
-    for (const site of allRestorableSites) {
-      if (!site.restored && checkProximityTrigger(player.position, site.position, GC.RESTORATION.HINT_RANGE)) {
-        const reqs = site.requirements.map(r => `${r.count} ${r.type.replace(/_/g, ' ')}`).join(', ');
-        siteHint = `<div style="color:#aed581;margin-top:4px">[R] Restore ${site.name} (needs: ${reqs})</div>`;
-        break;
-      }
-    }
+    const siteHint = buildSiteHintHTML(allRestorableSites, player.position, GC.RESTORATION.HINT_RANGE);
 
     // Status effects HUD line
-    const effectsLine = hudData.statusEffects.length > 0
-      ? `<div style="margin-top:2px;font-size:11px;color:#aed581">${hudData.statusEffects.map(e => `${e.type.replace(/_/g, ' ')} ${Math.ceil(e.remaining)}s`).join(' | ')}</div>`
-      : '';
+    const effectsLine = buildStatusEffectsHTML(hudData.statusEffects);
 
     hudElement.innerHTML = `
       <div>${config.characterName ? config.characterName + ' — ' : ''}${race.name} ${cls.name} Lv${hudData.level} | Day ${gameClock.day} — ${phase} | ${biome.name} | ${weather}${compassLabel}${crouchLabel}${guardLabel}${creativeMode.enabled ? ' [CREATIVE]' : ''}</div>
